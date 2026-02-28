@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38a6d0e38646844bdb30b7cdccd15a2c, type: 3}
   m_Name: ColorScheme_1
   m_EditorClassIdentifier: Assembly-CSharp::ColorScheme
-  purple: {r: 0.8518821, g: 0.5518868, b: 1, a: 1}
-  yellow: {r: 1, g: 0.9859686, b: 0.5801887, a: 1}
-  blue: {r: 0.5803922, g: 0.8032314, b: 1, a: 1}
+  purple: {r: 0.8932004, g: 0.71733713, b: 0.9811321, a: 1}
+  yellow: {r: 1, g: 0.74980235, b: 0.4764151, a: 1}
+  blue: {r: 0.61877, g: 0.8913294, b: 0.9716981, a: 1}
   green: {r: 0.5803922, g: 1, b: 0.69123876, a: 1}
-  red: {r: 1, g: 0.5803922, b: 0.6346039, a: 1}
-  blank: {r: 0, g: 0, b: 0, a: 1}
-  backgroundColor: {r: 1, g: 0.954597, b: 0.8160377, a: 1}
+  red: {r: 0.990566, g: 0.6401299, b: 0.70453495, a: 1}
+  blank: {r: 1, g: 1, b: 1, a: 1}
+  backgroundColor: {r: 0.5229936, g: 0.3504361, b: 0.5943396, a: 1}
   bombLight: {r: 0, g: 0, b: 0, a: 0}
   bombDark: {r: 0, g: 0, b: 0, a: 0}
   anchor: {fileID: 0}
