@@ -7,10 +7,14 @@ public class ConnectionModel : IConnectionModel
 {
     private readonly List<IDotPresenter> _path = new();
     private readonly HashSet<string> _pathIds = new();
-    private bool _cycleClosed;
+
+    /// <summary>
+    /// True if the connection is closed by revisiting an earlier dot.
+    /// </summary>
+    private bool _isSquare;
 
     private bool _isSessionActive;
-    public bool CycleClosed => _cycleClosed;
+    public bool IsSquare => _isSquare;
 
     public bool IsSessionActive => _isSessionActive;
     public event Action OnPathChanged;
@@ -28,7 +32,7 @@ public class ConnectionModel : IConnectionModel
     {
         _path = new List<IDotPresenter>();
         _pathIds = new HashSet<string>();
-        _cycleClosed = false;
+        _isSquare = false;
         _isSessionActive = false;
         _board = board;
         _rule = rule;
@@ -42,26 +46,43 @@ public class ConnectionModel : IConnectionModel
         Cancel();
         _path.Add(dot);
         _pathIds.Add(dot.Dot.ID);
-        _cycleClosed = false;
+        _isSquare = false;
         _isSessionActive = true;
 
         OnPathChanged?.Invoke();
         OnDotAddedToPath?.Invoke(dot.Dot.ID);
+    }
+
+    private bool TryBacktrackAfterSquare(IDotPresenter dot)
+    {
+        if (!_isSessionActive || dot == null || _path.Count == 0) return false;
+        IDotPresenter head = _path[^1]; // last dot in the path
+        if (head.Dot.ID == dot.Dot.ID) return false; // same dot, no-op
+        if (_path.Count >= 2 && _path[^2].Dot.ID == dot.Dot.ID)
+        {
+            _path.RemoveAt(_path.Count - 1);
+            _isSquare = false;
+            OnPathChanged?.Invoke();
+            return true;
+        }
+        return false;
     }
     public bool TryBacktrack(IDotPresenter dot)
     {
         if (!_isSessionActive || dot == null || _path.Count == 0) return false;
 
         IDotPresenter head = _path[^1]; // last dot in the path
+        if (head.Dot.ID == dot.Dot.ID) return false; // same dot, no-op
         if (_path.Count >= 2 && _path[^2].Dot.ID == dot.Dot.ID)
         {
             // only remove the head if the cycle is not closed: a closed cycle means the head is still in the connection
-            if (!_cycleClosed)
+            if (_isSquare)
             {
-                _pathIds.Remove(head.Dot.ID);
+                return TryBacktrackAfterSquare(dot);
             }
+            _pathIds.Remove(head.Dot.ID);
             _path.RemoveAt(_path.Count - 1);
-            _cycleClosed = false;
+            _isSquare = false;
             OnPathChanged?.Invoke();
             OnDotRemovedFromPath?.Invoke(head.Dot.ID);
             return true;
@@ -71,7 +92,7 @@ public class ConnectionModel : IConnectionModel
     }
     public bool TryAppend(IDotPresenter dot)
     {
-        if (!_isSessionActive || dot == null || _path.Count == 0 || _cycleClosed) return false;
+        if (!_isSessionActive || dot == null || _path.Count == 0 || _isSquare) return false;
 
         IDotPresenter head = _path[^1]; // last dot in the path
         if (head.Dot.ID == dot.Dot.ID) return false; // same dot, no-op
@@ -87,7 +108,7 @@ public class ConnectionModel : IConnectionModel
         {
             if (!_rule.CanConnect(head, dot, this, _board)) return false;
             _path.Add(dot);
-            _cycleClosed = true;
+            _isSquare = true;
 
             OnDotAddedToPath?.Invoke(dot.Dot.ID);
             OnPathChanged?.Invoke();
@@ -145,8 +166,8 @@ public class ConnectionModel : IConnectionModel
         for (int i = 0; i < _path.Count; i++)
             dotIds.Add(_path[i].Dot.ID);
 
-        int segmentCount = _path.Count == 0 ? 0 : (_cycleClosed ? _path.Count : _path.Count - 1);
-        var payload = new ConnectionCompletedPayload(dotIds, _cycleClosed, segmentCount);
+        int segmentCount = _path.Count == 0 ? 0 : (_isSquare ? _path.Count : _path.Count - 1);
+        var payload = new ConnectionCompletedPayload(dotIds, _isSquare, segmentCount);
         OnConnectionCompleted?.Invoke(payload);
         Cancel();
     }
@@ -155,7 +176,7 @@ public class ConnectionModel : IConnectionModel
     {
         _path.Clear();
         _pathIds.Clear();
-        _cycleClosed = false;
+        _isSquare = false;
         _isSessionActive = false;
         _currentColor = DotColor.Blank;
         OnColorChanged?.Invoke(_currentColor);

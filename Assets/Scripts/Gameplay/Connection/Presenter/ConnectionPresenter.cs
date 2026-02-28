@@ -91,7 +91,7 @@ public class ConnectionPresenter : MonoBehaviour
     }
     private void OnPointerDragged(Vector3 worldPos)
     {
-        if (!_model.IsSessionActive || _model.Path.Count == 0 || _model.CycleClosed)
+        if (!_model.IsSessionActive || _model.Path.Count == 0 || _model.IsSquare)
         {
             HideDragLine();
             return;

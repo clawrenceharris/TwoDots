@@ -26,8 +26,9 @@ public interface IConnectionModel
     
     /// <summary>Current color of the connection.</summary>
     DotColor CurrentColor { get; }
+
     /// <summary>True if the connection is closed by revisiting an earlier dot.</summary>
-    bool CycleClosed { get; }
+    bool IsSquare { get; }
 
     /// <summary>Start a session with the given dot as the first node.</summary>
     void Begin(IDotPresenter dot);
