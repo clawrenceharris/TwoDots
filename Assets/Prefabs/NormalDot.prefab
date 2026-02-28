@@ -101,9 +101,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2818817833734586123}
   - component: {fileID: 5224356030327197459}
-  - component: {fileID: 4647557671036655339}
-  - component: {fileID: 2162699669910961529}
-  - component: {fileID: 6904733556307611285}
+  - component: {fileID: 6480254893941272487}
+  - component: {fileID: 1842759899835583463}
+  - component: {fileID: 4478629231230152698}
   m_Layer: 0
   m_Name: NormalDot
   m_TagString: Color Dot
@@ -187,7 +187,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &4647557671036655339
+--- !u!114 &6480254893941272487
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -196,24 +196,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 6629530070703699901}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f482d3d01db8455d91b799036b582c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DotView
---- !u!114 &2162699669910961529
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6629530070703699901}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 417bbf0a8595d4ca5a6ce2e2bdb2b7cd, type: 3}
+  m_Script: {fileID: 11500000, guid: 7c0a9eb849e24451fbd35423adb7a23e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DotRenderer
   _fallbackBaseRenderer: {fileID: 5224356030327197459}
   _targets: []
---- !u!114 &6904733556307611285
+--- !u!114 &1842759899835583463
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -222,13 +210,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 6629530070703699901}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36e190aa5b8bd4123a73db877dccec1c, type: 3}
+  m_Script: {fileID: 11500000, guid: 9d53124ffe0114acda4a4322469f415e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DotView
+--- !u!114 &4478629231230152698
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6629530070703699901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f011897215391442aa746046d5d3f9de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DotSelectionFeedback
   _pulseRenderer: {fileID: 7796637422996918524}
   _fillRenderer: {fileID: 480599722393274306}
   _pulseDuration: 0.65
-  _fillDuration: 0.15
+  _fillDuration: 0.2
   _pulseStartScale: 0.8
   _pulseEndScale: 2.5
   _fillEase:

@@ -13,7 +13,7 @@ public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
 
     public void Connect(IConnectionModel connection)
     {
-        _selectionFeedback.PlaySelectionAnimation(ColorSchemeManager.FromDotColor(connection.CurrentColor));
+        _selectionFeedback.PlaySelectionAnimation(ColorSchemeService.FromDotColor(connection.CurrentColor));
         connection.OnColorChanged += OnColorChanged;
         connection.OnConnectionCompleted += OnConnectionCompleted;
         connection.OnDotRemovedFromPath += OnDotRemovedFromPath;
@@ -32,7 +32,7 @@ public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
 
     private void OnColorChanged(DotColor color)
     {
-        _selectionFeedback.ChangeFillColor(ColorSchemeManager.FromDotColor(color));
+        _selectionFeedback.ChangeFillColor(ColorSchemeService.FromDotColor(color));
     }
     
     public void Disconnect()
