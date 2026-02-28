@@ -30,7 +30,7 @@ public class ConnectorLineView : MonoBehaviour
 
     private void OnColorChanged(DotColor color)
     {
-        SetColor(ColorSchemeManager.FromDotColor(color));
+        SetColor(ColorSchemeService.FromDotColor(color));
     }
 
     private void OnDisable()

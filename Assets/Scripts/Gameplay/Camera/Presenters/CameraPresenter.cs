@@ -2,32 +2,31 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Camera))]
-public class CameraController : MonoBehaviour
+public class CameraPresenter : MonoBehaviour
 {
-    private float aspectRatio = 0.625f;
+    private readonly float _aspectRatio = 0.625f;
     [SerializeField] private float padding = 1;
     private Camera cam;
-    private BoardPresenter board;
+    private BoardPresenter _board;
     void Start()
     {
-        board  =FindFirstObjectByType<BoardPresenter>(); 
+        _board = FindFirstObjectByType<BoardPresenter>();
         cam = GetComponent<Camera>();
-        cam.backgroundColor = ColorSchemeManager.CurrentColorScheme.backgroundColor;
-    }
-
+        cam.backgroundColor = ColorSchemeService.CurrentColorScheme.backgroundColor;
+    }   
     private void Update()
     {
-        RepositionCamera((board.Width - 1) * BoardView.TileSize , (board.Height - 1) * BoardView.TileSize);
-
+        RepositionCamera((_board.Width - 1) * BoardView.TileSize, (_board.Height - 1) * BoardView.TileSize);
     }
+
 
     void RepositionCamera(float x, float y)
     {
         Vector3 tempPosition = new(x / 2, y / 2, -1);
         transform.position = tempPosition;
-        if (board.Width >= board.Height)
+        if (_board.Width >= _board.Height)
         {
-            Camera.main.orthographicSize = (x / 2 + padding) / aspectRatio;
+            Camera.main.orthographicSize = (x / 2 + padding) / _aspectRatio;
         }
         else
         {

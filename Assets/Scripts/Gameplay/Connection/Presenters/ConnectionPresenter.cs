@@ -124,7 +124,7 @@ public class ConnectionPresenter : MonoBehaviour
         line.transform.SetParent(transform, true);
 
         line.SetPositions(fromWorld, toWorld);
-        line.SetColor(ColorSchemeManager.FromDotColor(_model.CurrentColor));
+        line.SetColor(ColorSchemeService.FromDotColor(_model.CurrentColor));
         _activeConnectionSegments.Push(line);
     }
 
@@ -161,7 +161,7 @@ public class ConnectionPresenter : MonoBehaviour
         }
 
         var line = _activeDragLine;
-        line.SetColor(ColorSchemeManager.FromDotColor(_model.CurrentColor));
+        line.SetColor(ColorSchemeService.FromDotColor(_model.CurrentColor));
         if (line != null)
         {
             line.SetPositions(fromWorld, toWorld);

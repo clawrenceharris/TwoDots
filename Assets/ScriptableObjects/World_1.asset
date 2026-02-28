@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levels:
   - {fileID: 4900000, guid: 8556cb4da27724fcb9800c5d18812c46, type: 3}
-  colorScheme: {fileID: 11400000, guid: 8c8ccea2cc4a543b3b775264f4492ac7, type: 2}
+  colorScheme: {fileID: 11400000, guid: acad1199ddd73451fb7af9558a4bac88, type: 2}

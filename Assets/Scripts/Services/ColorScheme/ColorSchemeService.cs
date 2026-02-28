@@ -3,23 +3,23 @@ using System.Net.NetworkInformation;
 using UnityEngine;
 using Color = UnityEngine.Color;
 
-public class ColorSchemeManager
+public class ColorSchemeService
 {
-    private ColorScheme[] colorSchemes;
+    private readonly ColorScheme[] _colorSchemes;
 
     public static ColorScheme CurrentColorScheme { get; private set; }
 
-    public ColorSchemeManager(ColorScheme[] colorSchemes, int initialIndex)
+    public ColorSchemeService(ColorScheme[] colorSchemes, int initialIndex)
     {
-        this.colorSchemes = colorSchemes;
+        _colorSchemes = colorSchemes;
         SetColorScheme(initialIndex);
     }
 
     public void SetColorScheme(int index)
     {
-        if (index >= 0 && index < colorSchemes.Length)
+        if (index >= 0 && index < _colorSchemes.Length)
         {
-            CurrentColorScheme = colorSchemes[index];
+            CurrentColorScheme = _colorSchemes[index];
         }
         else
         {
