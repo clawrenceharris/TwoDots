@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
+/// <summary>
+/// Orchestrates the fillstep cascade: on connection complete, switches to CascadeState (input off),
+/// runs pre-gravity steps (connection clear, seed, hedgehog), then gravity and refill, then post-fill
+/// steps (anchor, lotus, gem). Repeats until no new work; then restores the previous state (input on).
+/// Subscribes to ConnectionPresenter.OnConnectionCompleted; auto-creates an instance if none exists.
+/// </summary>
 public class CascadeRunner : MonoBehaviour
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]

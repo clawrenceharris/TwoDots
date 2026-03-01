@@ -1,9 +1,16 @@
 using System.Collections.Generic;
 
+/// <summary>
+/// Post-fill producer that finds gem dots (SquareGem, RectangleGem) adjacent to recently cleared
+/// positions and enqueues a step to clear the gem and all of its neighbors (explosion). Runs after
+/// gravity/refill; e.g. when a lotus clear exposes a gem, the gem explodes in the same cycle.
+/// </summary>
 public class GemProducer : IFillStepProducer
 {
+    /// <inheritdoc />
     public FillStepPhase Phase => FillStepPhase.PostFill;
 
+    /// <inheritdoc />
     public void CollectSteps(CascadeContext context, List<FillStep> outSteps)
     {
         if (context == null || outSteps == null) return;

@@ -1,9 +1,16 @@
 using System.Collections.Generic;
 
+/// <summary>
+/// Post-fill producer that finds lotus dots with at least one same-color neighbor (cardinal)
+/// and enqueues a step to clear the lotus and all matching neighbors. Runs after gravity/refill
+/// so new alignments (e.g. after an anchor sink) are detected in the same cycle.
+/// </summary>
 public class LotusProducer : IFillStepProducer
 {
+    /// <inheritdoc />
     public FillStepPhase Phase => FillStepPhase.PostFill;
 
+    /// <inheritdoc />
     public void CollectSteps(CascadeContext context, List<FillStep> outSteps)
     {
         if (context == null || outSteps == null) return;

@@ -2,10 +2,17 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/// <summary>
+/// Pre-gravity producer that finds seed dots adjacent (cardinal) to any recently cleared position
+/// and enqueues a single step to clear them. Seeds cannot be connected; they clear as if part of
+/// the connection when next to a cleared cell, before gravity runs.
+/// </summary>
 public class SeedAdjacencyProducer : IFillStepProducer
 {
+    /// <inheritdoc />
     public FillStepPhase Phase => FillStepPhase.PreGravity;
 
+    /// <inheritdoc />
     public void CollectSteps(CascadeContext context, List<FillStep> outSteps)
     {
         if (context == null || outSteps == null) return;

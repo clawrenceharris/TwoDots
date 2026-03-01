@@ -1,10 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Pre-gravity producer that finds hedgehog dots adjacent (cardinal) to recently cleared positions
+/// and enqueues a step to clear (or trigger) them. Hedgehog activation runs before gravity; if
+/// multiple hedgehogs are adjacent, they are included in the same step so gravity waits for all.
+/// </summary>
 public class HedgehogProducer : IFillStepProducer
 {
+    /// <inheritdoc />
     public FillStepPhase Phase => FillStepPhase.PreGravity;
 
+    /// <inheritdoc />
     public void CollectSteps(CascadeContext context, List<FillStep> outSteps)
     {
         if (context == null || outSteps == null) return;
@@ -17,7 +24,7 @@ public class HedgehogProducer : IFillStepProducer
             foreach (var neighbor in neighbors)
             {
                 if (neighbor == null) continue;
-                if (!IsHedgehogType(neighbor.Dot.DotType)) continue;
+                if (neighbor.Dot.DotType != DotType.Hedgehog) continue;
                 hedgehogIds.Add(neighbor.Dot.ID);
             }
         }
@@ -30,11 +37,5 @@ public class HedgehogProducer : IFillStepProducer
             FillStepPhase.PreGravity,
             hedgehogIds,
             source: "Hedgehog"));
-    }
-
-    private static bool IsHedgehogType(DotType type)
-    {
-        // Hedgehog placeholder: map to Beetle until a dedicated DotType is introduced.
-        return type == DotType.Beetle;
     }
 }
