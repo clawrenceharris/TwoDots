@@ -24,4 +24,5 @@ public enum DotType
     Geoid,
     Monster,
     SquareGem,
+    Hedgehog,
 }

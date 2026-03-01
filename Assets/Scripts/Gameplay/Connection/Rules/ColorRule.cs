@@ -17,42 +17,31 @@ public class ColorRule : IDotConnectionRule
     public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, ConnectionModel connection, IBoardPresenter board)
     {
         var toColorable = toDot.Dot.GetComponent<ColorableModel>();
-        var fromColorable = fromDot.Dot.GetComponent<ColorableModel>();
         var connectionColor = connection.CurrentColor;
 
-        if (!CheckConnectionMatch(connectionColor, fromColorable, toColorable))
+        if (!CheckConnectionMatch(connectionColor, toColorable))
         {
             return false;
         }
-        if (!CheckDotColorMatch(fromColorable, toColorable))
-        {
-            return false;
-        }
+       
         return true;
     }
 
-    private bool CheckConnectionMatch(DotColor connectionColor, ColorableModel fromDot, ColorableModel toDot)
+    private bool CheckConnectionMatch(DotColor connectionColor, ColorableModel toDot)
     {
+        // If the connection color is blank, we can connect to any dot
         if (connectionColor.IsBlank())
         {
             return true;
         }
-        if (toDot.Equals(connectionColor) && fromDot.Equals(connectionColor))
+        // Get the real (or surrogate) color of the dot we are trying to connect to
+        var toColor = toDot.GetComparableColor(connectionColor);
+         // Match is true if the color we are trying to connect to is the same as the connection color
+        if (connectionColor == toColor)
         {
             return true;
         }
-        return false;
-    }
-
-    private bool CheckDotColorMatch(ColorableModel fromDot, ColorableModel toDot)
-    {
-        var fromColor = fromDot.GetComparableColor(toDot.Color);
-        var toColor = toDot.GetComparableColor(fromDot.Color);
-        if (fromColor == toColor)
-        {
-
-            return true;
-        }
-        return false;
+         return false;
+       
     }
 }

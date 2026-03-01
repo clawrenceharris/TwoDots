@@ -200,6 +200,7 @@ Transform:
   - {fileID: 1079918959}
   - {fileID: 811015623}
   - {fileID: 3503370}
+  - {fileID: 741445000}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &149395176
@@ -246,7 +247,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bdbe52371324548898d0460d09183b4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BoardView
-  _tileSize: 2.3
+  _tileSize: 2.5
 --- !u!1 &171902018
 GameObject:
   m_ObjectHideFlags: 0
@@ -258,7 +259,6 @@ GameObject:
   - component: {fileID: 171902022}
   - component: {fileID: 171902021}
   - component: {fileID: 171902020}
-  - component: {fileID: 171902019}
   - component: {fileID: 171902023}
   m_Layer: 0
   m_Name: SoundManager
@@ -267,18 +267,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!114 &171902019
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 171902018}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1697ad29631de43e5a385a3a79c4a4c3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!164 &171902020
 AudioReverbFilter:
   m_ObjectHideFlags: 0
@@ -741,6 +729,50 @@ Transform:
   - {fileID: 277646875}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &741444999
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 741445000}
+  - component: {fileID: 741445001}
+  m_Layer: 0
+  m_Name: LevelStateManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &741445000
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 741444999}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5849008}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &741445001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 741444999}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f13782329797a460b961be5da567ca21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelStateManager
 --- !u!1 &811015622
 GameObject:
   m_ObjectHideFlags: 0
@@ -1049,7 +1081,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18a17f766ea854e919985a2177045557, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InputRouter
-  _maxHitRadius: 0.5
+  _maxHitRadius: 1.3
 --- !u!1 &1423726733
 GameObject:
   m_ObjectHideFlags: 0

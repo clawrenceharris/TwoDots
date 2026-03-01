@@ -1,0 +1,27 @@
+using System.Collections.Generic;
+
+/// <summary>
+/// Pre-gravity producer that consumes the connection payload once per cascade and enqueues
+/// a single step to clear all dots in the completed path. Runs at VeryHigh priority so
+/// connection clears happen first; other producers (e.g. seed, hedgehog) then react to recent clears.
+/// </summary>
+public class ConnectionClearProducer : IFillStepProducer
+{
+    /// <inheritdoc />
+    public FillStepPhase Phase => FillStepPhase.PreGravity;
+
+    /// <inheritdoc />
+    public void CollectSteps(CascadeContext context, List<FillStep> outSteps)
+    {
+        if (context == null || outSteps == null) return;
+        if (!context.TryConsumeConnectionPayload(out var payload)) return;
+        if (payload == null || payload.DotIds == null || payload.DotIds.Count < 2) return;
+
+        outSteps.Add(new FillStep(
+            FillStepType.ConnectionClear,
+            FillStepPriority.VeryHigh,
+            FillStepPhase.PreGravity,
+            payload.DotIds,
+            source: "Connection"));
+    }
+}

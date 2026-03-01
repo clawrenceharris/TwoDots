@@ -13,4 +13,12 @@ public class TilePresenter : ITilePresenter
         _model = model;
         _view = view;
     }
+    public void Clear()
+    {
+        OnTileRemoved?.Invoke(this);
+    }
+    public void Spawn()
+    {
+        OnTileSpawned?.Invoke(this);
+    }
 }

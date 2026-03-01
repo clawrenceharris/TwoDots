@@ -2,12 +2,12 @@
 using UnityEngine;
 
 
-public class Game : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
 
     [SerializeField] private World[] worlds;
     private LevelManager levelManager;
-    public static Game Instance { get; private set; }
+    public static GameManager Instance { get; private set; }
     
     public World[] Worlds
     {

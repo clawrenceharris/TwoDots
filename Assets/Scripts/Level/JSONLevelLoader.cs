@@ -20,7 +20,7 @@ public class LevelLoader
     
     public static LevelData LoadLevelData(int levelNum)
     {
-        string path = Application.dataPath + "/Json/World " + (Game.Instance.WorldIndex + 1) + "/level_" + levelNum + ".json";
+        string path = Application.dataPath + "/Json/World " + (GameManager.Instance.WorldIndex + 1) + "/level_" + levelNum + ".json";
         string json = File.ReadAllText(path);
 
         var settings = new JsonSerializerSettings
