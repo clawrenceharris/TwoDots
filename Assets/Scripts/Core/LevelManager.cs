@@ -27,7 +27,7 @@ public class LevelManager : MonoBehaviour
     }
 
     private BoardPresenter _board;
-
+    private LevelStateManager _stateManager;
     private static ColorScheme theme;
     public ColorScheme Theme
     {
@@ -48,6 +48,7 @@ public class LevelManager : MonoBehaviour
         _board = FindFirstObjectByType<BoardPresenter>();
         _colorSchemeService = new ColorSchemeService(_colorSchemes, 0);
         _connectionPresenter = FindFirstObjectByType<ConnectionPresenter>();
+        _stateManager = FindFirstObjectByType<LevelStateManager>();
     }
 
 
@@ -65,7 +66,14 @@ public class LevelManager : MonoBehaviour
 
         _colorSchemeService.SetColorScheme(level.levelNum - 1);
         OnLevelSetupComplete?.Invoke(new LevelContext(level, _board));
-
+        if(IsTutorial)
+        {
+            _stateManager.Initialize(new TutorialState(_stateManager));
+        }
+        else
+        {
+            _stateManager.Initialize(new PlayingState(_stateManager));
+        }
     }
    
 
