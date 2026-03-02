@@ -2,7 +2,7 @@
 
 ## Board
 
-### BoardModel (`Gameplay/Board/BoardModel.cs`)
+### BoardModel (`Gameplay/Board/Models/BoardModel.cs`)
 
 - Implements `IBoardModel`.
 - Grid state: `DotGrid` (2D array of `Dot`), `TileGrid` (2D array of `TileModel`); `Width`, `Height`.
@@ -20,7 +20,7 @@
 - Exposes board queries (dots at position/row, neighbors, edge checks) and dot/tile lifecycle (Spawn, Remove, Move).
 - Dot presenters are registered by dot ID; tile presenters by tile ID. Clears and recreates on re-initialization.
 
-### BoardView (`Views/Board/BoardView.cs`)
+### BoardView (`Views/Board/Views/BoardView.cs`)
 
 - Creates and holds `TileView` and `DotView` instances; uses `BoardView.TileSize` for dot placement.
 - **CreateTileView(tile)**, **CreateDotView(dot)**: Instantiate or obtain from pools and position from grid.
@@ -31,7 +31,7 @@
 
 ## Dots
 
-### Dot entity (`Enitities/Dot/Dot.cs`)
+### Dot entity (`Gameplay/Dots/Enitities/Base/Dot.cs`)
 
 - Implements `IBoardEntity` (`ID`, `GridPosition`).
 - **Component pattern**: `Dictionary<Type, IModel>` for attached models.

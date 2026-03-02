@@ -39,6 +39,18 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
 
     public static float Offset { get; private set; } = 2.5f;
 
+    public readonly struct DotDrop
+    {
+        public IDotPresenter Presenter { get; }
+        public int TargetRow { get; }
+
+        public DotDrop(IDotPresenter presenter, int targetRow)
+        {
+            Presenter = presenter;
+            TargetRow = targetRow;
+        }
+    }
+
     #region Board Lifecycle
     private void Awake()
     {
@@ -180,6 +192,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     /// List of all playable dots presenters on the board.
     /// </returns>
     public List<IDotPresenter> GetDotsOnBoard() => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID]).ToList();
+    public List<T> GetDotsOnBoard<T>() where T : DotPresenter => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID].GetPresenter<T>()).ToList();
 
     public List<T> GetDotNeighbors<T>(int x, int y, bool includesDiagonals = true) where T : class
     {
@@ -188,13 +201,12 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         {
             for (int j = -1; j <= 1; j++)
             {
-                if (includesDiagonals || (i == 0 && j == 0))
+                if (i == 0 && j == 0) continue;
+                if (!includesDiagonals && i != 0 && j != 0) continue;
+                var neighbor = GetDotAt<T>(x + i, y + j);
+                if (neighbor != null)
                 {
-                    var neighbor = GetDotAt<T>(x + i, y + j);
-                    if (neighbor != null)
-                    {
-                        neighbors.Add(neighbor as T);
-                    }
+                    neighbors.Add(neighbor as T);
                 }
             }
         }
@@ -256,6 +268,26 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         }
         return p; ;
 
+    }
+
+    public List<IDotPresenter> CollectPresenters(IEnumerable<string> dotIds)
+    {
+        var presenters = new List<IDotPresenter>();
+        if (dotIds == null) return presenters;
+        var seen = new HashSet<string>();
+
+        foreach (var id in dotIds)
+        {
+            if (!seen.Add(id)) continue;
+            var presenter = GetDot(id);
+            if (presenter != null)
+                presenters.Add(presenter);
+        }
+
+        return presenters
+            .OrderBy(p => p.Dot.GridPosition.y)
+            .ThenBy(p => p.Dot.GridPosition.x)
+            .ToList();
     }
     public bool DotExists(string id)
     {
@@ -498,39 +530,30 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     }
      public bool FillBoard(DotsObject[] dotsToSpawn = null)
     {
-
-        bool dotsDropped = false;
-        for (int col = 0; col < Width; col++)
+        var drops = CollectRefillDrops(dotsToSpawn);
+        foreach (var drop in drops)
         {
-            for (int row = Height - 1; row >= 0; row--)
-            {
-                ITilePresenter tile = GetTileAt(col, row);
-                if (tile != null && tile.Model.TileType.IsBlockable() )
-                {
-                    break;
-                }
-                if (GetDotAt(col, row) == null){
-                    if(tile == null || !tile.Model.TileType.IsBoardMechanicTile())
-                    {
-                        dotsDropped = true;
-
-                        IDotPresenter dot = InitRandomDot(col, row, dotsToSpawn ?? _dotsToSpawn);
-                        dot.PrepareForDrop();
-                        dot.Drop(row);
-
-                    }
-                }
-                
-            }
+            if (drop.Presenter == null) continue;
+            drop.Presenter.Drop(drop.TargetRow);
         }
-
-
-        return dotsDropped;
+        return drops.Count > 0;
     }
 
 
     public bool CollapseColumn()
     {
+        var drops = CollectGravityDrops();
+        foreach (var drop in drops)
+        {
+            if (drop.Presenter == null) continue;
+            drop.Presenter.Drop(drop.TargetRow);
+        }
+        return drops.Count > 0;
+    }
+    public bool CollapseColumn(out List<DotDrop> drops)
+    {
+        drops = new List<DotDrop>();
+
         bool dotsDropped = false;
         for (int col = 0; col < Width; col++)
         {
@@ -548,13 +571,11 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
                     if(tile == null || !tile.Model.TileType.IsBoardMechanicTile()){
                         for (int k = row + 1; k < Height; k++)
                         {
-                            if (_boardModel.DotGrid[col, k] != null)
+                            IDotPresenter dot = GetDotAt(col, k);
+                            if (dot != null)
                             {
-                                IDotPresenter dot = GetDotAt(col, k);
-
-                                _boardModel.DotGrid[col, row] = dot.Dot;
-                                _boardModel.DotGrid[col, k] = null;
-                                dot.Drop(row);
+                                _boardModel.MoveDot(dot.Dot.ID, new Vector2Int(col, row));
+                                drops.Add(new DotDrop(dot, row));
                                 dotsDropped = true;
                                 break;
                             }
@@ -571,6 +592,48 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
 
         }
         return dotsDropped;
+    }
+    public List<DotDrop> CollectGravityDrops()
+    {
+        var allDrops = new List<DotDrop>();
+        bool dotsDropped;
+        do
+        {
+            dotsDropped = CollapseColumn(out var drops);
+            allDrops.AddRange(drops);
+
+
+
+        } while (dotsDropped);
+        
+
+        return allDrops;
+    }
+
+    public List<DotDrop> CollectRefillDrops(DotsObject[] dotsToSpawn = null)
+    {
+        var drops = new List<DotDrop>();
+        for (int col = 0; col < Width; col++)
+        {
+            for (int row = Height - 1; row >= 0; row--)
+            {
+                ITilePresenter tile = GetTileAt(col, row);
+                if (tile != null && tile.Model.TileType.IsBlockable())
+                {
+                    break;
+                }
+                if (GetDotAt(col, row) == null)
+                {
+                    if (tile == null || !tile.Model.TileType.IsBoardMechanicTile())
+                    {
+                        IDotPresenter dot = InitRandomDot(col, row, dotsToSpawn ?? _dotsToSpawn);
+                        drops.Add(new DotDrop(dot, row));
+                    }
+                }
+            }
+        }
+
+        return drops;
     }
 
     /// <summary>

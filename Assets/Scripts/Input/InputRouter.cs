@@ -99,7 +99,6 @@ public class InputRouter : MonoBehaviour
         OnDotSelectionEnded?.Invoke();
         if (!TryGetPointerHit(out IDotPresenter dot)) return;
         OnDotDeselected?.Invoke(dot);
-        Debug.Log("Dot deselected: " + dot.View.name);
     }
 
     private void EmitPointerDragPosition()

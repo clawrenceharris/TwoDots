@@ -1,13 +1,14 @@
 
+using DG.Tweening;
 using UnityEngine;
 
 
-public class Game : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
 
     [SerializeField] private World[] worlds;
     private LevelManager levelManager;
-    public static Game Instance { get; private set; }
+    public static GameManager Instance { get; private set; }
     
     public World[] Worlds
     {
@@ -21,7 +22,7 @@ public class Game : MonoBehaviour
     public int WorldIndex { get { return worldIndex; }}
     public static int TotalAmountOfLevels { get; private set; }
     [SerializeField]private TextAsset startingLevel;
-    
+
     private void Awake()
     {
 
@@ -37,9 +38,11 @@ public class Game : MonoBehaviour
             Destroy(gameObject);
         }
         SetTotalAmountOfLevels();
+        DOTween.SetTweensCapacity(500, 50);
         levelManager = FindFirstObjectByType<LevelManager>();
         LevelData level = LevelLoader.LoadLevelData(startingLevel);
         levelManager.StartLevel(level);
+        
     }
 
     private void SetTotalAmountOfLevels()

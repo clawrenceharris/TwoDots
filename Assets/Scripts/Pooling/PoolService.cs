@@ -5,7 +5,6 @@ public class PoolService : MonoBehaviour
 {
     public static PoolService Instance { get; private set; }
     private readonly Dictionary<Type, Pool> _pools = new();
-    private bool _poolsRegistered = false;
     private void Awake()
     {
         if (Instance == null)
@@ -24,7 +23,6 @@ public class PoolService : MonoBehaviour
         LinePool linePool = FindFirstObjectByType<LinePool>();
         linePool.transform.SetParent(transform);
         _pools.TryAdd(typeof(LinePool), linePool);
-        _poolsRegistered = true;
     }
 
     public void FillPool<T>(int size) where T : Pool
@@ -41,7 +39,7 @@ public class PoolService : MonoBehaviour
             Debug.LogError($"Pool {typeof(T)} not found");
             return null;
         }
-        return pool?.Get<U>() ?? null;
+        return pool.Get<U>();
     }
     public void ReturnToPool<T>(MonoBehaviour item) where T : Pool
     {

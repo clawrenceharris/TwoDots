@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -16,9 +17,9 @@ public class ConnectionPresenter : MonoBehaviour
     public static event Action<IDotPresenter> OnDotSelected;
     public static event Action<IDotPresenter> OnDotDeselected;
     public static event Action<IDotPresenter> OnDotConnected;
-    public static event Action<ConnectionCompletedPayload> OnConnectionCompleted;
-
-
+    public static event Action<ConnectionResult> OnConnectionCompleted;
+    private IBoardPresenter _board;
+   
     private void Start()
     {
         InputRouter.OnPointerDragged += OnPointerDragged;
@@ -29,9 +30,12 @@ public class ConnectionPresenter : MonoBehaviour
     public void Initialize(IDotConnectionRule rule, IBoardPresenter board)
     {
         _model = new ConnectionModel(board, rule);
+        _board = board;
         _model.OnConnectionCompleted += HandleConnectionCompleted;
         _model.OnPathChanged += HandlePathChanged;
         _model.OnColorChanged += OnConnectionColorChanged;
+        _model.OnSquareActivated += HandleSquareActivated;
+        _model.OnSquareDeactivated += HandleSquareDeactivated;
     }
     private void HandlePathChanged()
     {
@@ -49,7 +53,29 @@ public class ConnectionPresenter : MonoBehaviour
         _model.OnColorChanged -= OnConnectionColorChanged;
         _model.OnConnectionCompleted -= HandleConnectionCompleted;
         _model.OnPathChanged -= HandlePathChanged;
+        _model.OnSquareActivated -= HandleSquareActivated;
+        _model.OnSquareDeactivated -= HandleSquareDeactivated;
     }
+    private void HandleSquareDeactivated(IReadOnlyList<string> dotsToDeactivate)
+    {
+        foreach (var dotId in dotsToDeactivate)
+        {
+            var dot = _board.GetDot(dotId);
+            if (dot.TryGetPresenter(out ConnectableDotPresenter presenter)) {
+                presenter.Deselect();
+            }
+        }
+    }
+    private void HandleSquareActivated(IReadOnlyList<string> dotsToActivate)
+    {
+        foreach (var dotId in dotsToActivate)
+        {
+            if(_board.GetDot(dotId).TryGetPresenter(out ConnectableDotPresenter presenter)){
+                presenter.Select(new ConnectionResult(_model));
+            }
+        }
+    }
+
     private void OnConnectionColorChanged(DotColor color)
     {
         OnColorChanged?.Invoke(color);
@@ -181,7 +207,7 @@ public class ConnectionPresenter : MonoBehaviour
     }
     
 
-    private void HandleConnectionCompleted(ConnectionCompletedPayload payload)
+    private void HandleConnectionCompleted(ConnectionResult payload)
     {
 
         OnConnectionCompleted?.Invoke(payload);
