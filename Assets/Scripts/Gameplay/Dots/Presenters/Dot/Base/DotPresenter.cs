@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Dots.Utilities;
 using UnityEngine;
+
 /// <summary>
 /// Base class for all dot presenters. Handles dropping, spawning, 
 /// and clearing and other dot management as it relates to the dot's presentation on the board.
@@ -60,8 +61,8 @@ public class DotPresenter : IDotPresenter
     }
     public void PrepareForDrop()
     {
-        var worldPos = GridUtility.GridToWorld(_dot.GridPosition);
-        _view.transform.position = new Vector3(worldPos.x, (Camera.main.orthographicSize * 2 )+ BoardView.TileSize, 0);
+        var startPos = GridUtility.GridToWorld(_dot.GridPosition);
+        _view.transform.position = new Vector3(startPos.x, (Camera.main.orthographicSize * 2 )+ startPos.y, 0);
     }
 
 

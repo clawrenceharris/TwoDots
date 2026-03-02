@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// Pre-gravity producer that consumes the connection payload once per cascade and enqueues
@@ -15,13 +16,14 @@ public class ConnectionClearProducer : IFillStepProducer
     {
         if (context == null || outSteps == null) return;
         if (!context.TryConsumeConnectionPayload(out var payload)) return;
-        if (payload == null || payload.DotIds == null || payload.DotIds.Count < 2) return;
-
+        if (payload == null || payload.DotIdsInPath == null || payload.DotIdsInPath.Count < 2) return;
+        
         outSteps.Add(new FillStep(
-            FillStepType.ConnectionClear,
-            FillStepPriority.VeryHigh,
-            FillStepPhase.PreGravity,
-            payload.DotIds,
-            source: "Connection"));
-    }
+                FillStepType.ConnectionClear,
+                FillStepPriority.VeryHigh,
+                FillStepPhase.PreGravity,
+                payload.AllDotsToHit,
+                source: "Connection"));
+        }
+    
 }

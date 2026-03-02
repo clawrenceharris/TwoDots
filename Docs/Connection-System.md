@@ -11,14 +11,29 @@ The connection system handles drag-to-connect gameplay: the player draws a path 
 
 ## Components
 
-### ConnectionModel (`Gameplay/Connection/Model/ConnectionModel.cs`)
+### ConnectionModel (`Gameplay/Connection/Models/ConnectionModel.cs`)
 
 - Implements `IConnectionModel`.
 - Holds: `Path` (read-only list of `IDotPresenter`), `IsSessionActive`, `CurrentColor`, `IsSquare`.
 - Methods: `Begin(dot)`, `TryAppend(dot)`, `TryBacktrack(dot)`, `End()`, `Cancel()`, `UpdateColor()`.
-- Events: `OnPathChanged`, `OnConnectionCompleted`, `OnColorChanged`, `OnDotAddedToPath`, `OnDotRemovedFromPath`.
+- Events: `OnPathChanged`, `OnConnectionCompleted`, `OnColorChanged`, `OnDotAddedToPath`, `OnDotRemovedFromPath`, `OnSquareActivated`, `OnSquareDeactivated`.
 - Uses an `IDotConnectionRule` and `IBoardPresenter` for validation and board queries.
 - **UpdateColor** derives the connection color from the path (e.g. first dot’s color or blank).
+
+### Square (closed-cycle) connection logic
+
+A **square** connection is activated when the player **revisits a dot that is already in the path** (cycle-close). When this happens, `ConnectionModel` flips `IsSquare = true` and computes an expanded “hit/clear” set:
+
+- **Dots in the path**: the connected dots (existing `_pathIds`) are always included.
+- **Dots outside the path**: the model scans the full board and includes **any colorable dot** whose comparable color matches the connection’s `CurrentColor`.
+  - If the connection color is **blank**, the square can include **all** eligible dots (per the model’s rules).
+  - Blank-colored dots are excluded when the connection color is not blank.
+
+This expanded set is exposed via:
+
+- **`DotsToHitFromSquare`**: the additional dot IDs included by the square logic (outside the normal connection path).
+- **`OnSquareActivated(dotsToActivate)`**: raised when the cycle is closed; used for square selection feedback.
+- **`OnSquareDeactivated(dotsToDeactivate)`**: raised when the player backtracks out of the closed cycle; used to remove square feedback from dots that are no longer “hit” by the square.
 
 ### ConnectionPresenter (`Gameplay/Connection/Presenter/ConnectionPresenter.cs`)
 
@@ -37,11 +52,15 @@ The connection system handles drag-to-connect gameplay: the player draws a path 
   - **AdjacencyRule**: Only allows cardinal neighbours (no diagonals).
   - **ColorRule**: Ensures dots match the connection color and each other (uses `ColorableModel` / comparable color).
 
-### ConnectionCompletedPayload (`Gameplay/Connection/ConnectionCompletedPayload.cs`)
+### ConnectionResult (`Gameplay/Connection/ConnectionResult.cs`)
 
-- Immutable result of a connection session when the pointer is released.
-- Properties: `DotIds` (ordered), `IsCycle` (path closed), `SegmentCount`.
-- Consumed by future clear/score/objective logic.
+- Result of a connection session when the pointer is released.
+- Properties:
+  - `DotIds`: ordered dot IDs in the path.
+  - `IsSquare`: whether the path was closed (cycle).
+  - `ConnectionColor`: the final resolved connection color.
+  - `DotsToHitFromSquare`: dot IDs selected by square logic (outside the path).
+  - `AllDotsToHit`: union of `DotIds` and `DotsToHitFromSquare` (deduped). This is the typical set you’d pass into clear/cascade logic for a square.
 
 ### ConnectorLineView (`Views/Connection/ConnectorLineView.cs`)
 

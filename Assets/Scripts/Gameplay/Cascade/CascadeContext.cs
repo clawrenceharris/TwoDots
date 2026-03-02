@@ -16,7 +16,7 @@ public class CascadeContext
     public int ChainIndex { get; set; }
 
     /// <summary>Payload from the connection that started this cascade; may be null.</summary>
-    public ConnectionCompletedPayload ConnectionPayload { get; private set; }
+    public ConnectionResult Connection { get; private set; }
     /// <summary>True after TryConsumeConnectionPayload has been called successfully once.</summary>
     public bool ConnectionPayloadConsumed { get; private set; }
 
@@ -32,17 +32,17 @@ public class CascadeContext
     private readonly List<Vector2Int> _recentClearedPositions = new();
 
     /// <summary>Creates context for a cascade run with the given board and optional connection payload.</summary>
-    public CascadeContext(IBoardPresenter board, ConnectionCompletedPayload payload, int turnIndex = 0)
+    public CascadeContext(IBoardPresenter board, ConnectionResult payload, int turnIndex = 0)
     {
         Board = board;
-        ConnectionPayload = payload;
+        Connection = payload;
         TurnIndex = turnIndex;
     }
 
     /// <summary>Returns the connection payload and marks it consumed; returns false if already consumed or null.</summary>
-    public bool TryConsumeConnectionPayload(out ConnectionCompletedPayload payload)
+    public bool TryConsumeConnectionPayload(out ConnectionResult payload)
     {
-        payload = ConnectionPayload;
+        payload = Connection;
         if (payload == null || ConnectionPayloadConsumed) return false;
         ConnectionPayloadConsumed = true;
         return true;

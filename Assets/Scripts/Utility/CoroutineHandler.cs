@@ -1,9 +1,7 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 public class CoroutineHandler : MonoBehaviour
 {
     private static CoroutineHandler instance;
@@ -17,12 +15,8 @@ public class CoroutineHandler : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject);
         }
-        else
-        {
-            Destroy(gameObject);
-        }
+       
     }
 
  

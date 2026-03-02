@@ -44,7 +44,7 @@ public interface IBoardPresenter
 
     // Grid queries
     List<IDotPresenter> GetDotsOnBoard();
-
+    List<T> GetDotsOnBoard<T>() where T : DotPresenter;
     bool IsValidPosition(Vector2Int position);
 
     IDotPresenter SpawnDot(Dot dot);

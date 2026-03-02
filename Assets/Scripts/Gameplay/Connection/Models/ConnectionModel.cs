@@ -6,32 +6,46 @@ using UnityEngine;
 public class ConnectionModel : IConnectionModel
 {
     private readonly List<IDotPresenter> _path = new();
-    private readonly HashSet<string> _pathIds = new();
 
-    /// <summary>
-    /// True if the connection is closed by revisiting an earlier dot.
-    /// </summary>
+    /// <summary> Set of unique dot IDs in the path. </summary>
+    private readonly HashSet<string> _dotIdsInPath = new();
+
+    /// <summary>The dot IDs to hit from the resulting square connection.</summary>
+    private HashSet<string> _dotsToHitFromSquare = new();
+    /// <summary> The dot IDs to hit in by the connection from the square.</summary>
+    public IReadOnlyList<string> DotsToHitFromSquare => _dotsToHitFromSquare.ToList();
+
+    /// <summary> True if the connection is closed by revisiting an earlier dot.</summary>
     private bool _isSquare;
 
     private bool _isSessionActive;
     public bool IsSquare => _isSquare;
 
     public bool IsSessionActive => _isSessionActive;
-    public event Action OnPathChanged;
     private readonly IBoardPresenter _board;
     private readonly IDotConnectionRule _rule;
-    public IReadOnlyList<IDotPresenter> Path => _path;
-    public event Action<DotColor> OnColorChanged;
 
+    public event Action<DotColor> OnColorChanged;
     public event Action<string> OnDotRemovedFromPath;
     public event Action<string> OnDotAddedToPath;
-    public event Action<ConnectionCompletedPayload> OnConnectionCompleted;
+    public event Action OnPathChanged;
+    public event Action<IReadOnlyList<string>> OnSquareActivated;
+    public event Action<IReadOnlyList<string>> OnSquareDeactivated;
+    public event Action<ConnectionResult> OnConnectionCompleted;
+    public IReadOnlyList<IDotPresenter> Path => _path;
+    public IReadOnlyList<string> DotIdsInPath => _dotIdsInPath.ToList();
+
     private DotColor _currentColor;
     public DotColor CurrentColor => _currentColor;
+
+
+   
+
     public ConnectionModel(IBoardPresenter board, IDotConnectionRule rule)
     {
         _path = new List<IDotPresenter>();
-        _pathIds = new HashSet<string>();
+        _dotIdsInPath = new HashSet<string>();
+        _dotsToHitFromSquare = new HashSet<string>();
         _isSquare = false;
         _isSessionActive = false;
         _board = board;
@@ -45,7 +59,7 @@ public class ConnectionModel : IConnectionModel
         if (dot == null) return;
         Cancel();
         _path.Add(dot);
-        _pathIds.Add(dot.Dot.ID);
+        _dotIdsInPath.Add(dot.Dot.ID);
         _isSquare = false;
         _isSessionActive = true;
 
@@ -53,20 +67,6 @@ public class ConnectionModel : IConnectionModel
         OnDotAddedToPath?.Invoke(dot.Dot.ID);
     }
 
-    private bool TryBacktrackAfterSquare(IDotPresenter dot)
-    {
-        if (!_isSessionActive || dot == null || _path.Count == 0) return false;
-        IDotPresenter head = _path[^1]; // last dot in the path
-        if (head.Dot.ID == dot.Dot.ID) return false; // same dot, no-op
-        if (_path.Count >= 2 && _path[^2].Dot.ID == dot.Dot.ID)
-        {
-            _path.RemoveAt(_path.Count - 1);
-            _isSquare = false;
-            OnPathChanged?.Invoke();
-            return true;
-        }
-        return false;
-    }
     public bool TryBacktrack(IDotPresenter dot)
     {
         if (!_isSessionActive || dot == null || _path.Count == 0) return false;
@@ -75,12 +75,13 @@ public class ConnectionModel : IConnectionModel
         if (head.Dot.ID == dot.Dot.ID) return false; // same dot, no-op
         if (_path.Count >= 2 && _path[^2].Dot.ID == dot.Dot.ID)
         {
-            // only remove the head if the cycle is not closed: a closed cycle means the head is still in the connection
             if (_isSquare)
             {
-                return TryBacktrackAfterSquare(dot);
+                // if the connection is a square, backtrack needs to deactivate the it
+                HandleSquareDeactivated();
+                return true;
             }
-            _pathIds.Remove(head.Dot.ID);
+            _dotIdsInPath.Remove(head.Dot.ID);
             _path.RemoveAt(_path.Count - 1);
             _isSquare = false;
             OnPathChanged?.Invoke();
@@ -104,27 +105,75 @@ public class ConnectionModel : IConnectionModel
         }
 
         // Cycle-close: revisiting an earlier dot (not the previous)
-        if (_pathIds.Contains(dot.Dot.ID))
+        if (_dotIdsInPath.Contains(dot.Dot.ID))
         {
-            if (!_rule.CanConnect(head, dot, this, _board)) return false;
-            _path.Add(dot);
-            _isSquare = true;
+            if (!_rule.CanConnect(head, dot, new ConnectionResult(this), _board)) return false;
+            HandleSquareActivated(dot);
 
-            OnDotAddedToPath?.Invoke(dot.Dot.ID);
-            OnPathChanged?.Invoke();
+
             return true;
         }
         
         // New dot - append if rule allows
-        if (!_rule.CanConnect(head, dot, this, _board)) return false;
+        if (!_rule.CanConnect(head, dot, new ConnectionResult(this), _board)) return false;
         _path.Add(dot);
-        _pathIds.Add(dot.Dot.ID);
+        _dotIdsInPath.Add(dot.Dot.ID);
 
         OnDotAddedToPath?.Invoke(dot.Dot.ID);
         OnPathChanged?.Invoke();
         return true;
     }
 
+
+    private void HandleSquareActivated(IDotPresenter dot)
+    {
+        _path.Add(dot);
+        _isSquare = true;
+        var dotsToActivate = new List<string>(_dotIdsInPath);
+
+        var dots = _board.GetDotsOnBoard();
+        foreach (var d in dots)
+        {
+            if (dotsToActivate.Contains(d.Dot.ID)) continue;
+            if (!d.Dot.DotType.IsColorable()) continue;
+
+            // if the connection color is blank, we can clear any dot
+            if (_currentColor.IsBlank())
+            {
+                dotsToActivate.Add(d.Dot.ID);
+                continue;
+            }
+
+            if (!d.Dot.TryGetModel<ColorableModel>(out var colorableDot)) continue;
+            // We know the connection color is not blank at this point so we can exclude blank dots
+            if (colorableDot.Color.IsBlank()) continue;
+
+            if (colorableDot.GetComparableColor(_currentColor) == _currentColor)
+            {
+
+                dotsToActivate.Add(d.Dot.ID);
+            }
+
+
+        }
+        _dotsToHitFromSquare = new HashSet<string>(dotsToActivate);
+        OnDotAddedToPath?.Invoke(dot.Dot.ID);
+        OnPathChanged?.Invoke();
+        OnSquareActivated?.Invoke(dotsToActivate);
+    }
+    private void HandleSquareDeactivated()
+    {
+        _isSquare = false;
+        _path.RemoveAt(_path.Count - 1);
+
+
+        // All the dots that would have been hit from the square excluding the dots that are still in the path
+        List<string> dotsToDeactivate = new(_dotsToHitFromSquare.Where(id => !_dotIdsInPath.Contains(id)));
+        _dotsToHitFromSquare.Clear();
+
+        OnPathChanged?.Invoke();
+        OnSquareDeactivated?.Invoke(dotsToDeactivate);
+    }
 
     private DotColor GetConnectionColor()
     {
@@ -135,7 +184,7 @@ public class ConnectionModel : IConnectionModel
         {
             // skip if not a color dot
             if (!d.Dot.DotType.IsColorable()) continue;
-            if (d.Dot.TryGetComponent(out ColorableModel colorable))
+            if (d.Dot.TryGetModel(out ColorableModel colorable))
             {
                 // skip if the dot's color is blank. We only care about dots with a definitive color
                 if (colorable.Color.IsBlank()) continue;
@@ -166,8 +215,7 @@ public class ConnectionModel : IConnectionModel
         for (int i = 0; i < _path.Count; i++)
             dotIds.Add(_path[i].Dot.ID);
 
-        int segmentCount = _path.Count == 0 ? 0 : (_isSquare ? _path.Count : _path.Count - 1);
-        var payload = new ConnectionCompletedPayload(dotIds, _isSquare, segmentCount);
+        var payload = new ConnectionResult(this);
         OnConnectionCompleted?.Invoke(payload);
         Cancel();
     }
@@ -175,7 +223,8 @@ public class ConnectionModel : IConnectionModel
     public void Cancel()
     {
         _path.Clear();
-        _pathIds.Clear();
+        _dotIdsInPath.Clear();
+        _dotsToHitFromSquare.Clear();
         _isSquare = false;
         _isSessionActive = false;
         _currentColor = DotColor.Blank;

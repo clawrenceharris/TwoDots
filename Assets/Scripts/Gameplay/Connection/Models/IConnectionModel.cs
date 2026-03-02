@@ -3,9 +3,14 @@ using System.Collections.Generic;
 
 public interface IConnectionModel
 {
+    /// <summary>
+    /// The dot IDs to hit in by the connection from the square.
+    /// </summary>
+    IReadOnlyList<string> DotsToHitFromSquare { get; }
     /// <summary>Current ordered path of dots in this session (empty if no active session).</summary>
     IReadOnlyList<IDotPresenter> Path { get; }
-
+    /// <summary> Set of unique dot IDs in the path. </summary>
+    IReadOnlyList<string> DotIdsInPath { get; }
     /// <summary>True when a session is active (between Begin and End/Cancel).</summary>
     bool IsSessionActive { get; }
 
@@ -13,7 +18,7 @@ public interface IConnectionModel
     event Action OnPathChanged;
 
     /// <summary>Raised when the session ends with pointer up; payload describes the completed path.</summary>
-    event Action<ConnectionCompletedPayload> OnConnectionCompleted;
+    event Action<ConnectionResult> OnConnectionCompleted;
 
     /// <summary>Raised when the color changes.</summary>
     event Action<DotColor> OnColorChanged;
@@ -23,13 +28,14 @@ public interface IConnectionModel
 
     /// <summary>Raised when a dot is removed from the path.</summary>
     event Action<string> OnDotRemovedFromPath;
-    
+    event Action<IReadOnlyList<string>> OnSquareActivated;
+    event Action<IReadOnlyList<string>> OnSquareDeactivated;
     /// <summary>Current color of the connection.</summary>
     DotColor CurrentColor { get; }
 
     /// <summary>True if the connection is closed by revisiting an earlier dot.</summary>
     bool IsSquare { get; }
-
+    
     /// <summary>Start a session with the given dot as the first node.</summary>
     void Begin(IDotPresenter dot);
 

@@ -192,6 +192,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     /// List of all playable dots presenters on the board.
     /// </returns>
     public List<IDotPresenter> GetDotsOnBoard() => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID]).ToList();
+    public List<T> GetDotsOnBoard<T>() where T : DotPresenter => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID].GetPresenter<T>()).ToList();
 
     public List<T> GetDotNeighbors<T>(int x, int y, bool includesDiagonals = true) where T : class
     {

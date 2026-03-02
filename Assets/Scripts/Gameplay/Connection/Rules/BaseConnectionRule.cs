@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// </summary>
 public class BaseConnectionRule : IDotConnectionRule
 {
-    public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, ConnectionModel connection, IBoardPresenter board)
+    public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, ConnectionResult connection, IBoardPresenter board)
     {
         var defaultRules = new List<IDotConnectionRule>
         {

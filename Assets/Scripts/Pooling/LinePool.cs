@@ -32,10 +32,8 @@ public class LinePool : Pool
         }
         ConnectorLineView line = _linePool.Dequeue();
         if(line == null) {
-            Debug.LogWarning("Line is null!");
             return null;
         }
-        Debug.Log("Line: " + line);
         line.gameObject.SetActive(true);
         return line as T;
 

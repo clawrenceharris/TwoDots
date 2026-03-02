@@ -25,12 +25,12 @@ public class Dot : IBoardEntity
 
    
 
-    public T AddComponent<T>(T component) where T : class,IModel
+    public T AddModel<T>(T component) where T : class,IModel
     {
         _components.Add(typeof(T), component);
         return component;
     }
-    public T GetComponent<T>() where T : class, IModel
+    public T GetModel<T>() where T : class, IModel
     {
         // First, try to find an exact type match
         if (_components.TryGetValue(typeof(T), out IModel component))
@@ -50,12 +50,12 @@ public class Dot : IBoardEntity
         }
         throw new ArgumentException($"Component {typeof(T)} not found for dot");
     }
-    public bool TryGetComponent<T>(out T component) where T : class,IModel
+    public bool TryGetModel<T>(out T component) where T : class,IModel
     {
-        component = GetComponent<T>();
+        component = GetModel<T>();
         return component != null;
     }
-    public void RemoveComponent<T>() where T : class, IModel
+    public void RemoveModel<T>() where T : class, IModel
     {
         _components.Remove(typeof(T));
     }
