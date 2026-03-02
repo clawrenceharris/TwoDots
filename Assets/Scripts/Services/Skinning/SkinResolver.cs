@@ -17,19 +17,19 @@ public class SkinResolver : ISkinResolver
 
     private static Color ResolveDetailColor(Dot dot)
     {
-         if (dot.TryGetComponent(out ColorableModel colorable))
+         if (dot.TryGetModel(out ColorableModel colorable))
             return ResolveDotColor(colorable.Color);
         return ColorSchemeService.GetDotColorScheme(dot.DotType).detailColor;
     }
     private static Color ResolveAccentColor(Dot dot)
     {
-         if (dot.TryGetComponent(out ColorableModel colorable))
+         if (dot.TryGetModel(out ColorableModel colorable))
             return ResolveDotColor(colorable.Color);
         return ColorSchemeService.GetDotColorScheme(dot.DotType).accentColor;
     }
     private static Color ResolveBaseColor(Dot dot)
     {
-        if (dot.TryGetComponent(out ColorableModel colorable))
+        if (dot.TryGetModel(out ColorableModel colorable))
         {
             return ResolveDotColor(colorable.Color);
         }

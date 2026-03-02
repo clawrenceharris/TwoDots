@@ -1,23 +1,32 @@
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
-/// Result of a connection session when the pointer is released.
+/// Result of a connection session
 /// </summary>
-public class ConnectionCompletedPayload
+public class ConnectionContext
 {
-    /// <summary>Ordered dot IDs in the path (including cycle-close back to start if applicable).</summary>
+    /// <summary>Ordered dot IDs in the path.</summary>
     public IReadOnlyList<string> DotIds { get; }
 
     /// <summary>True if the path was closed by revisiting an earlier dot.</summary>
-    public bool IsCycle { get; }
+    public bool IsSquare { get; }
+
+    /// <summary>The ID's of every dot to hit from the resulting connection. (e.g. all dots) </summary>
+    public IReadOnlyList<string> AllDotsToHit { get; }
 
     /// <summary>Number of segments (edges) in the path.</summary>
-    public int SegmentCount { get; }
+    public DotColor ConnectionColor { get; }
 
-    public ConnectionCompletedPayload(IReadOnlyList<string> dotIds, bool isCycle, int segmentCount)
+    /// <summary>The dot IDs to hit from the resulting square connection. (e.g. all dots or all dots of a distinct color)</summary>
+    public IReadOnlyList<string> DotsToHitFromSquare { get; }
+
+    public ConnectionContext(IConnectionModel connection)
     {
-        DotIds = dotIds;
-        IsCycle = isCycle;
-        SegmentCount = segmentCount;
+        DotIds = connection.Path.Select(p => p.Dot.ID).ToList();
+        IsSquare = connection.IsSquare;
+        ConnectionColor = connection.CurrentColor;
+        DotsToHitFromSquare = connection.DotsToHitFromSquare;
+        AllDotsToHit = DotsToHitFromSquare.Concat(DotIds).Distinct().ToList();
     }
 }

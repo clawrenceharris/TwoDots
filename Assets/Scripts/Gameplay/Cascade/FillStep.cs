@@ -14,8 +14,10 @@ public class FillStep
     public FillStepPriority Priority { get; }
     /// <summary>PreGravity (before gravity/refill) or PostFill (after).</summary>
     public FillStepPhase Phase { get; }
-    /// <summary>Dot IDs to clear when this step is executed.</summary>
+    /// <summary>Dot IDs to hit when this step is executed.</summary>
     public IReadOnlyList<string> DotIds { get; }
+    /// <summary> Tile IDs to hit when this step is executed.</summary>
+    public IReadOnlyList<string> TileIds { get; }
     /// <summary>Optional grid positions; may be used by producers for spatial logic.</summary>
     public IReadOnlyList<Vector2Int> Positions { get; }
     /// <summary>Label for debugging (e.g. "Connection", "SeedAdjacency").</summary>
@@ -29,12 +31,14 @@ public class FillStep
         FillStepPriority priority,
         FillStepPhase phase,
         IEnumerable<string> dotIds = null,
+        IEnumerable<string> tileIds = null,
         IEnumerable<Vector2Int> positions = null,
         string source = null)
     {
         Type = type;
         Priority = priority;
         Phase = phase;
+        TileIds = tileIds != null ? new List<string>(tileIds) : new List<string>();
         DotIds = dotIds != null ? new List<string>(dotIds) : new List<string>();
         Positions = positions != null ? new List<Vector2Int>(positions) : new List<Vector2Int>();
         Source = source ?? string.Empty;

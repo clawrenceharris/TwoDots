@@ -23,7 +23,7 @@ public class DotFactory
                     var validColors = colors ?? levelColors;
                     var color = validColors[Random.Range(0, validColors.Length)];
                     var dot = new Dot(DotType.Normal, new Vector2Int(data.Col, data.Row));
-                    var colorable = dot.AddComponent(new ColorableModel(dot));
+                    var colorable = dot.AddModel(new ColorableModel(dot));
                     colorable.Color = LevelLoader.FromJsonColor(color);
                   
                     return dot;
@@ -32,7 +32,7 @@ public class DotFactory
                 case DotType.Blank:
                 {
                     var dot = new Dot(DotType.Blank, new Vector2Int(data.Col, data.Row));
-                    dot.AddComponent(new BlankColorableModel(dot));
+                    dot.AddModel(new BlankColorableModel(dot));
                     return dot;
                 }
             default: throw new ArgumentException("Invalid dot type: " + type);

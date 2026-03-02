@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// </summary>
 public class AdjacencyRule : IDotConnectionRule
 {
-    public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, ConnectionModel connection, IBoardPresenter board)
+    public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, ConnectionContext connection, IBoardPresenter board)
     {
         var delta = toDot.Dot.GridPosition - fromDot.Dot.GridPosition;
         if (delta.x == 0 && delta.y == 0) return false;

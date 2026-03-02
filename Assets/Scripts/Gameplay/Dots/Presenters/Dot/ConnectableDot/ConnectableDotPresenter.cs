@@ -1,4 +1,3 @@
-using System;
 
 public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
 {
@@ -7,7 +6,7 @@ public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
     public ConnectableDotPresenter(Dot dot, DotView view) : base(dot, view)
     {
         _selectionFeedback = view.GetComponent<DotSelectionFeedback>();
-        _colorable = dot.TryGetComponent(out ColorableModel colorable) ? colorable : null;
+        _colorable = dot.TryGetModel(out ColorableModel colorable) ? colorable : null;
 
     }
 
@@ -19,20 +18,28 @@ public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
         connection.OnDotRemovedFromPath += OnDotRemovedFromPath;
     }
 
+    public void Select(ConnectionContext context)
+    {
+        var dotColor = _colorable.GetComparableColor(context.ConnectionColor);
+        _selectionFeedback.PlaySelectionAnimation(ColorSchemeService.FromDotColor(dotColor));
+    }
+
+   
+
     private void OnDotRemovedFromPath(string dotId)
     {
         if (dotId != _dot.ID) return;
         Disconnect();
     }
 
-    private void OnConnectionCompleted(ConnectionCompletedPayload payload)
+    private void OnConnectionCompleted(ConnectionContext payload)
     {
         Disconnect();
     }
 
     private void OnColorChanged(DotColor color)
     {
-        _selectionFeedback.ChangeFillColor(ColorSchemeService.FromDotColor(color));
+        _selectionFeedback.SetFillColor(ColorSchemeService.FromDotColor(color));
     }
     
     public void Disconnect()
@@ -40,4 +47,8 @@ public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
         _selectionFeedback.PlayDeselectionAnimation();
     }
 
+    public void Deselect()
+    {
+        _selectionFeedback.PlayDeselectionAnimation();
+    }
 }

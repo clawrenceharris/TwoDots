@@ -14,5 +14,5 @@ public interface IDotConnectionRule
     /// <param name="currentPath">Ordered path so far (read-only).</param>
     /// <param name="board">Board for spatial/state queries.</param>
     /// <returns>True if the connection is allowed.</returns>
-    bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, ConnectionModel currentConnection, IBoardPresenter board);
+    bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, ConnectionContext connection, IBoardPresenter board);
 }
