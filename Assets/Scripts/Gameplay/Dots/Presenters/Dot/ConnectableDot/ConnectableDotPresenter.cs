@@ -18,7 +18,7 @@ public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
         connection.OnDotRemovedFromPath += OnDotRemovedFromPath;
     }
 
-    public void Select(ConnectionContext context)
+    public void Select(ConnectionResult context)
     {
         var dotColor = _colorable.GetComparableColor(context.ConnectionColor);
         _selectionFeedback.PlaySelectionAnimation(ColorSchemeService.FromDotColor(dotColor));
@@ -32,7 +32,7 @@ public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
         Disconnect();
     }
 
-    private void OnConnectionCompleted(ConnectionContext payload)
+    private void OnConnectionCompleted(ConnectionResult payload)
     {
         Disconnect();
     }

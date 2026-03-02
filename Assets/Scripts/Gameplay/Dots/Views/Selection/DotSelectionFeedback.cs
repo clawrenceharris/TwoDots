@@ -18,7 +18,6 @@ public sealed class DotSelectionFeedback : MonoBehaviour, IModel
     private Sequence _selectionSequence;
     private Sequence _deselectionSequence;
     private bool _isSelected;
-    private bool _isPlaying;
 
     private void KillSequences()
     {
@@ -58,7 +57,6 @@ public sealed class DotSelectionFeedback : MonoBehaviour, IModel
         
         _selectionSequence?.Kill();
         _selectionSequence = DOTween.Sequence();
-        _selectionSequence.OnStart(() => _isPlaying = true);
         _selectionSequence.Append(
             _pulseRenderer.transform
                 .DOScale(Vector3.one * _pulseEndScale, _pulseDuration)
@@ -72,7 +70,6 @@ public sealed class DotSelectionFeedback : MonoBehaviour, IModel
         _selectionSequence.OnComplete(() =>
         {
             _pulseRenderer.gameObject.SetActive(false);
-            _isPlaying = false;
         });
         return _selectionSequence;
     }

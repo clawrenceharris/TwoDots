@@ -17,7 +17,7 @@ public class ConnectionPresenter : MonoBehaviour
     public static event Action<IDotPresenter> OnDotSelected;
     public static event Action<IDotPresenter> OnDotDeselected;
     public static event Action<IDotPresenter> OnDotConnected;
-    public static event Action<ConnectionContext> OnConnectionCompleted;
+    public static event Action<ConnectionResult> OnConnectionCompleted;
     private IBoardPresenter _board;
    
     private void Start()
@@ -71,7 +71,7 @@ public class ConnectionPresenter : MonoBehaviour
         foreach (var dotId in dotsToActivate)
         {
             if(_board.GetDot(dotId).TryGetPresenter(out ConnectableDotPresenter presenter)){
-                presenter.Select(new ConnectionContext(_model));
+                presenter.Select(new ConnectionResult(_model));
             }
         }
     }
@@ -207,7 +207,7 @@ public class ConnectionPresenter : MonoBehaviour
     }
     
 
-    private void HandleConnectionCompleted(ConnectionContext payload)
+    private void HandleConnectionCompleted(ConnectionResult payload)
     {
 
         OnConnectionCompleted?.Invoke(payload);

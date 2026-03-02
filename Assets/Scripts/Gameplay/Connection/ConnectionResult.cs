@@ -4,10 +4,10 @@ using System.Linq;
 /// <summary>
 /// Result of a connection session
 /// </summary>
-public class ConnectionContext
+public class ConnectionResult
 {
     /// <summary>Ordered dot IDs in the path.</summary>
-    public IReadOnlyList<string> DotIds { get; }
+    public IReadOnlyList<string> DotIdsInPath { get; }
 
     /// <summary>True if the path was closed by revisiting an earlier dot.</summary>
     public bool IsSquare { get; }
@@ -21,12 +21,12 @@ public class ConnectionContext
     /// <summary>The dot IDs to hit from the resulting square connection. (e.g. all dots or all dots of a distinct color)</summary>
     public IReadOnlyList<string> DotsToHitFromSquare { get; }
 
-    public ConnectionContext(IConnectionModel connection)
+    public ConnectionResult(IConnectionModel connection)
     {
-        DotIds = connection.Path.Select(p => p.Dot.ID).ToList();
+        DotIdsInPath = connection.DotIdsInPath;
         IsSquare = connection.IsSquare;
         ConnectionColor = connection.CurrentColor;
         DotsToHitFromSquare = connection.DotsToHitFromSquare;
-        AllDotsToHit = DotsToHitFromSquare.Concat(DotIds).Distinct().ToList();
+        AllDotsToHit = DotsToHitFromSquare.Concat(DotIdsInPath).Distinct().ToList();
     }
 }

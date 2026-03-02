@@ -14,7 +14,7 @@ public class ColorRule : IDotConnectionRule
     /// <param name="connection">The connection model</param>
     /// <param name="board">The board presenter object</param>
     /// <returns>Wether or not the two dots can form a valid connection</returns>
-    public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, ConnectionContext connection, IBoardPresenter board)
+    public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, ConnectionResult connection, IBoardPresenter board)
     {
         var toColorable = toDot.Dot.GetModel<ColorableModel>();
         var connectionColor = connection.ConnectionColor;

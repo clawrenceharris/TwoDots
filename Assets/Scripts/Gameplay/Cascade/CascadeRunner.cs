@@ -51,14 +51,14 @@ public class CascadeRunner : MonoBehaviour
         ConnectionPresenter.OnConnectionCompleted -= HandleConnectionCompleted;
     }
 
-    private void HandleConnectionCompleted(ConnectionContext payload)
+    private void HandleConnectionCompleted(ConnectionResult payload)
     {
         if (_isRunning) return;
-        if (payload == null || payload.DotIds == null || payload.DotIds.Count < 2) return;
+        if (payload == null || payload.DotIdsInPath == null || payload.DotIdsInPath.Count < 2) return;
         StartCascade(payload);
     }
 
-    public void StartCascade(ConnectionContext payload)
+    public void StartCascade(ConnectionResult payload)
     {
         if (_isRunning) return;
         if (_stateManager == null)

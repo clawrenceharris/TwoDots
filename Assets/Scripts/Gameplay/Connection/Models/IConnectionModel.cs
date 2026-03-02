@@ -9,7 +9,8 @@ public interface IConnectionModel
     IReadOnlyList<string> DotsToHitFromSquare { get; }
     /// <summary>Current ordered path of dots in this session (empty if no active session).</summary>
     IReadOnlyList<IDotPresenter> Path { get; }
-
+    /// <summary> Set of unique dot IDs in the path. </summary>
+    IReadOnlyList<string> DotIdsInPath { get; }
     /// <summary>True when a session is active (between Begin and End/Cancel).</summary>
     bool IsSessionActive { get; }
 
@@ -17,7 +18,7 @@ public interface IConnectionModel
     event Action OnPathChanged;
 
     /// <summary>Raised when the session ends with pointer up; payload describes the completed path.</summary>
-    event Action<ConnectionContext> OnConnectionCompleted;
+    event Action<ConnectionResult> OnConnectionCompleted;
 
     /// <summary>Raised when the color changes.</summary>
     event Action<DotColor> OnColorChanged;

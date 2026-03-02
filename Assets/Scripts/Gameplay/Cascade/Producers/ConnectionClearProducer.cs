@@ -16,7 +16,7 @@ public class ConnectionClearProducer : IFillStepProducer
     {
         if (context == null || outSteps == null) return;
         if (!context.TryConsumeConnectionPayload(out var payload)) return;
-        if (payload == null || payload.DotIds == null || payload.DotIds.Count < 2) return;
+        if (payload == null || payload.DotIdsInPath == null || payload.DotIdsInPath.Count < 2) return;
         
         outSteps.Add(new FillStep(
                 FillStepType.ConnectionClear,

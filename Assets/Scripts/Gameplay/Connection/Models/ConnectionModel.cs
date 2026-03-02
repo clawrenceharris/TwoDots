@@ -6,7 +6,9 @@ using UnityEngine;
 public class ConnectionModel : IConnectionModel
 {
     private readonly List<IDotPresenter> _path = new();
-    private readonly HashSet<string> _pathIds = new();
+
+    /// <summary> Set of unique dot IDs in the path. </summary>
+    private readonly HashSet<string> _dotIdsInPath = new();
 
     /// <summary>The dot IDs to hit from the resulting square connection.</summary>
     private HashSet<string> _dotsToHitFromSquare = new();
@@ -22,7 +24,6 @@ public class ConnectionModel : IConnectionModel
     public bool IsSessionActive => _isSessionActive;
     private readonly IBoardPresenter _board;
     private readonly IDotConnectionRule _rule;
-    public IReadOnlyList<IDotPresenter> Path => _path;
 
     public event Action<DotColor> OnColorChanged;
     public event Action<string> OnDotRemovedFromPath;
@@ -30,8 +31,9 @@ public class ConnectionModel : IConnectionModel
     public event Action OnPathChanged;
     public event Action<IReadOnlyList<string>> OnSquareActivated;
     public event Action<IReadOnlyList<string>> OnSquareDeactivated;
-    public event Action<ConnectionContext> OnConnectionCompleted;
-
+    public event Action<ConnectionResult> OnConnectionCompleted;
+    public IReadOnlyList<IDotPresenter> Path => _path;
+    public IReadOnlyList<string> DotIdsInPath => _dotIdsInPath.ToList();
 
     private DotColor _currentColor;
     public DotColor CurrentColor => _currentColor;
@@ -42,7 +44,7 @@ public class ConnectionModel : IConnectionModel
     public ConnectionModel(IBoardPresenter board, IDotConnectionRule rule)
     {
         _path = new List<IDotPresenter>();
-        _pathIds = new HashSet<string>();
+        _dotIdsInPath = new HashSet<string>();
         _dotsToHitFromSquare = new HashSet<string>();
         _isSquare = false;
         _isSessionActive = false;
@@ -57,7 +59,7 @@ public class ConnectionModel : IConnectionModel
         if (dot == null) return;
         Cancel();
         _path.Add(dot);
-        _pathIds.Add(dot.Dot.ID);
+        _dotIdsInPath.Add(dot.Dot.ID);
         _isSquare = false;
         _isSessionActive = true;
 
@@ -79,7 +81,7 @@ public class ConnectionModel : IConnectionModel
                 HandleSquareDeactivated();
                 return true;
             }
-            _pathIds.Remove(head.Dot.ID);
+            _dotIdsInPath.Remove(head.Dot.ID);
             _path.RemoveAt(_path.Count - 1);
             _isSquare = false;
             OnPathChanged?.Invoke();
@@ -103,9 +105,9 @@ public class ConnectionModel : IConnectionModel
         }
 
         // Cycle-close: revisiting an earlier dot (not the previous)
-        if (_pathIds.Contains(dot.Dot.ID))
+        if (_dotIdsInPath.Contains(dot.Dot.ID))
         {
-            if (!_rule.CanConnect(head, dot, new ConnectionContext(this), _board)) return false;
+            if (!_rule.CanConnect(head, dot, new ConnectionResult(this), _board)) return false;
             HandleSquareActivated(dot);
 
 
@@ -113,9 +115,9 @@ public class ConnectionModel : IConnectionModel
         }
         
         // New dot - append if rule allows
-        if (!_rule.CanConnect(head, dot, new ConnectionContext(this), _board)) return false;
+        if (!_rule.CanConnect(head, dot, new ConnectionResult(this), _board)) return false;
         _path.Add(dot);
-        _pathIds.Add(dot.Dot.ID);
+        _dotIdsInPath.Add(dot.Dot.ID);
 
         OnDotAddedToPath?.Invoke(dot.Dot.ID);
         OnPathChanged?.Invoke();
@@ -127,7 +129,7 @@ public class ConnectionModel : IConnectionModel
     {
         _path.Add(dot);
         _isSquare = true;
-        var dotsToActivate = new List<string>(_pathIds);
+        var dotsToActivate = new List<string>(_dotIdsInPath);
 
         var dots = _board.GetDotsOnBoard();
         foreach (var d in dots)
@@ -166,7 +168,7 @@ public class ConnectionModel : IConnectionModel
 
 
         // All the dots that would have been hit from the square excluding the dots that are still in the path
-        List<string> dotsToDeactivate = new(_dotsToHitFromSquare.Where(id => !_pathIds.Contains(id)));
+        List<string> dotsToDeactivate = new(_dotsToHitFromSquare.Where(id => !_dotIdsInPath.Contains(id)));
         _dotsToHitFromSquare.Clear();
 
         OnPathChanged?.Invoke();
@@ -213,15 +215,15 @@ public class ConnectionModel : IConnectionModel
         for (int i = 0; i < _path.Count; i++)
             dotIds.Add(_path[i].Dot.ID);
 
-        var ctx = new ConnectionContext(this);
-        OnConnectionCompleted?.Invoke(ctx);
+        var payload = new ConnectionResult(this);
+        OnConnectionCompleted?.Invoke(payload);
         Cancel();
     }
 
     public void Cancel()
     {
         _path.Clear();
-        _pathIds.Clear();
+        _dotIdsInPath.Clear();
         _dotsToHitFromSquare.Clear();
         _isSquare = false;
         _isSessionActive = false;
