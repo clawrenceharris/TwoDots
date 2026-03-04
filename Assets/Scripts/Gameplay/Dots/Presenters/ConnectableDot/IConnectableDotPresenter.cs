@@ -3,7 +3,7 @@
 /// </summary>
 public interface IConnectableDotPresenter
 {
-    void Connect(IConnectionModel connection);
+    void Connect(DotColor connectionColor);
     void Disconnect();
-
+    void ChangeColor(DotColor color);
 }

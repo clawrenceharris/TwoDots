@@ -58,7 +58,22 @@ public class BoardView : MonoBehaviour
     /// </summary>
     public void ReleaseDotView(string dotId)
     {
-        
+        Debug.Log($"Releasing dot view {dotId}");
+        if (_dotViews.TryGetValue(dotId, out var dotView))
+        {
+            if (dotView is BombView bombView)
+            {
+                var poolObj = bombView.GetComponentInParent<BombPoolObject>();
+                Debug.Log($"Releasing bomb view {bombView.name} to pool");
+                if (poolObj != null)
+                {
+                    PoolService.Instance.ReturnToPool<BombPool>(poolObj);
+                }
+                return;
+            }
+            Destroy(dotView.gameObject);
+            _dotViews.Remove(dotId);
+        }
     }
 
     public TileView CreateTileView(TileModel tile)
@@ -80,9 +95,12 @@ public class BoardView : MonoBehaviour
         int gridY = dot.GridPosition.y;
         Vector3 worldPos = new Vector3(gridX, gridY, 0) * _tileSize;
 
-        
+       
         DotView view = Instantiate(PrefabLibrary.Instance.FromDotType(dot.DotType), transform);
-
+        if (view is BombView bombView)
+        {
+            Debug.Log($"Creating bomb view for {dot.ID}");
+        }
         view.transform.position = worldPos;
         _dotViews.TryAdd(dot.ID, view);
         return view;

@@ -39,7 +39,9 @@ public class LevelData
     [NonReorderable]public TutorialStep[] tutorialSteps;
 }
 
-
+/// <summary>
+/// DotsObject is a class that represents base dot data on the board. Lowest level form of a dot and used as a foundation for concrete dot implementations
+/// </summary>
 
 [Serializable]
 public class DotsObject

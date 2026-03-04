@@ -56,14 +56,15 @@ The cascade system runs after a connection is completed (pointer up). It clears 
 
 ## Producers
 
-| Producer | Phase | Description |
-| -------- | ----- | ----------- |
-| **ConnectionClearProducer** | PreGravity | Consumes the connection payload once and enqueues one step to clear all path dots (VeryHigh priority). |
-| **SeedAdjacencyProducer** | PreGravity | Finds seed dots adjacent (cardinal) to `RecentClearedPositions`; enqueues one step to clear them (High). Seeds clear with the connection, before gravity. |
-| **HedgehogProducer** | PreGravity | Finds hedgehog dots adjacent to recent clears; enqueues one step (High). Multiple hedgehogs can be in one step so gravity waits for all. |
-| **AnchorSinkProducer** | PostFill | Finds anchor dots where `IsAtBottomOfBoard` is true; enqueues one step to clear them (High). |
-| **LotusProducer** | PostFill | For each lotus dot, finds cardinal neighbors with same color; if any, enqueues a step to clear lotus + those neighbors (Normal). |
-| **GemProducer** | PostFill | Finds gem types (SquareGem, RectangleGem) adjacent to recent clears; enqueues one step to clear each gem and all of its neighbors (explosion) (High). |
+| Producer                    | Phase      | Description                                                                                                                                               |
+| --------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ConnectionClearProducer** | PreGravity | Consumes the connection payload once and enqueues one step to clear all path dots (VeryHigh priority).                                                    |
+| **SeedAdjacencyProducer**   | PreGravity | Finds seed dots adjacent (cardinal) to `RecentClearedPositions`; enqueues one step to clear them (High). Seeds clear with the connection, before gravity. |
+| **HedgehogProducer**        | PreGravity | Finds hedgehog dots adjacent to recent clears; enqueues one step (High). Multiple hedgehogs can be in one step so gravity waits for all.                  |
+| **AnchorSinkProducer**      | PostFill   | Finds anchor dots where `IsAtBottomOfBoard` is true; enqueues one step to clear them (High).                                                              |
+| **LotusProducer**           | PostFill   | For each lotus dot, finds cardinal neighbors with same color; if any, enqueues a step to clear lotus + those neighbors (Normal).                          |
+| **GemProducer**             | PostFill   | Finds gem types (SquareGem, RectangleGem) adjacent to recent clears; enqueues one step to clear each gem and all of its neighbors (explosion) (High).     |
+| **BombProducer**            | PostFill   | For each bomb on the board, finds its neighboring dots and enqueues on step to hit/clear all neighbors including itself.                                  |
 
 ## Data Flow
 

@@ -138,6 +138,7 @@ public class CascadeRunner : MonoBehaviour
         }
         _previousState = null;
         _isRunning = false;
+        
     }
 
     private void BuildProducers()
@@ -148,7 +149,7 @@ public class CascadeRunner : MonoBehaviour
         _preGravityProducers.Add(new ConnectionClearProducer());
         _preGravityProducers.Add(new SeedAdjacencyProducer());
         _preGravityProducers.Add(new HedgehogProducer());
-
+        _postFillProducers.Add(new BombProducer());
         _postFillProducers.Add(new AnchorSinkProducer());
         _postFillProducers.Add(new LotusProducer());
         _postFillProducers.Add(new GemProducer());
@@ -187,7 +188,12 @@ public class CascadeRunner : MonoBehaviour
                 EnqueueProducerSteps(producers, queue);
             }
         }
+        foreach (var id in _context.ClearedDotIds)
+        {
+            _board.RemoveAndDestroyDot(id);
+        }
         _context.ClearRecentClears();
+
     }
 
     private FillStepResult ExecuteStep(FillStep step, out List<Sequence> animations)
@@ -241,8 +247,9 @@ public class CascadeRunner : MonoBehaviour
         if (remaining > 0)
             yield return new WaitUntil(() => remaining == 0);
 
-        void HandleDropComplete(IDotPresenter presenter)
+        void HandleDropComplete(string dotId)
         {
+            var presenter = _board.GetDot(dotId);
             if (presenter == null) return;
             presenter.OnDotDropped -= HandleDropComplete;
             remaining--;

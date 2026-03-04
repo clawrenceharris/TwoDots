@@ -19,13 +19,21 @@ public class SkinResolver : ISkinResolver
     {
          if (dot.TryGetModel(out ColorableModel colorable))
             return ResolveDotColor(colorable.Color);
-        return ColorSchemeService.GetDotColorScheme(dot.DotType).detailColor;
+        if (ColorSchemeService.GetDotColorScheme(dot.DotType) is { } colorScheme)
+        {
+            return colorScheme.detailColor;
+        }
+        return Color.white;
     }
     private static Color ResolveAccentColor(Dot dot)
     {
          if (dot.TryGetModel(out ColorableModel colorable))
             return ResolveDotColor(colorable.Color);
-        return ColorSchemeService.GetDotColorScheme(dot.DotType).accentColor;
+        if (ColorSchemeService.GetDotColorScheme(dot.DotType) is { } colorScheme)
+        {
+            return colorScheme.accentColor;
+        }
+        return Color.white;
     }
     private static Color ResolveBaseColor(Dot dot)
     {
@@ -33,12 +41,12 @@ public class SkinResolver : ISkinResolver
         {
             return ResolveDotColor(colorable.Color);
         }
-          
-        
-        return ColorSchemeService.GetDotColorScheme(dot.DotType).baseColor;
-        
 
-
+        if (ColorSchemeService.GetDotColorScheme(dot.DotType) is { } colorScheme)
+        {
+            return colorScheme.baseColor;
+        }
+        return Color.white;
     }
 
     private static Color ResolveDotColor(DotColor dotColor)
