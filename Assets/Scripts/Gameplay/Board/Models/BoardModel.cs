@@ -143,7 +143,15 @@ public class BoardModel : IBoardModel
             dotToMove.GridPosition = toPosition;
         }
     }
-   
+    public void ReplaceDot(string id, Dot dot)
+    {
+        if (_dotsById.TryGetValue(id, out Dot dotToReplace))
+        {
+            DotGrid[dotToReplace.GridPosition.x, dotToReplace.GridPosition.y] = dot;
+            _dotsById.Remove(id);
+            _dotsById.Add(dot.ID, dot);
+        }
+    }
 
     public Dot GetDotAt(Vector2Int position)
     {

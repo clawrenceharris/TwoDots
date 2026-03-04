@@ -18,5 +18,7 @@ public enum FillStepType
     /// <summary>Hedgehog(s) activated by adjacency to cleared cells; cleared before gravity.</summary>
     HedgehogCollision,
     /// <summary>Seed dots adjacent to a connection clear alongside the connection.</summary>
-    SeedClear
+    SeedClear,
+    /// <summary>Bomb explodes and clears itself and adjacent dots.</summary>
+    BombExplode,
 }

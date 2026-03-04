@@ -29,4 +29,5 @@ public interface IBoardModel
     List<TileModel> InitTiles(LevelData level);
     bool IsValidPosition(Vector2Int position);
     void ClearBoard();
+    void ReplaceDot(string id, Dot dot);
 }

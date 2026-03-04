@@ -35,7 +35,8 @@ public class DotFactory
                     dot.AddModel(new BlankColorableModel(dot));
                     return dot;
                 }
-            default: throw new ArgumentException("Invalid dot type: " + type);
+                
+            default: return new Dot(type, new Vector2Int(data.Col, data.Row));
         }
     }
 

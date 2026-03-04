@@ -16,8 +16,11 @@ public class DotPresenter : IDotPresenter
     protected readonly Dot _dot;
     public Dot Dot => _dot;
     public DotView View => _view;
-    public event Action<IDotPresenter> OnDotCleared;
-    public event Action<IDotPresenter> OnDotDropped;
+
+    public event Action<string> OnDotSpawned;
+
+    public event Action<string> OnDotCleared;
+    public event Action<string> OnDotDropped;
     private readonly Dictionary<Type, IDotPresenter> _presenters = new();
 
     public DotPresenter(
@@ -37,14 +40,18 @@ public class DotPresenter : IDotPresenter
     {
         return DOTween.Sequence().Append(_view.transform.DOScale(Vector3.zero, 0.3f)).OnComplete(() =>
         {
-            OnDotCleared?.Invoke(this);
+            _presenters.Clear();
+           
 
         });
     }
 
     public Sequence Spawn()
     {
-        throw new System.NotImplementedException();
+        return DOTween.Sequence().Append(_view.transform.DOScale(Vector3.one, 0.3f)).OnComplete(() =>
+        {
+            OnDotSpawned?.Invoke(_dot.ID);
+        });
     }
 
 
@@ -56,7 +63,7 @@ public class DotPresenter : IDotPresenter
         _view.transform.DOMoveY(targetRow * BoardView.TileSize, 0.5f).SetEase(Ease.OutBounce).OnComplete(() =>
         {
             _view.transform.position = endPos;
-            OnDotDropped?.Invoke(this);
+            OnDotDropped?.Invoke(_dot.ID);
         });
     }
     public void PrepareForDrop()

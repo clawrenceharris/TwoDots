@@ -3,10 +3,8 @@ using System.Collections.Generic;
 
 public interface IConnectionModel
 {
-    /// <summary>
-    /// The dot IDs to hit in by the connection from the square.
-    /// </summary>
-    IReadOnlyList<string> DotsToHitFromSquare { get; }
+    /// <summary> The square that is created when the connection is closed by revisiting an earlier dot. </summary>
+    Square Square { get; }
     /// <summary>Current ordered path of dots in this session (empty if no active session).</summary>
     IReadOnlyList<IDotPresenter> Path { get; }
     /// <summary> Set of unique dot IDs in the path. </summary>

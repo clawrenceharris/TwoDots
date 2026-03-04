@@ -7,8 +7,8 @@ public interface IDotPresenter
 {
     Dot Dot { get; }
     DotView View { get; }
-    event Action<IDotPresenter> OnDotCleared;
-    event Action<IDotPresenter> OnDotDropped;
+    event Action<string> OnDotCleared;
+    event Action<string> OnDotDropped;
 
     Sequence Clear();
     Sequence Spawn();

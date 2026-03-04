@@ -21,8 +21,10 @@ public class PoolService : MonoBehaviour
     private void RegisterPools()
     {
         LinePool linePool = FindFirstObjectByType<LinePool>();
+        BombPool bombPool = FindFirstObjectByType<BombPool>();
         linePool.transform.SetParent(transform);
         _pools.TryAdd(typeof(LinePool), linePool);
+        _pools.TryAdd(typeof(BombPool), bombPool);
     }
 
     public void FillPool<T>(int size) where T : Pool
@@ -50,4 +52,5 @@ public class PoolService : MonoBehaviour
         }
         pool.Return(item);
     }
+
 }

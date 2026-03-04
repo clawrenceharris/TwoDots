@@ -19,6 +19,7 @@ public interface IBoardPresenter
     // Dot management
     void MoveDot(string id, Vector2Int endPosition);
     void RemoveDot(string id);
+    void RemoveAndDestroyDot(string id);
 
 
     // Tile management
@@ -46,10 +47,14 @@ public interface IBoardPresenter
     List<IDotPresenter> GetDotsOnBoard();
     List<T> GetDotsOnBoard<T>() where T : DotPresenter;
     bool IsValidPosition(Vector2Int position);
+    IDotPresenter CreateDotPresenter(DotsObject dObject);
+    IDotPresenter SpawnDot(DotsObject dObject);
 
-    IDotPresenter SpawnDot(Dot dot);
+    void ReplaceDot(IDotPresenter oldDot, IDotPresenter newDot, System.Action onComplete = null);
     bool IsOnEdgeOfBoard(Vector2Int gridPosition);
     bool IsOnEdgeOfBoard(int column, int row);
+
+    List<IDotPresenter> GetDotNeighbors(Vector2Int position, bool includesDiagonals = true);
     List<T> GetDotNeighbors<T>(int column, int row, bool includesDiagonals = true) where T : class;
     List<T> GetDotNeighbors<T>(Vector2Int position, bool includesDiagonals = true) where T : class;
     bool IsAtBottomOfBoard(Vector2Int gridPosition);
