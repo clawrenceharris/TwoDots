@@ -12,6 +12,9 @@ public class ConnectionResult
     /// <summary>True if the path was closed by revisiting an earlier dot.</summary>
     public bool IsSquare { get; }
 
+    /// <summary>The square that is created when the connection is closed by revisiting an earlier dot.</summary>
+    public Square Square { get; }
+
     /// <summary>The ID's of every dot to hit from the resulting connection. (e.g. all dots) </summary>
     public IReadOnlyList<string> AllDotsToHit { get; }
 
@@ -26,7 +29,9 @@ public class ConnectionResult
         DotIdsInPath = connection.DotIdsInPath;
         IsSquare = connection.IsSquare;
         ConnectionColor = connection.CurrentColor;
-        DotsToHitFromSquare = connection.DotsToHitFromSquare;
-        AllDotsToHit = DotsToHitFromSquare.Concat(DotIdsInPath).Distinct().ToList();
+        Square = connection.Square;
+        IsSquare = Square != null;
+        DotsToHitFromSquare = Square?.DotIdsToHit ?? new List<string>();
+        AllDotsToHit = DotIdsInPath.Union(DotsToHitFromSquare).ToList();
     }
 }

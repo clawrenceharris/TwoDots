@@ -57,16 +57,16 @@ public class InputRouter : MonoBehaviour
     private bool TryGetPointerHit(out IDotPresenter dot)
     {
         dot = null;
-    if (!TryGetPointerScreenPosition(out Vector2 position)) return false;
+        if (!TryGetPointerScreenPosition(out Vector2 position)) return false;
 
-    var worldPosition = _cam.ScreenToWorldPoint(position);
-    var gridPosition = GridUtility.WorldToGrid(worldPosition);
+        var worldPosition = _cam.ScreenToWorldPoint(position);
+        var gridPosition = GridUtility.WorldToGrid(worldPosition);
 
-    IDotPresenter bestDot = null;
+        IDotPresenter bestDot = null;
 
-    // Check the clicked cell and its neighbors
-    for (int dx = -1; dx <= 1; dx++)
-    {
+        // Check the clicked cell and its neighbors
+        for (int dx = -1; dx <= 1; dx++)
+        {
             for (int dy = -1; dy <= 1; dy++)
             {
                 var candidateGrid = new Vector2Int(gridPosition.x + dx, gridPosition.y + dy);
@@ -79,10 +79,10 @@ public class InputRouter : MonoBehaviour
                     bestDot = candidate;
                 }
             }
-    }
+        }
 
-    dot = bestDot;
-    return dot != null;
+        dot = bestDot;
+        return dot != null;
 
     }
 

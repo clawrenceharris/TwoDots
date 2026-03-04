@@ -13,7 +13,7 @@ public class ConnectionPresenter : MonoBehaviour
     private IConnectionModel _model;
     public static event Action<DotColor> OnColorChanged;
     private readonly Stack<ConnectorLineView> _activeConnectionSegments = new();
-    public static event Action OnPathChanged;
+    public static event Action<IReadOnlyList<IDotPresenter>> OnPathChanged;
     public static event Action<IDotPresenter> OnDotSelected;
     public static event Action<IDotPresenter> OnDotDeselected;
     public static event Action<IDotPresenter> OnDotConnected;
@@ -27,9 +27,9 @@ public class ConnectionPresenter : MonoBehaviour
         InputRouter.OnDotSelectionEnded += OnInputDotSelectionEnded;
         InputRouter.OnDotSelected += OnInputDotSelected;
     }
-    public void Initialize(IDotConnectionRule rule, IBoardPresenter board)
+    public void Initialize(IBoardPresenter board)
     {
-        _model = new ConnectionModel(board, rule);
+        _model = new ConnectionModel(board, new BaseConnectionRule());
         _board = board;
         _model.OnConnectionCompleted += HandleConnectionCompleted;
         _model.OnPathChanged += HandlePathChanged;
@@ -40,7 +40,7 @@ public class ConnectionPresenter : MonoBehaviour
     private void HandlePathChanged()
     {
         _model.UpdateColor();
-        OnPathChanged?.Invoke();
+        OnPathChanged?.Invoke(_model.Path);
     }
 
 
@@ -78,17 +78,28 @@ public class ConnectionPresenter : MonoBehaviour
 
     private void OnConnectionColorChanged(DotColor color)
     {
+        foreach (var dotId in _model.DotIdsInPath)
+        {
+            var dot = _board.GetDot(dotId);
+            if (dot.TryGetPresenter(out ConnectableDotPresenter presenter))
+            {
+                presenter.ChangeColor(color);
+            }
+        }
         OnColorChanged?.Invoke(color);
     }
     private void OnInputDotSelected(IDotPresenter dot)
     {
-        if (_model.IsSessionActive) return;
-        _model.Begin(dot);
-        if(dot.TryGetPresenter(out ConnectableDotPresenter presenter))
+        if ( _model.IsSessionActive) return;
+        
+       
+        if (dot.TryGetPresenter(out ConnectableDotPresenter presenter))
         {
-            presenter.Connect(_model);
+            presenter.Connect(_model.CurrentColor);
         }
+         _model.Begin(dot);
         OnDotSelected?.Invoke(dot);
+        
     }
 
     
@@ -104,13 +115,17 @@ public class ConnectionPresenter : MonoBehaviour
     
             if (dot.TryGetPresenter(out ConnectableDotPresenter presenter))
             {
-                presenter.Connect(_model);
+                presenter.Connect(_model.CurrentColor);
             }
             OnDotConnected?.Invoke(dot);
         }
         else if (_model.TryBacktrack(dot))
         {
             RemoveLastConnectionSegment();
+            if (previousDot.TryGetPresenter(out ConnectableDotPresenter presenter))
+            {
+                presenter.Disconnect();
+            }
             OnDotDeselected?.Invoke(previousDot);
         }
 
@@ -131,10 +146,19 @@ public class ConnectionPresenter : MonoBehaviour
 
     private void OnInputDotSelectionEnded()
     {
-        _model.End();
+
+        
+        foreach (var dotId in _model.DotIdsInPath)
+        {
+            var dot = _board.GetDot(dotId);
+            if (dot.TryGetPresenter(out ConnectableDotPresenter presenter))
+            {
+                presenter.Disconnect();
+            }
+        }
         ClearConnectionSegments();
         HideDragLine();
-
+        _model.End();
     }
 
 
@@ -209,7 +233,7 @@ public class ConnectionPresenter : MonoBehaviour
 
     private void HandleConnectionCompleted(ConnectionResult payload)
     {
-
+        
         OnConnectionCompleted?.Invoke(payload);
     }
 }

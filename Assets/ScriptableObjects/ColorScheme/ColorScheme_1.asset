@@ -23,7 +23,7 @@ MonoBehaviour:
   bombDark: {r: 0, g: 0, b: 0, a: 0}
   anchor: {fileID: 0}
   clock: {fileID: 0}
-  bomb: {fileID: 0}
+  bomb: {fileID: 11400000, guid: 5bd1b8fdf51324591a639d68f24a107c, type: 2}
   nesting: {fileID: 0}
   beetle: {fileID: 0}
   lotus: {fileID: 0}

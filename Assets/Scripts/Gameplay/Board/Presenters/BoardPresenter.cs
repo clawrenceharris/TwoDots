@@ -103,20 +103,13 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     
 
     
-    private IDotPresenter InitRandomDot(int col, int row, DotsObject[] dotsToSpawn)
+    private IDotPresenter SpawnRandomDotAt(Vector2Int position, DotsObject[] dotsToSpawn)
     {
 
         DotsObject data = _dotSpawner.GetRandomDot(dotsToSpawn.ToList());
-        data.Col = col;
-        data.Row = row;
-
-        Dot dot = DotFactory.CreateDot(data);
-        DotView view = _boardView.CreateDotView(dot);
-        IDotPresenter presenter = DotFactory.CreateDotPresenter(dot, view);
-        _dotPresenters.Add(dot.ID, presenter);
-        presenter.OnDotCleared += RemoveDotPresenter;
-        _boardModel.SpawnDot(dot);
-        return presenter;
+        data.Col = position.x;
+        data.Row = position.y;
+        return SpawnDot(data);
     }
 
 
@@ -194,6 +187,10 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     public List<IDotPresenter> GetDotsOnBoard() => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID]).ToList();
     public List<T> GetDotsOnBoard<T>() where T : DotPresenter => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID].GetPresenter<T>()).ToList();
 
+    public List<IDotPresenter> GetDotNeighbors(Vector2Int position, bool includesDiagonals = true)
+    {
+        return GetDotNeighbors<IDotPresenter>(position, includesDiagonals);
+    }
     public List<T> GetDotNeighbors<T>(int x, int y, bool includesDiagonals = true) where T : class
     {
         var neighbors = new List<T>();
@@ -338,24 +335,17 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     {
         _boardModel.MoveDot(id, endPosition);
     }
-
-    public IDotPresenter SpawnDot(Dot dot)
-    {
-        if (_boardView == null)
-        {
-            Debug.LogError("[BoardPresenter] BoardView is null");
-            return null;
-        }
+    
 
 
-        DotView view = _boardView.CreateDotView(dot);
-        var presenter = DotFactory.CreateDotPresenter(dot, view);
-        _dotPresenters.Add(dot.ID, presenter);
-        presenter.OnDotCleared += RemoveDotPresenter;
-        _boardModel.SpawnDot(dot);
-        return presenter;
-    }
-     public IDotPresenter SpawnDot(DotsObject dObject)
+
+
+    /// <summary>
+    /// Creates a dot presenter from a DotsObject.
+    /// </summary>
+    /// <param name="dObject"></param>
+    /// <returns></returns>
+    public IDotPresenter CreateDotPresenter(DotsObject dObject)
     {
         if (_boardView == null)
         {
@@ -364,35 +354,67 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         }
 
         Dot dot = DotFactory.CreateDot(dObject);
-        DotView view = _boardView.CreateDotView(dot);
+       
+        var view = _boardView.CreateDotView(dot);
         var presenter = DotFactory.CreateDotPresenter(dot, view);
-        _dotPresenters.Add(dot.ID, presenter);
-        presenter.OnDotCleared += RemoveDotPresenter;
-        _boardModel.SpawnDot(dot);
+        // presenter.OnDotCleared += _boardView.ReleaseDotView;
+        return presenter;
+    }
+    public IDotPresenter SpawnDot(DotsObject dObject)
+    {
+        if (_boardView == null)
+        {
+            Debug.LogError("[BoardPresenter] BoardView is null");
+            return null;
+        }
+
+        IDotPresenter presenter = CreateDotPresenter(dObject);
+        _dotPresenters.Add(presenter.Dot.ID, presenter);
+        // presenter.OnDotCleared += RemoveDotPresenter;
+        _boardModel.SpawnDot(presenter.Dot);
         return presenter;
     }
 
 
-   
+    
+
+    public void ReplaceDot(IDotPresenter oldDot, IDotPresenter newDot, Action onComplete = null)
+    {
+        
+        _boardModel.ReplaceDot(oldDot.Dot.ID, newDot.Dot);
+        _boardView.ReleaseDotView(oldDot.Dot.ID);
+
+        newDot.View.transform.position = oldDot.View.transform.position;
+        newDot.Dot.GridPosition = oldDot.Dot.GridPosition;
+        newDot.View.Init(newDot.Dot);
+
+        _dotPresenters.Remove(oldDot.Dot.ID);
+        _dotPresenters.Add(newDot.Dot.ID, newDot);
+        // newDot.OnDotCleared += RemoveDotPresenter;
+        onComplete?.Invoke();
+    
+       
+    }
+    public void RemoveAndDestroyDot(string id)
+    {
+        _boardModel.RemoveDot(id);
+        _boardView.ReleaseDotView(id);
+        _dotPresenters.Remove(id);
+    }
 
     public void RemoveDot(string id)
     {
 
         _boardModel.RemoveDot(id);
-
-
+    
     }
-    /// <summary>
-    /// Called after remove animation completes. Releases the dot view to the pool and moves the presenter
-    /// </summary>
-    private void RemoveDotPresenter(IDotPresenter presenter)
+    
+    
+    private void RemoveDotPresenter(string dotId)
     {
-        // Release the view to the pool (so it can be reused by ID on undo)
-        if (_boardView != null)
-            _boardView.ReleaseDotView(presenter.Dot.ID);
 
-        _dotPresenters.Remove(presenter.Dot.ID);
-        presenter.OnDotCleared -= RemoveDotPresenter;
+       
+       
     }
 
     #endregion
@@ -514,16 +536,6 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         return false;
     }
 
-    
-    public static Vector2 GetPosition(int col, int row)
-    {
-        return new Vector2(col, row) * Offset;
-    }
-
-    
-    
-
-
      public bool IsOnEdgeOfBoard(int col, int row)
     {
         return IsAtBottomOfBoard(col, row) || IsAtLeftOfBoard(col, row) || IsAtRightOfBoard(col, row) || IsAtTopOfBoard(col, row);
@@ -540,16 +552,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     }
 
 
-    public bool CollapseColumn()
-    {
-        var drops = CollectGravityDrops();
-        foreach (var drop in drops)
-        {
-            if (drop.Presenter == null) continue;
-            drop.Presenter.Drop(drop.TargetRow);
-        }
-        return drops.Count > 0;
-    }
+   
     public bool CollapseColumn(out List<DotDrop> drops)
     {
         drops = new List<DotDrop>();
@@ -626,7 +629,8 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
                 {
                     if (tile == null || !tile.Model.TileType.IsBoardMechanicTile())
                     {
-                        IDotPresenter dot = InitRandomDot(col, row, dotsToSpawn ?? _dotsToSpawn);
+                        var position = new Vector2Int(col, row);
+                        IDotPresenter dot = SpawnRandomDotAt(position, dotsToSpawn ?? _dotsToSpawn);
                         drops.Add(new DotDrop(dot, row));
                     }
                 }
@@ -742,5 +746,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     {
         return IsAtBottomOfBoard(gridPosition.x, gridPosition.y);
     }
+
+   
 }
 

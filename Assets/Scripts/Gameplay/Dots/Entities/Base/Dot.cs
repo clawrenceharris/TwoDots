@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Dot : IBoardEntity
 {
-    private readonly Dictionary<Type, IModel> _components = new();
+    private readonly Dictionary<Type, IModel> _models = new();
 
     private Vector2Int _gridPosition;
     private readonly DotType _dotType;
@@ -27,36 +27,55 @@ public class Dot : IBoardEntity
 
     public T AddModel<T>(T component) where T : class,IModel
     {
-        _components.Add(typeof(T), component);
+        _models.Add(typeof(T), component);
         return component;
     }
     public T GetModel<T>() where T : class, IModel
     {
         // First, try to find an exact type match
-        if (_components.TryGetValue(typeof(T), out IModel component))
-        // If not found, search the components for a value that is compatible (handles subtypes/interfaces)
+        if (_models.TryGetValue(typeof(T), out IModel model))
+        // If not found, search the models for a value that is compatible (handles subtypes/interfaces)
         {
-            return component as T;
+            return model as T;
         }
         else
         {
-            foreach (var kvp in _components)
+            foreach (var kvp in _models)
             {
-                if (kvp.Value is T tComponent)
+                if (kvp.Value is T tModel)
                 {
-                    return tComponent;
+                    return tModel;
                 }
             }
         }
         throw new ArgumentException($"Component {typeof(T)} not found for dot");
     }
-    public bool TryGetModel<T>(out T component) where T : class,IModel
+    public bool TryGetModel<T>(out T model) where T : class,IModel
     {
-        component = GetModel<T>();
-        return component != null;
+
+        // First, try to find an exact type match
+        if (_models.TryGetValue(typeof(T), out IModel tModel))
+        // If not found, search the components for a value that is compatible (handles subtypes/interfaces)
+        {
+            model = tModel as T;
+            return true;
+        }
+        else
+        {
+            foreach (var kvp in _models)
+            {
+                if (kvp.Value is T tModelValue)
+                {
+                    model = tModelValue;
+                    return true;
+                }
+            }
+        }
+        model = null;
+        return false;
     }
     public void RemoveModel<T>() where T : class, IModel
     {
-        _components.Remove(typeof(T));
+        _models.Remove(typeof(T));
     }
 }

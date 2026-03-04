@@ -60,7 +60,7 @@ public class LevelManager : MonoBehaviour
     {
         Level = level;
 
-        _connectionPresenter.Initialize(new BaseConnectionRule(), _board);
+        _connectionPresenter.Initialize(_board);
 
         _board.Initialize(level);
 

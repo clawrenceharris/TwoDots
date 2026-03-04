@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class DotView : MonoBehaviour
 {
+    
     private Dot _dot;
     private DotRenderer _dotRenderer;
     public DotRenderer DotRenderer

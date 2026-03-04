@@ -1,4 +1,8 @@
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
 {
     private readonly DotSelectionFeedback _selectionFeedback;
@@ -7,15 +11,14 @@ public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
     {
         _selectionFeedback = view.GetComponent<DotSelectionFeedback>();
         _colorable = dot.TryGetModel(out ColorableModel colorable) ? colorable : null;
-
     }
 
-    public void Connect(IConnectionModel connection)
+    
+
+    public void Connect(DotColor connectionColor)
     {
-        _selectionFeedback.PlaySelectionAnimation(ColorSchemeService.FromDotColor(connection.CurrentColor));
-        connection.OnColorChanged += OnColorChanged;
-        connection.OnConnectionCompleted += OnConnectionCompleted;
-        connection.OnDotRemovedFromPath += OnDotRemovedFromPath;
+        _selectionFeedback.PlaySelectionAnimation(ColorSchemeService.FromDotColor(connectionColor));
+        
     }
 
     public void Select(ConnectionResult context)
@@ -24,27 +27,17 @@ public class ConnectableDotPresenter : DotPresenter, IConnectableDotPresenter
         _selectionFeedback.PlaySelectionAnimation(ColorSchemeService.FromDotColor(dotColor));
     }
 
-   
 
-    private void OnDotRemovedFromPath(string dotId)
+    public void ChangeColor(DotColor color)
     {
-        if (dotId != _dot.ID) return;
-        Disconnect();
-    }
-
-    private void OnConnectionCompleted(ConnectionResult payload)
-    {
-        Disconnect();
-    }
-
-    private void OnColorChanged(DotColor color)
-    {
+        
         _selectionFeedback.SetFillColor(ColorSchemeService.FromDotColor(color));
     }
-    
+
     public void Disconnect()
     {
         _selectionFeedback.PlayDeselectionAnimation();
+       
     }
 
     public void Deselect()

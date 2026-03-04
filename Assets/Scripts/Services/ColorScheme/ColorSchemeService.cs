@@ -37,7 +37,7 @@ public class ColorSchemeService
             DotType.Nesting => CurrentColorScheme.nesting,
             DotType.Beetle => CurrentColorScheme.beetle,
             DotType.Lotus => CurrentColorScheme.lotus,
-            _ => throw new ArgumentException("Invalid dot type."),
+            _ => null,
         };
     }
     public static Color FromDotColor(DotColor dotColor)

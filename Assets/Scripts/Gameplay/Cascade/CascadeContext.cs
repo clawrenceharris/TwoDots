@@ -63,6 +63,6 @@ public class CascadeContext
     public void ClearRecentClears()
     {
         _recentClearedDotIds.Clear();
-        _recentClearedPositions.Clear();
+        _recentClearedPositions.Clear();    
     }
 }
