@@ -38,7 +38,7 @@
   - **AddComponent&lt;T&gt;(component)**: Registers by `typeof(T)`.
   - **GetComponent&lt;T&gt;()**: Exact type first; if missing, searches for a component assignable to `T` (e.g. interface).
   - **TryGetComponent&lt;T&gt;(out T)**, **RemoveComponent&lt;T&gt;**.
-- Created via `DotFactory.CreateDot(dotsObject)` from level/spawn data. Dot type (Normal, Beetle, Blank, etc.) determines which components are added (e.g. `ColorableModel`, `BlankColorableModel`, `DirectionalModel`).
+- Created via `DotFactory.CreateDot(dotsObject)` from level/spawn data. Dot type (Normal, Beetle, Blank, Bomb, etc.) determines which components are added (e.g. `ColorableModel`, `BlankColorableModel`, `DirectionalModel`).
 
 ### Dot presenters and views
 
@@ -51,6 +51,19 @@
 
 - **ColorableModel** / **IColorableModel**: Holds `DotColor`; used by connection color rule. **BlankColorableModel** for blank dots; **BeetleColorableModel** for beetle type.
 - **DirectionalModel** / **IDirectionalModel**: Direction (e.g. for beetles); `SetDirection`, `FindBestDirection`, `ToRotation`.
+
+#### Bomb dots
+
+- **Type**: `DotType.Bomb` (see `GameTypeExtensions` and `LevelDataKeys`).
+- **Creation**:
+  - Bomb dots are usually **created at runtime**, not hand-authored in level JSON.
+  - When a **big square** connection is committed, the `Square` helper in the connection system finds dots fully enclosed by the loop and asks the board to replace each interior dot with a pooled bomb presenter.
+- **Pooling**:
+  - `BombPool` pre-allocates bomb presenters by constructing `DotsObject` instances with `DotType.Bomb` and calling `BoardPresenter.CreateDotPresenter`.
+  - Each pooled entry is wrapped in a `BombPoolObject` exposing an `IDotPresenter` and is returned to the pool when no longer in use.
+- **Visuals and preview**:
+  - While the player is drawing a big square, interior dots are hidden and temporary bomb views are shown as a **preview**.
+  - If the square is cancelled or backtracked, the preview bombs are removed and original dot views are restored; if the connection is completed, the preview bombs are committed as real bomb dots on the board.
 
 ---
 

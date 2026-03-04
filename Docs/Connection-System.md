@@ -22,18 +22,39 @@ The connection system handles drag-to-connect gameplay: the player draws a path 
 
 ### Square (closed-cycle) connection logic
 
-A **square** connection is activated when the player **revisits a dot that is already in the path** (cycle-close). When this happens, `ConnectionModel` flips `IsSquare = true` and computes an expanded “hit/clear” set:
+A **square** connection is activated when the player **revisits a dot that is already in the path** (cycle-close). When this happens, `ConnectionModel` creates a `Square` helper, flips `IsSquare = true`, and the square computes an expanded “hit/clear” set:
 
-- **Dots in the path**: the connected dots (existing `_pathIds`) are always included.
-- **Dots outside the path**: the model scans the full board and includes **any colorable dot** whose comparable color matches the connection’s `CurrentColor`.
-  - If the connection color is **blank**, the square can include **all** eligible dots (per the model’s rules).
+- **Dots in the path**: the connected dots (current `DotIdsInPath`) are always included.
+- **Dots outside the path**: the square scans the full board and includes **any colorable dot** whose comparable color matches the connection’s `CurrentColor`.
+  - If the connection color is **blank**, the square can include **all** eligible dots (per the square’s rules).
   - Blank-colored dots are excluded when the connection color is not blank.
+  - Non-colorable dots that `ShouldBeHitBySquare` are also included.
 
 This expanded set is exposed via:
 
 - **`DotsToHitFromSquare`**: the additional dot IDs included by the square logic (outside the normal connection path).
 - **`OnSquareActivated(dotsToActivate)`**: raised when the cycle is closed; used for square selection feedback.
 - **`OnSquareDeactivated(dotsToDeactivate)`**: raised when the player backtracks out of the closed cycle; used to remove square feedback from dots that are no longer “hit” by the square.
+
+#### Big squares and bombs
+
+“**Big squares**” are a special case of square connections:
+
+- **Size threshold**: if the closed path contains **fewer than 8 dots**, it behaves as a normal square. When it contains **8 or more dots**, the system treats it as a big square and looks for dots fully enclosed by the loop.
+- **Interior detection**: the `Square` scans the board to:
+  - Build the border segment of the connection (the loop itself).
+  - Flood‑fill regions that are separated from the board edge by the border.
+  - Collect all dots that are inside the border, **not on the edge of the board**, and **not already part of the connection path**.
+- **Bomb preview during drag**:
+  - When the square is activated, each interior dot is temporarily hidden and replaced with a pooled bomb presenter from `BombPool`.
+  - These bombs are **purely visual previews** while the drag is active; they are tracked by the `Square` so they can be reverted or committed.
+- **Cancel / backtrack behavior**:
+  - If the player backtracks out of the closed loop, `ConnectionModel` deactivates the square.
+  - The square clears its hit list, restores original dot visuals, and returns all preview bombs to the pool.
+- **Commit on connection end**:
+  - When the player releases the pointer, `ConnectionModel.End()` calls `Square.Commit()`.
+  - For each interior dot, the board replaces the original dot with the bomb presenter, permanently turning all fully enclosed dots into **bomb dots**.
+  - The resulting `ConnectionResult` exposes `Square`, `DotsToHitFromSquare`, and `AllDotsToHit` so the cascade system can clear the connection and then react to the newly-created bombs in subsequent steps.
 
 ### ConnectionPresenter (`Gameplay/Connection/Presenter/ConnectionPresenter.cs`)
 
