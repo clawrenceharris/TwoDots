@@ -17,14 +17,18 @@ The cascade system runs after a connection is completed (pointer up). It clears 
 - **EnsureInstance**: `[RuntimeInitializeOnLoadMethod]` creates a `CascadeRunner` in the scene if none exists.
 - **StartCascade(payload)**: Validates payload (≥2 dot IDs), builds a `CascadeContext`, switches `LevelStateManager` to `CascadeState`, and starts the `RunCascade` coroutine.
 - **RunCascade**: Loop: (1) enqueue steps from pre-gravity producers, (2) process pre-gravity queue until empty (each step can enqueue more), (3) collect and play gravity drops, (4) collect and play refill drops, (5) enqueue steps from post-fill producers, (6) process post-fill queue. Repeat until no work or `_maxCascadeIterations` is hit.
-- **ExecuteStep**: Resolves presenters for step dot IDs (stable order), removes dots from board, runs clear animations, updates context recent clears and `ClearedDotIds`, returns `FillStepResult`.
+- **ExecuteStep**: Runs hit/explode sequences, then clears eligible dots (stable order), updates context recent clears and `ClearedDotIds`, and returns `FillStepResult`.
 - **Trace**: Optional `_enableTrace` logs each executed step (phase, type, count, source).
 - **FinishCascade**: Restores `LevelStateManager` to the previous state and sets `_isRunning = false`.
 
 ### FillStep (`Gameplay/Cascade/FillStep.cs`)
 
-- Immutable data for one cascade action: `Type`, `Priority`, `Phase`, `DotIds`, optional `Positions`, `Source` (debug), and `Sequence` (set by queue).
-- Producers create steps; the runner executes them (clear those dots, wait for animations, then re-run producers for the same phase so new steps can be enqueued).
+- Immutable data for one cascade action: `Type`, `Priority`, `Phase`, and intent lists:
+  - `ToHit`: dot IDs to apply hit logic/animations to (multi-hit, bombs, etc.).
+  - `ToExplode`: dot IDs to run explosion visuals for (e.g. bombs).
+  - `ToClear`: dot IDs that should be removed after the hit/explode phase (subject to hit-count rules).
+  - Optional `TileIds`, `Positions`, `Source`, and `Sequence` (set by queue).
+- Producers create steps; the runner executes them in **hit → clear** order, then re-runs producers for the same phase if clears occurred.
 
 ### FillStepResult (`Gameplay/Cascade/FillStepResult.cs`)
 
@@ -66,12 +70,19 @@ The cascade system runs after a connection is completed (pointer up). It clears 
 | **GemProducer**             | PostFill   | Finds gem types (SquareGem, RectangleGem) adjacent to recent clears; enqueues one step to clear each gem and all of its neighbors (explosion) (High).     |
 | **BombProducer**            | PostFill   | For each bomb on the board, finds its neighboring dots and enqueues on step to hit/clear all neighbors including itself.                                  |
 
+## Hit vs Clear pipeline
+
+1. **Hit phase**: the runner applies `ToHit` by calling `IHittableDotPresenter.Hit()` (and any `ToExplode` visuals via `IExplodableDotPresenter.Explode()`), then waits for those sequences to finish.
+2. **Clear phase**: the runner evaluates which dots should actually die (e.g. `hitCount >= maxHits` or explicitly in `ToClear`) and then plays their clear animations before gravity/refill.
+
+This split gives bombs and other exploders room to “breathe” before the board refills and allows multi-hit dots to absorb hits without being cleared prematurely.
+
 ## Data Flow
 
 1. **Pointer up** → `ConnectionModel.End()` → `OnConnectionCompleted(payload)` → `CascadeRunner.HandleConnectionCompleted` → `StartCascade(payload)` (if payload has ≥2 dot IDs).
 2. **StartCascade** → Create `CascadeContext(board, payload)` → `LevelStateManager.ChangeState(CascadeState)` → Start `RunCascade` coroutine.
 3. **RunCascade loop**:
-   - Pre-gravity: Enqueue from ConnectionClear, SeedAdjacency, Hedgehog producers. While queue not empty: dequeue step → ExecuteStep (clear dots, play animations) → SetRecentClears → wait for animations → enqueue again from same producers → repeat.
+   - Pre-gravity: Enqueue from ConnectionClear, SeedAdjacency, Hedgehog producers. While queue not empty: dequeue step → hit phase → clear phase → SetRecentClears → wait for clear animations → enqueue again from same producers → repeat.
    - Gravity: `Board.CollectGravityDrops()` → apply model moves → play drop animations → wait for all drops.
    - Refill: `Board.CollectRefillDrops()` → spawn dots → play drop animations → wait.
    - Post-fill: Enqueue from AnchorSink, Lotus, Gem producers; process queue same way as pre-gravity.
@@ -83,6 +94,10 @@ The cascade system runs after a connection is completed (pointer up). It clears 
 - **CascadeState**: On enter, `InputRouter.Gate.SetEnabled(false)`; on exit, `SetEnabled(true)`.
 - **BoardPresenter**: `CollectPresenters(dotIds)` (stable sort by position), `CollectGravityDrops()`, `CollectRefillDrops()`; runner uses these for clearing and for gravity/refill animation.
 - **ConnectionPresenter**: Only emits `OnConnectionCompleted`; it does not call the runner directly. The runner subscribes in OnEnable and unsubscribes in OnDisable.
+
+## Multi-hit dots (future integration)
+
+Multi-hit dots (e.g. beetles) should implement `IHittableDotPresenter` and back their hit counts with an `IHittableDot` model. Producers should put those dot IDs in `ToHit` (and optionally `ToClear`), while the clear phase only removes them when `hitCount >= maxHits`. This keeps repeated hits visible (crack/shake) without forcing an early clear.
 
 ## Adding a New Mechanic
 

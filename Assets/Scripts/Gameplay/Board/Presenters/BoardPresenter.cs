@@ -185,7 +185,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     /// List of all playable dots presenters on the board.
     /// </returns>
     public List<IDotPresenter> GetDotsOnBoard() => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID]).ToList();
-    public List<T> GetDotsOnBoard<T>() where T : DotPresenter => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID].GetPresenter<T>()).ToList();
+    public List<T> GetDotsOnBoard<T>() where T : class, IPresenter => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID].GetPresenter<T>()).ToList();
 
     public List<IDotPresenter> GetDotNeighbors(Vector2Int position, bool includesDiagonals = true)
     {
@@ -267,7 +267,8 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
 
     }
 
-    public List<IDotPresenter> CollectPresenters(IEnumerable<string> dotIds)
+    
+    public List<IDotPresenter> CollectPresenters(List<string> dotIds)
     {
         var presenters = new List<IDotPresenter>();
         if (dotIds == null) return presenters;
@@ -277,8 +278,29 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         {
             if (!seen.Add(id)) continue;
             var presenter = GetDot(id);
-            if (presenter != null)
-                presenters.Add(presenter);
+
+            presenters.Add(presenter);
+        }
+
+
+        return presenters;
+    }
+    public List<T> CollectPresenters<T>(List<string> dotIds)
+    where T : class, IPresenter
+    {
+        var presenters = new List<T>();
+        if (dotIds == null) return presenters;
+        var seen = new HashSet<string>();
+
+        foreach (var id in dotIds)
+        {
+            if (!seen.Add(id)) continue;
+            var presenter = GetDot(id);
+            if (presenter != null && presenter.TryGetPresenter(out T t))
+            {
+                 presenters.Add(t);
+            }
+               
         }
 
         return presenters
@@ -335,8 +357,44 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     {
         _boardModel.MoveDot(id, endPosition);
     }
-    
 
+
+    public bool TryHitDot(string dotId, out bool shouldClear)
+    {
+        var dot = GetDot(dotId);
+        shouldClear = false;
+        if (dot == null)
+        {
+            return false;
+        }
+        if (dot.Dot.TryGetModel(out IHittableDot hittable) && hittable.ShouldHit())
+        {
+            hittable.Hit();
+            shouldClear = hittable.Clearable.ShouldClear();
+            return true;
+        }
+        return false;
+    }
+    public bool TryClearDot(string dotId)
+    {
+        var dot = GetDot(dotId);
+        if (dot == null)
+        {
+            return false;
+        }
+        if (dot.Dot.TryGetModel(out IHittableDot hittable) && hittable.Clearable.ShouldClear())
+        {
+            ClearDot(dotId);
+            return true;
+        }
+        
+        else if (dot.Dot.TryGetModel(out IClearableDot clearable) && clearable.ShouldClear())
+        {
+            ClearDot(dotId);
+            return true;
+        }
+        return false;
+    }
 
 
 
@@ -354,10 +412,10 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         }
 
         Dot dot = DotFactory.CreateDot(dObject);
-       
+
         var view = _boardView.CreateDotView(dot);
-        var presenter = DotFactory.CreateDotPresenter(dot, view);
-        // presenter.OnDotCleared += _boardView.ReleaseDotView;
+        var presenter = DotFactory.CreateDotPresenter(dot, view, this);
+        presenter.Initialize(this);
         return presenter;
     }
     public IDotPresenter SpawnDot(DotsObject dObject)
@@ -370,7 +428,6 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
 
         IDotPresenter presenter = CreateDotPresenter(dObject);
         _dotPresenters.Add(presenter.Dot.ID, presenter);
-        // presenter.OnDotCleared += RemoveDotPresenter;
         _boardModel.SpawnDot(presenter.Dot);
         return presenter;
     }
@@ -390,23 +447,20 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
 
         _dotPresenters.Remove(oldDot.Dot.ID);
         _dotPresenters.Add(newDot.Dot.ID, newDot);
-        // newDot.OnDotCleared += RemoveDotPresenter;
         onComplete?.Invoke();
     
        
     }
     public void RemoveAndDestroyDot(string id)
     {
-        _boardModel.RemoveDot(id);
+        _boardModel.ClearDot(id);
         _boardView.ReleaseDotView(id);
         _dotPresenters.Remove(id);
     }
 
-    public void RemoveDot(string id)
+    public void ClearDot(string id)
     {
-
-        _boardModel.RemoveDot(id);
-    
+        _boardModel.ClearDot(id);
     }
     
     
@@ -747,6 +801,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         return IsAtBottomOfBoard(gridPosition.x, gridPosition.y);
     }
 
-   
+
+    
 }
 

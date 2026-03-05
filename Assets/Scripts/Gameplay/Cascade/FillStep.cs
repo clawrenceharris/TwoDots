@@ -12,10 +12,15 @@ public class FillStep
     public FillStepType Type { get; }
     /// <summary>Ordering within phase; higher runs first.</summary>
     public FillStepPriority Priority { get; }
+    
     /// <summary>PreGravity (before gravity/refill) or PostFill (after).</summary>
     public FillStepPhase Phase { get; }
     /// <summary>Dot IDs to hit when this step is executed.</summary>
-    public IReadOnlyList<string> DotIds { get; }
+    public IReadOnlyList<string> ToHit { get; }
+    /// <summary>Dot IDs to explode when this step is executed.</summary>
+    public IReadOnlyList<string> ToExplode { get; }
+    /// <summary>Dot IDs to clear when this step is executed.</summary>
+    public IReadOnlyList<string> ToClear { get; }
     /// <summary> Tile IDs to hit when this step is executed.</summary>
     public IReadOnlyList<string> TileIds { get; }
     /// <summary>Optional grid positions; may be used by producers for spatial logic.</summary>
@@ -30,7 +35,9 @@ public class FillStep
         FillStepType type,
         FillStepPriority priority,
         FillStepPhase phase,
-        IEnumerable<string> dotIds = null,
+        IEnumerable<string> toHit = null,
+        IEnumerable<string> toClear = null,
+        IEnumerable<string> toExplode = null,
         IEnumerable<string> tileIds = null,
         IEnumerable<Vector2Int> positions = null,
         string source = null)
@@ -39,7 +46,9 @@ public class FillStep
         Priority = priority;
         Phase = phase;
         TileIds = tileIds != null ? new List<string>(tileIds) : new List<string>();
-        DotIds = dotIds != null ? new List<string>(dotIds) : new List<string>();
+        ToHit = toHit != null ? new List<string>(toHit) : new List<string>();
+        ToClear = toClear != null ? new List<string>(toClear) : new List<string>();
+        ToExplode = toExplode != null ? new List<string>(toExplode) : new List<string>();
         Positions = positions != null ? new List<Vector2Int>(positions) : new List<Vector2Int>();
         Source = source ?? string.Empty;
     }

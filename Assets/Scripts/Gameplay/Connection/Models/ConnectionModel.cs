@@ -157,7 +157,7 @@ public class ConnectionModel : IConnectionModel
         {
             // skip if not a color dot
             if (!d.Dot.DotType.IsColorable()) continue;
-            if (d.Dot.TryGetModel(out ColorableModel colorable))
+            if (d.Dot.TryGetModel(out ColorableDot colorable))
             {
                 // skip if the dot's color is blank. We only care about dots with a definitive color
                 if (colorable.Color.IsBlank()) continue;

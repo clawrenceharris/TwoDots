@@ -12,14 +12,14 @@ public interface IBoardModel
     List<TileModel> GetAllTiles();
     void SpawnTile(TileModel tile);
     void SpawnDot(Dot dot);
-    void RemoveTile(string id);
-    void RemoveDot(string id);
+    void RemoveTile(string tileId);
+    void ClearDot(string dotId);
     void MoveDot(string id, Vector2Int toPosition);
     Dot GetDotAt(Vector2Int position);
     Dot GetDotAt(int x, int y);
     TileModel GetTileAt(Vector2Int position);
     TileModel GetTileAt(int x, int y);
-    Dot GetDot(string id);
+    Dot GetDot(string dotId);
     TileModel GetTile(string id);
     event Action<Dot> OnDotCleared;
     event Action<Dot> OnDotSpawned;
@@ -29,5 +29,5 @@ public interface IBoardModel
     List<TileModel> InitTiles(LevelData level);
     bool IsValidPosition(Vector2Int position);
     void ClearBoard();
-    void ReplaceDot(string id, Dot dot);
+    void ReplaceDot(string dotId, Dot dot);
 }

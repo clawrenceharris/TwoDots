@@ -58,13 +58,11 @@ public class BoardView : MonoBehaviour
     /// </summary>
     public void ReleaseDotView(string dotId)
     {
-        Debug.Log($"Releasing dot view {dotId}");
         if (_dotViews.TryGetValue(dotId, out var dotView))
         {
             if (dotView is BombView bombView)
             {
                 var poolObj = bombView.GetComponentInParent<BombPoolObject>();
-                Debug.Log($"Releasing bomb view {bombView.name} to pool");
                 if (poolObj != null)
                 {
                     PoolService.Instance.ReturnToPool<BombPool>(poolObj);
@@ -97,10 +95,7 @@ public class BoardView : MonoBehaviour
 
        
         DotView view = Instantiate(PrefabLibrary.Instance.FromDotType(dot.DotType), transform);
-        if (view is BombView bombView)
-        {
-            Debug.Log($"Creating bomb view for {dot.ID}");
-        }
+       
         view.transform.position = worldPos;
         _dotViews.TryAdd(dot.ID, view);
         return view;

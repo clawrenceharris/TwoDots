@@ -19,14 +19,14 @@ public class LotusProducer : IFillStepProducer
         {
             if (dot == null) continue;
             if (dot.Dot.DotType != DotType.Lotus) continue;
-            if (!dot.Dot.TryGetModel(out ColorableModel lotusColorable)) continue;
+            if (!dot.Dot.TryGetModel(out ColorableDot lotusColorable)) continue;
 
             var matchedIds = new HashSet<string> { dot.Dot.ID };
             var neighbors = context.Board.GetDotNeighbors<IDotPresenter>(dot.Dot.GridPosition, includesDiagonals: false);
             foreach (var neighbor in neighbors)
             {
                 if (neighbor == null) continue;
-                if (!neighbor.Dot.TryGetModel(out ColorableModel neighborColorable)) continue;
+                if (!neighbor.Dot.TryGetModel(out ColorableDot neighborColorable)) continue;
                 if (neighborColorable.Color != lotusColorable.Color) continue;
                 matchedIds.Add(neighbor.Dot.ID);
             }
@@ -37,7 +37,7 @@ public class LotusProducer : IFillStepProducer
                 FillStepType.LotusClear,
                 FillStepPriority.Normal,
                 FillStepPhase.PostFill,
-                matchedIds,
+                toClear: matchedIds,
                 source: "Lotus"));
         }
     }

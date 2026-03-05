@@ -57,7 +57,7 @@ public class Square
                 continue;
             }
 
-            if (d.Dot.TryGetModel<ColorableModel>(out var colorableDot))
+            if (d.Dot.TryGetModel<ColorableDot>(out var colorableDot))
             {
                 // We know the connection color is not blank at this point so we can exclude blank dots
                 if (colorableDot.Color.IsBlank()) continue;

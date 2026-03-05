@@ -30,7 +30,7 @@ public class AnchorSinkProducer : IFillStepProducer
             FillStepType.AnchorSink,
             FillStepPriority.High,
             FillStepPhase.PostFill,
-            anchors,
+            toClear: anchors,
             source: "AnchorSink"));
     }
 }

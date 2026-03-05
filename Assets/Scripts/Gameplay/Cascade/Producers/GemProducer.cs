@@ -41,7 +41,7 @@ public class GemProducer : IFillStepProducer
             FillStepType.GemExplode,
             FillStepPriority.High,
             FillStepPhase.PostFill,
-            clearIds,
+            toClear: clearIds,
             source: "GemExplosion"));
     }
 
