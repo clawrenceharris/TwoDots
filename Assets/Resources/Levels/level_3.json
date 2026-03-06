@@ -3,7 +3,7 @@
   "w": 6,
   "h": 6,
   "moves": 10,
-  "colors": ["b", "p", "g"],
+  "colors": ["b"],
   "initDotsToSpawn": [],
   "dotsToSpawn": [
     {

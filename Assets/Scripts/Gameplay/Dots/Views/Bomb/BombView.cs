@@ -17,7 +17,7 @@ public class BombView : DotView
     public Sequence DoLineAnimation(IHittableDotPresenter dot, Action callback = null)
     {
         var sequence = DOTween.Sequence();
-        float duration = 0.4f;
+        float duration = 0.35f;
         Vector3 startPos = transform.position;
         Vector3 targetPosition = GridUtility.GridToWorld(dot.Dot.GridPosition);
         float angle = Vector2.SignedAngle(Vector2.right, targetPosition - startPos);
@@ -46,13 +46,20 @@ public class BombView : DotView
         // Phase 1: Head extends from start to target, tail remains at lineStart
         sequence.Append(DOTween.To(
             () => 0f,
-            t => {
+            t =>
+            {
                 renderer.SetPosition(0, lineStart);
                 renderer.SetPosition(1, Vector3.Lerp(lineStart, targetPosition, t));
+                if (Vector3.Distance(renderer.GetPosition(0), dot.View.transform.position - (dot.View.transform.localScale / 2)) < 0.01f)
+                {
+                    dot.View.DotRenderer.SetColor(ColorSchemeService.CurrentColorScheme.blank);
+                }
             },
             1f,
             duration * 0.5f
-        ));
+        )).AppendCallback(() => {
+            dot.View.DotRenderer.SetColor(ColorSchemeService.ToDotColor(dot.Dot));
+        });
 
         // Phase 2: Tail follows to target, so line 'collapses' into target
         sequence.Join(DOTween.To(
@@ -62,9 +69,10 @@ public class BombView : DotView
                 renderer.SetPosition(0, Vector3.Lerp(lineStart, targetPosition, t));
                 renderer.startWidth = Mathf.Lerp(0.2f, 0.1f, t);
                 renderer.endWidth = Mathf.Lerp(0.2f, 0.1f, t);
+
             },
             1f,
-            duration * 1.5f
+            duration * 1.3f
         ));
 
 

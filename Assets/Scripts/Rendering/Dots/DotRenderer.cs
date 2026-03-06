@@ -49,4 +49,25 @@ public class DotRenderer : MonoBehaviour
         if (!applied && role == SkinColorRole.Base && _fallbackBaseRenderer != null)
             _fallbackBaseRenderer.color = color;
     }
+
+    public void SetColor(Color color)
+    {
+        _fallbackBaseRenderer.color = color;
+        if (_targets != null)
+        {
+            for (int i = 0; i < _targets.Length; i++)
+            {
+                var binding = _targets[i];
+                foreach (var sprite in binding.Renderers)
+                {
+                    sprite.color = color;
+                }
+            }
+        
+        }
+        if (_fallbackBaseRenderer != null)
+        {
+            _fallbackBaseRenderer.color = color;
+        }
+    }
 }
