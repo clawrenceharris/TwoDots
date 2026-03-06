@@ -14,8 +14,6 @@ public class ColorScheme : ScriptableObject
     public Color blank;
     public Color backgroundColor;
 
-    public Color bombLight;
-    public Color bombDark;
 
     public DotColorScheme anchor;
     public DotColorScheme clock;

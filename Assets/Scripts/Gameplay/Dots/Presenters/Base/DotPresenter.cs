@@ -16,34 +16,28 @@ public class DotPresenter : IDotPresenter
     protected readonly Dot _dot;
     public Dot Dot => _dot;
     public DotView View => _view;
+    protected IBoardPresenter _board;
 
     public event Action<string> OnDotSpawned;
 
-    public event Action<string> OnDotCleared;
     public event Action<string> OnDotDropped;
-    private readonly Dictionary<Type, IDotPresenter> _presenters = new();
+    private readonly Dictionary<Type, IPresenter> _presenters = new();
 
-    public DotPresenter(
-        Dot dot,
-        DotView view)
+    public DotPresenter(Dot dot, DotView view)
     {
         _skinResolver = new SkinResolver();
         _skinApplier = new DotSkinApplier();
         _dot = dot;
         _view = view;
-        _view.Init(dot);
-        RefreshSkin();
+
         PrepareForDrop();
     }
 
-    public Sequence Clear()
+    public void Initialize(IBoardPresenter board)
     {
-        return DOTween.Sequence().Append(_view.transform.DOScale(Vector3.zero, 0.3f)).OnComplete(() =>
-        {
-            _presenters.Clear();
-           
-
-        });
+        _view.Init(_dot);
+        RefreshSkin();
+        _board = board;
     }
 
     public Sequence Spawn()
@@ -55,10 +49,10 @@ public class DotPresenter : IDotPresenter
     }
 
 
-   
+
     public void Drop(int targetRow)
     {
-        
+
         var endPos = GridUtility.GridToWorld(_dot.GridPosition);
         _view.transform.DOMoveY(targetRow * BoardView.TileSize, 0.5f).SetEase(Ease.OutBounce).OnComplete(() =>
         {
@@ -69,7 +63,7 @@ public class DotPresenter : IDotPresenter
     public void PrepareForDrop()
     {
         var startPos = GridUtility.GridToWorld(_dot.GridPosition);
-        _view.transform.position = new Vector3(startPos.x, (Camera.main.orthographicSize * 2 )+ startPos.y, 0);
+        _view.transform.position = new Vector3(startPos.x, (Camera.main.orthographicSize * 2) + startPos.y, 0);
     }
 
 
@@ -81,28 +75,46 @@ public class DotPresenter : IDotPresenter
         _skinApplier.Apply(_view, skin);
     }
 
-    public void AddPresenter<T>(T presenter) where T : DotPresenter
+    public void AddPresenter<T>(T presenter) where T : class, IPresenter
     {
         _presenters.Add(typeof(T), presenter);
     }
 
-    public void RemovePresenter<T>() where T : DotPresenter
+    public void RemovePresenter<T>() where T : class, IPresenter
     {
         _presenters.Remove(typeof(T));
     }
-    public T GetPresenter<T>() where T : DotPresenter
+    public T GetPresenter<T>() where T : class, IPresenter
     {
-        if (_presenters.TryGetValue(typeof(T), out var presenter))
+        if (TryGetPresenter(out T presenter))
         {
-            return presenter as T;
+            return presenter;
         }
         Debug.LogWarning($"Presenter {typeof(T)} not found");
         return null;
     }
 
-    public bool TryGetPresenter<T>(out T presenter) where T : DotPresenter
+
+    public bool TryGetPresenter<T>(out T presenter) where T : class, IPresenter
     {
-        presenter = GetPresenter<T>();
-        return presenter != null;
+
+        if (_presenters.TryGetValue(typeof(T), out IPresenter tPresenter))
+        {
+            presenter = tPresenter as T;
+            return true;
+        }
+        else
+        {
+            foreach (var kvp in _presenters)
+            {
+                if (kvp.Value is T tPresenterValue)
+                {
+                    presenter = tPresenterValue;
+                    return true;
+                }
+            }
+        }
+        presenter = null;
+        return false;
     }
 }

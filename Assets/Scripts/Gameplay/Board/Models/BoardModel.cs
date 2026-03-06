@@ -112,7 +112,7 @@ public class BoardModel : IBoardModel
         return false;
     }
 
-    public void RemoveDot(string id)
+    public void ClearDot(string id)
     {
         if (_dotsById.TryGetValue(id, out Dot dotToRemove))
         {
@@ -291,5 +291,7 @@ public class BoardModel : IBoardModel
         DotGrid = new Dot[Width, Height];
         TileGrid = new TileModel[Width, Height];
     }
+
+   
 }
 

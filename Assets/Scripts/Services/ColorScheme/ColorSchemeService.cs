@@ -56,7 +56,7 @@ public class ColorSchemeService
     }
     public static Color ToDotColor(Dot dot)
     {
-        if (dot.TryGetModel(out ColorableModel colorable))
+        if (dot.TryGetModel(out ColorableDot colorable))
         {
             return FromDotColor(colorable.Color);
         }

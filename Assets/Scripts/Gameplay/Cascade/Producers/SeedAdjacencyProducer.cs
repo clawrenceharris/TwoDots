@@ -36,7 +36,8 @@ public class SeedAdjacencyProducer : IFillStepProducer
             FillStepType.SeedClear,
             FillStepPriority.High,
             FillStepPhase.PreGravity,
-            seedIds,
+            toHit: seedIds,
+            toClear: seedIds,
             source: "SeedAdjacency"));
     }
 }

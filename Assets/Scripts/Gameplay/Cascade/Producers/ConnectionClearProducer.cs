@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
-
 /// <summary>
 /// Pre-gravity producer that consumes the connection payload once per cascade and enqueues
 /// a single step to clear all dots in the completed path. Runs at VeryHigh priority so
@@ -8,10 +6,8 @@ using System.Linq;
 /// </summary>
 public class ConnectionClearProducer : IFillStepProducer
 {
-    /// <inheritdoc />
     public FillStepPhase Phase => FillStepPhase.PreGravity;
 
-    /// <inheritdoc />
     public void CollectSteps(CascadeContext context, List<FillStep> outSteps)
     {
         if (context == null || outSteps == null) return;
@@ -22,7 +18,7 @@ public class ConnectionClearProducer : IFillStepProducer
                 FillStepType.ConnectionClear,
                 FillStepPriority.VeryHigh,
                 FillStepPhase.PreGravity,
-                payload.AllDotsToHit,
+                toHit: payload.AllDotsToHit,
                 source: "Connection"));
         }
     
