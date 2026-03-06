@@ -32,23 +32,12 @@ public class Dot : IBoardEntity
     }
     public T GetModel<T>() where T : class, IModel
     {
-        // First, try to find an exact type match
-        if (_models.TryGetValue(typeof(T), out IModel model))
-        // If not found, search the models for a value that is compatible (handles subtypes/interfaces)
+        if (TryGetModel(out T model))
         {
-            return model as T;
+            return model;
         }
-        else
-        {
-            foreach (var kvp in _models)
-            {
-                if (kvp.Value is T tModel)
-                {
-                    return tModel;
-                }
-            }
-        }
-        throw new ArgumentException($"Component {typeof(T)} not found for dot");
+        Debug.LogError($"Model {typeof(T)} not found");
+        return null;
     }
     public bool TryGetModel<T>(out T model) where T : class,IModel
     {

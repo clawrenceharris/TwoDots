@@ -35,7 +35,8 @@ public class HedgehogProducer : IFillStepProducer
             FillStepType.HedgehogCollision,
             FillStepPriority.High,
             FillStepPhase.PreGravity,
-            hedgehogIds,
+            toHit: hedgehogIds,
+            toClear: hedgehogIds,
             source: "Hedgehog"));
     }
 }

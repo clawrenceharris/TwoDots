@@ -7,14 +7,12 @@ public interface IDotPresenter
 {
     Dot Dot { get; }
     DotView View { get; }
-    event Action<string> OnDotCleared;
     event Action<string> OnDotDropped;
-
-    Sequence Clear();
+    void Initialize(IBoardPresenter board);
     Sequence Spawn();
-    bool TryGetPresenter<T>(out T presenter) where T : DotPresenter;
-    T GetPresenter<T>() where T : DotPresenter;
-    void AddPresenter<T>(T presenter) where T : DotPresenter;
-    void RemovePresenter<T>() where T : DotPresenter;
+    bool TryGetPresenter<T>(out T presenter) where T : class, IPresenter;
+    T GetPresenter<T>() where T : class, IPresenter;
+    void AddPresenter<T>(T presenter) where T : class, IPresenter;
+    void RemovePresenter<T>() where T : class, IPresenter;
     void Drop(int targetRow);
 }

@@ -26,7 +26,6 @@ public class BombPool : Pool
                 Row = 0,
             };
             var presenter = _board.CreateDotPresenter(bombDotObject);
-            Debug.Log($"Creating bomb pool object for {presenter.View.name}");
             var bombPoolObj = new GameObject("BombPoolObject").AddComponent<BombPoolObject>();
             bombPoolObj.Presenter = presenter;
             bombPoolObj.transform.SetParent(transform);

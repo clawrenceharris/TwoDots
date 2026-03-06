@@ -12,8 +12,6 @@ using UnityEngine;
 
 public class Square
 {
-
-    private readonly HashSet<IDotPresenter> visitedDots = new();
     public List<string> DotIdsToHit { get; private set; } = new();
     private readonly IBoardPresenter _board;
     private readonly IConnectionModel _connection;
@@ -57,7 +55,7 @@ public class Square
                 continue;
             }
 
-            if (d.Dot.TryGetModel<ColorableModel>(out var colorableDot))
+            if (d.Dot.TryGetModel<ColorableDot>(out var colorableDot))
             {
                 // We know the connection color is not blank at this point so we can exclude blank dots
                 if (colorableDot.Color.IsBlank()) continue;
@@ -104,7 +102,7 @@ public class Square
             // 3. Position/use it as a preview
             bombPoolObject.Presenter.View.transform.position = dot.View.transform.position;
             bombPoolObject.Presenter.Spawn(); // purely visual animation
-                                              // 4. Remember it for deactivation/commit
+            // 4. Remember it for deactivation/commit
             PreviewBombs[dotId] = bombPoolObject;
         }
     }
@@ -173,20 +171,45 @@ public class Square
         {
             return new List<string>();
         }
-        HashSet<string> dotsInSquare = new();
+        var dotsInSquare = new HashSet<string>();
         List<string> squareBorder = GetSquareBorderDots();
-        for (int col = 0; col < _board.Width; col++)
+        var borderSet = new HashSet<string>(squareBorder);
+        var pathSet = new HashSet<string>(_connection.DotIdsInPath);
+
+        // Flood-fill from board-edge dots to identify "outside" region, then classify remaining
+        // non-border dots as "inside". This avoids classifying isolated outside pockets as inside.
+        var outside = new HashSet<string>();
+        var queue = new Queue<IDotPresenter>();
+        foreach (var dot in _board.GetDotsOnBoard())
         {
-            for (int row = 0; row < _board.Height; row++)
+            if (dot == null) continue;
+            if (borderSet.Contains(dot.Dot.ID)) continue;
+            if (!_board.IsOnEdgeOfBoard(dot.Dot.GridPosition)) continue;
+            if (outside.Add(dot.Dot.ID))
             {
-                IDotPresenter dot = _board.GetDotAt(col, row);
-                // Make sure dot is not in the square and not on edge of board since there is no need to fill these
-                if (dot != null && !squareBorder.Contains(dot.Dot.ID) && !_board.IsOnEdgeOfBoard(dot.Dot.GridPosition))
-                {
-                    //Add each valid and unique dot found in the flood fill to the dots in square set and disregard dots within the current connection
-                    dotsInSquare.UnionWith(BoundaryFill(dot, squareBorder).Where((dotId) => !_connection.DotIdsInPath.Contains(dotId)));
-                }
+                queue.Enqueue(dot);
             }
+        }
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            foreach (var neighbor in _board.GetDotNeighbors(current.Dot.GridPosition, includesDiagonals: false))
+            {
+                if (neighbor == null) continue;
+                if (borderSet.Contains(neighbor.Dot.ID)) continue;
+                if (!outside.Add(neighbor.Dot.ID)) continue;
+                queue.Enqueue(neighbor);
+            }
+        }
+
+        foreach (var dot in _board.GetDotsOnBoard())
+        {
+            if (dot == null) continue;
+            if (borderSet.Contains(dot.Dot.ID)) continue;
+            if (outside.Contains(dot.Dot.ID)) continue;
+            if (pathSet.Contains(dot.Dot.ID)) continue;
+            dotsInSquare.Add(dot.Dot.ID);
         }
 
         return dotsInSquare.ToList();
@@ -194,77 +217,6 @@ public class Square
     }
 
 
-
-    /// <summary>
-    /// Performs a BFS flood‑fill from startDot, stopping if the region ever touches 
-    /// a board edge that is not part of the square border. In that case, the entire region is 
-    /// considered ‘outside’ the <paramref name="squareBorder"/> and an empty list is returned. 
-    /// Otherwise, returns the IDs of all connected dots reachable from <paramref name="startDot"/> without 
-    /// crossing the border.
-    /// </summary>
-    /// <param name="startDot">The starting dot from which the boundary fill algorithm begins.</param>
-    /// <param name="squareBorder">A list of dot ids representing the boundaries of the square area to be filled.</param>
-    /// <returns>A list of dots that are inside the square area, or possibly an empty list if no dots found.</returns>
-    private List<string> BoundaryFill(IDotPresenter startDot, List<string> squareBorder)
-    {
-        //list of dot ids that are inside the square
-        List<string> insideSquare = new();
-
-
-        // Queue for breadth-first search traversal
-        Queue<IDotPresenter> queue = new();
-
-        // Enqueue the starting dot
-        queue.Enqueue(startDot);
-
-        // Perform breadth-first search
-        while (queue.Count > 0)
-        {
-            IDotPresenter currentDot = queue.Dequeue();
-
-            insideSquare.Add(currentDot.Dot.ID);
-
-            visitedDots.Add(currentDot);
-
-            // Get neighbors of the current dot
-            var neighbors = _board.GetDotNeighbors(currentDot.Dot.GridPosition, true);
-
-            foreach (var neighbor in neighbors)
-            {
-                bool isOnEdge = _board.IsOnEdgeOfBoard(neighbor.Dot.GridPosition);
-                bool isBorder = squareBorder.Contains(neighbor.Dot.ID);
-
-                if (visitedDots.Contains(neighbor))
-                {
-                    continue;
-                }
-                // If the neighbor is:
-                //  1. on the edge of the board and 
-                //  2. not part of the square border
-                // then we know that it cant be inside the square
-                if (isOnEdge && !isBorder)
-                {
-                    //then return empty list
-                    return new();
-                }
-
-                // If the neighbor is not a dot in the square border, then add it to the queue for further exploration
-                // otherwise continue checking the other neighbors of the current dot
-                if (!isBorder)
-                {
-
-                    queue.Enqueue(neighbor);
-                }
-
-
-                visitedDots.Add(neighbor);
-
-            }
-
-        }
-
-        return insideSquare;
-    }
 
     public void Commit()
     {

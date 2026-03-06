@@ -9,11 +9,14 @@ public class BombProducer : IFillStepProducer
     public void CollectSteps(CascadeContext context, List<FillStep> outSteps)
     {
         if (context == null || outSteps == null) return;
-        var bombs = context.Board.GetDotsOnBoard().Where(d => d.Dot.DotType.IsBomb());
+        var bombs = context.Board.GetDotsOnBoard().Where(d => d.Dot.DotType.IsBomb()).ToList();
+        if (bombs.Count == 0) return;
+
+        var bombIds = new HashSet<string>();
         var dotsToHit = new HashSet<string>();
         foreach (var bomb in bombs)
         {
-            dotsToHit.Add(bomb.Dot.ID);
+            bombIds.Add(bomb.Dot.ID);
             var neighbors = context.Board.GetDotNeighbors(bomb.Dot.GridPosition, true);
             foreach (var neighbor in neighbors)
             {
@@ -22,12 +25,15 @@ public class BombProducer : IFillStepProducer
                 dotsToHit.Add(neighbor.Dot.ID);
             }
         }
-        if (dotsToHit.Count == 0) return;
+        Debug.Log($"bombIds: {bombIds.Count}, dotsToHit: {dotsToHit.Count}");
+        if (bombIds.Count == 0 && dotsToHit.Count == 0) return;
         outSteps.Add(new FillStep(
                 FillStepType.BombExplode,
                 FillStepPriority.VeryHigh,
                 FillStepPhase.PostFill,
-                dotsToHit,
+                toHit: dotsToHit,
+                toExplode: bombIds,
+                toClear: bombIds,
                 source: "BombSpawn"));
     }
 }

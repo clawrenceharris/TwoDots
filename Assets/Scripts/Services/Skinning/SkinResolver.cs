@@ -17,7 +17,7 @@ public class SkinResolver : ISkinResolver
 
     private static Color ResolveDetailColor(Dot dot)
     {
-         if (dot.TryGetModel(out ColorableModel colorable))
+         if (dot.TryGetModel(out ColorableDot colorable))
             return ResolveDotColor(colorable.Color);
         if (ColorSchemeService.GetDotColorScheme(dot.DotType) is { } colorScheme)
         {
@@ -27,7 +27,7 @@ public class SkinResolver : ISkinResolver
     }
     private static Color ResolveAccentColor(Dot dot)
     {
-         if (dot.TryGetModel(out ColorableModel colorable))
+         if (dot.TryGetModel(out ColorableDot colorable))
             return ResolveDotColor(colorable.Color);
         if (ColorSchemeService.GetDotColorScheme(dot.DotType) is { } colorScheme)
         {
@@ -37,7 +37,7 @@ public class SkinResolver : ISkinResolver
     }
     private static Color ResolveBaseColor(Dot dot)
     {
-        if (dot.TryGetModel(out ColorableModel colorable))
+        if (dot.TryGetModel(out ColorableDot colorable))
         {
             return ResolveDotColor(colorable.Color);
         }

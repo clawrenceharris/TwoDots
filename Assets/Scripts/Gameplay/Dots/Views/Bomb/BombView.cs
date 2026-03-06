@@ -14,43 +14,69 @@ public class BombView : DotView
         _visuals = GetComponent<BombVisuals>();
     }
     
-    public IEnumerator DoLineAnimation(IDotPresenter dot, Action callback = null)
+    public Sequence DoLineAnimation(IHittableDotPresenter dot, Action callback = null)
     {
-
-        float duration = 0.4f;
+        var sequence = DOTween.Sequence();
+        float duration = 0.35f;
         Vector3 startPos = transform.position;
         Vector3 targetPosition = GridUtility.GridToWorld(dot.Dot.GridPosition);
-
         float angle = Vector2.SignedAngle(Vector2.right, targetPosition - startPos);
         float distance = Vector2.Distance(startPos, targetPosition);
         distance -= dot.View.transform.localScale.x / 2 + dot.View.transform.localScale.x / 2;
 
-        ConnectorLineView line = new GameObject("Line").AddComponent<ConnectorLineView>();
+        GameObject line = Instantiate(_visuals.BombLine, startPos, Quaternion.Euler(0, 0, angle));
+        var renderer = line.GetComponent<LineRenderer>();
+        renderer.material.color = ColorSchemeService.CurrentColorScheme.blank;
+        renderer.sortingLayerName = "Bomb";
+        renderer.sortingOrder = 100;
 
-        line.enabled = false;
-        line.SetColor(ColorSchemeService.CurrentColorScheme.bombLight);
-        line.GetComponent<LineRenderer>().sortingLayerName = "Bomb";
-        line.GetComponent<LineRenderer>().sortingOrder = 100;
-        line.transform.SetPositionAndRotation(startPos, Quaternion.Euler(0, 0, angle));
+        renderer.startWidth = 0.2f;
+        renderer.endWidth = 0.2f;
+        renderer.positionCount = 2;
 
-        line.transform.localScale = new Vector3(0, 0.2f);
-        line.transform.parent = dot.View.transform;
+        // Set line to start small "behind" the bomb view (opposite direction to target)
+        float startLength = 0.3f; // tweak for visual effect
+        Vector3 forward = (targetPosition - startPos).normalized;
+        Vector3 startOffset = -forward * startLength;
+        Vector3 lineStart = startPos + startOffset;
+        renderer.SetPosition(0, lineStart);
+        renderer.SetPosition(1, lineStart);
 
-        line.transform.DOScale(new Vector3(distance, 0.2f), duration / 2).WaitForCompletion();
+        // As the line animates, the head moves to the target, then the tail follows
+        // Phase 1: Head extends from start to target, tail remains at lineStart
+        sequence.Append(DOTween.To(
+            () => 0f,
+            t =>
+            {
+                renderer.SetPosition(0, lineStart);
+                renderer.SetPosition(1, Vector3.Lerp(lineStart, targetPosition, t));
+                if (Vector3.Distance(renderer.GetPosition(0), dot.View.transform.position - (dot.View.transform.localScale / 2)) < 0.01f)
+                {
+                    dot.View.DotRenderer.SetColor(ColorSchemeService.CurrentColorScheme.blank);
+                }
+            },
+            1f,
+            duration * 0.5f
+        )).AppendCallback(() => {
+            dot.View.DotRenderer.SetColor(ColorSchemeService.ToDotColor(dot.Dot));
+        });
 
-        callback?.Invoke();
-        Vector3 position = targetPosition - (targetPosition - startPos).normalized * distance;
+        // Phase 2: Tail follows to target, so line 'collapses' into target
+        sequence.Join(DOTween.To(
+            () => 0f,
+            t =>
+            {
+                renderer.SetPosition(0, Vector3.Lerp(lineStart, targetPosition, t));
+                renderer.startWidth = Mathf.Lerp(0.2f, 0.1f, t);
+                renderer.endWidth = Mathf.Lerp(0.2f, 0.1f, t);
 
-        line.transform.DOMove(position, duration);
+            },
+            1f,
+            duration * 1.3f
+        ));
 
 
-        line.transform.DOScale(new Vector3(distance, 0.1f), duration / 3);
-
-
-        line.transform.DOMove(targetPosition, duration / 3);
-
-        line.transform.DOScale(new Vector3(0, 0.1f), duration / 3);
-        yield return new WaitForSeconds(duration);
-        Destroy(line.gameObject);
+        sequence.OnComplete(() => Destroy(line.gameObject));
+        return sequence;
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ public class CascadeRunner : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void EnsureInstance()
     {
-        if (Object.FindFirstObjectByType<CascadeRunner>() != null) return;
+        if (FindFirstObjectByType<CascadeRunner>() != null) return;
         var runnerObject = new GameObject("CascadeRunner");
         runnerObject.AddComponent<CascadeRunner>();
     }
@@ -22,7 +23,7 @@ public class CascadeRunner : MonoBehaviour
     [SerializeField] private bool _enableTrace;
     [SerializeField] private int _maxCascadeIterations = 50;
 
-    private BoardPresenter _board;
+    private IBoardPresenter _board;
     private LevelStateManager _stateManager;
     private IState _previousState;
     private bool _isRunning;
@@ -180,11 +181,23 @@ public class CascadeRunner : MonoBehaviour
             markWork?.Invoke();
             TraceStep(step);
 
-            var result = ExecuteStep(step, out var animations);
+            var hitAnimations = ExecuteHitPhase(step);
+            if (hitAnimations.Count > 0)
+            {
+                yield return WaitForAnimations(hitAnimations);
+            }
+
+            var result = ExecuteClearPhase(step, out var clearAnimations);
             if (result.HasClears)
             {
                 _context.SetRecentClears(result.ClearedDotIds, result.ClearedPositions);
-                yield return WaitForAnimations(animations);
+            }
+            if (clearAnimations.Count > 0)
+            {
+                yield return WaitForAnimations(clearAnimations);
+            }
+            if (result.HasClears)
+            {
                 EnqueueProducerSteps(producers, queue);
             }
         }
@@ -196,27 +209,69 @@ public class CascadeRunner : MonoBehaviour
 
     }
 
-    private FillStepResult ExecuteStep(FillStep step, out List<Sequence> animations)
+    private List<Sequence> ExecuteHitPhase(FillStep step)
+    {
+        var animations = new List<Sequence>();
+        if (step == null) return animations;
+
+        if (step.ToHit.Count > 0)
+        {
+            var hittables = _board.CollectPresenters<IHittableDotPresenter>(new List<string>(step.ToHit));
+            foreach (var hittable in hittables)
+            {
+                if (_board.TryHitDot(hittable.Dot.ID, out _))
+                {
+                    var sequence = hittable.Hit();
+                    if (sequence != null)
+                        animations.Add(sequence);
+                }
+            }
+        }
+
+        if (step.ToExplode.Count > 0)
+        {
+            var explodables = _board.CollectPresenters<IExplodableDotPresenter>(new List<string>(step.ToExplode));
+            foreach (var explodable in explodables)
+            {
+                explodable.PrepareForExplode(new List<string>(step.ToHit), new List<string>(step.ToExplode));
+            }
+            foreach (var explodable in explodables)
+            {
+                Debug.Log($"explodable: {explodable.Dot.ID}");
+                var sequence = explodable.Explode();
+                if (sequence != null)
+                    animations.Add(sequence);
+            }
+        }
+
+        return animations;
+    }
+
+    private FillStepResult ExecuteClearPhase(FillStep step, out List<Sequence> animations)
     {
         animations = new List<Sequence>();
-        if (step == null || step.DotIds.Count == 0) return FillStepResult.Empty;
+        if (step == null) return FillStepResult.Empty;
 
-        var presenters = _board.CollectPresenters(step.DotIds);
-        if (presenters.Count == 0) return FillStepResult.Empty;
+        var clearCandidates = new HashSet<string>(step.ToClear);
+        clearCandidates.UnionWith(step.ToHit);
+
+        if (clearCandidates.Count == 0) return FillStepResult.Empty;
 
         var clearedIds = new List<string>();
         var clearedPositions = new List<Vector2Int>();
 
-        foreach (var presenter in presenters)
+        var clearables = _board.CollectPresenters<IClearableDotPresenter>(new List<string>(clearCandidates));
+        foreach (var clearable in clearables)
         {
-            if (presenter == null) continue;
-            clearedIds.Add(presenter.Dot.ID);
-            clearedPositions.Add(presenter.Dot.GridPosition);
-            _board.RemoveDot(presenter.Dot.ID);
+            if (_board.TryClearDot(clearable.Dot.ID))
+            {
+                var sequence = clearable.Clear();
+                if (sequence != null)
+                    animations.Add(sequence);
 
-            var sequence = presenter.Clear();
-            if (sequence != null)
-                animations.Add(sequence);
+                clearedIds.Add(clearable.Dot.ID);
+                clearedPositions.Add(clearable.Dot.GridPosition);
+            }
         }
 
         foreach (var id in clearedIds)
@@ -275,6 +330,6 @@ public class CascadeRunner : MonoBehaviour
     private void TraceStep(FillStep step)
     {
         if (!_enableTrace || step == null) return;
-        Debug.Log($"[Cascade] {step.Phase} {step.Type} ({step.DotIds.Count}) src={step.Source}");
+        Debug.Log($"[Cascade] {step.Phase} {step.Type} ({step.ToClear.Count}) src={step.Source}");
     }
 }
