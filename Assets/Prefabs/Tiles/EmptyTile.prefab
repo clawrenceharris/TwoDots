@@ -10,8 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1962004455860119994}
   - component: {fileID: 8567817409825067955}
-  - component: {fileID: 573003161363665607}
-  - component: {fileID: -7210388392219430239}
+  - component: {fileID: 7183132184456729110}
+  - component: {fileID: 8102938735494983523}
+  - component: {fileID: 4626369126894060470}
   m_Layer: 0
   m_Name: EmptyTile
   m_TagString: Untagged
@@ -36,6 +37,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8567817409825067955
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -51,7 +53,12 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
-  m_RenderingLayerMask: 1
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
@@ -72,9 +79,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 463975771
-  m_SortingLayer: -1
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: -1874997851
+  m_SortingLayer: 3
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: d8d031d9b063a45f9b5d50b28ba79920, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -84,9 +93,8 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &573003161363665607
+--- !u!114 &7183132184456729110
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -95,10 +103,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 4638488678973304467}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2c61220d2af174e8480cb95687a07c17, type: 3}
+  m_Script: {fileID: 11500000, guid: 2afc69ed2e3384eb7a40804f9776ae46, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &-7210388392219430239
+  m_EditorClassIdentifier: Assembly-CSharp::EmptyTileView
+--- !u!114 &8102938735494983523
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -107,24 +115,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 4638488678973304467}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 578437344c76f4386ad13ebf39311665, type: 3}
+  m_Script: {fileID: 11500000, guid: 78cdaab60550f47c68d1be9d1698dbee, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
-  spriteRenderer: {fileID: 8567817409825067955}
-  Sprites: []
-  TopRightCornerSprite: {fileID: 21300000, guid: 6e8fda4aa8ff846158e554d60537416e, type: 3}
-  TopLeftCornerSprite: {fileID: 21300000, guid: 6a25e52eade004330ae964bedf722692, type: 3}
-  BottomRightCornerSprite: {fileID: 21300000, guid: 37963ec4a68bf4ca8b870c9b0a47db21, type: 3}
-  BottomLeftCornerSprite: {fileID: 21300000, guid: 04eeb33638ef6482cb26b58a976320b3, type: 3}
-  HorizontalEdgeSprite: {fileID: 21300000, guid: 7987835a1f9b24d3c997d038e31ffcc5, type: 3}
-  VerticalEdgeSprite: {fileID: 21300000, guid: 9f4875a6240674ebd8474ac8b7ae9457, type: 3}
-  RightEdgeSprite: {fileID: 21300000, guid: 37963ec4a68bf4ca8b870c9b0a47db21, type: 3}
-  LeftEdgeSprite: {fileID: 21300000, guid: 04eeb33638ef6482cb26b58a976320b3, type: 3}
-  TopEdgeSprite: {fileID: 21300000, guid: 7987835a1f9b24d3c997d038e31ffcc5, type: 3}
-  BottomEdgeSprite: {fileID: 21300000, guid: 5a267142a120846ceba67affdf14fd3e, type: 3}
-  RightEndSprite: {fileID: 21300000, guid: 6e8fda4aa8ff846158e554d60537416e, type: 3}
-  LeftEndSprite: {fileID: 21300000, guid: 6a25e52eade004330ae964bedf722692, type: 3}
-  TopEndSprite: {fileID: 21300000, guid: d8d031d9b063a45f9b5d50b28ba79920, type: 3}
-  BottomEndSprite: {fileID: 21300000, guid: 25437dc5be7d54c0db884788e6126543, type: 3}
-  FullSprite: {fileID: 21300000, guid: 5a267142a120846ceba67affdf14fd3e, type: 3}
-  IsolatedSprite: {fileID: 21300000, guid: d8d031d9b063a45f9b5d50b28ba79920, type: 3}
+  m_EditorClassIdentifier: Assembly-CSharp::TileSpriteController
+  baseSortingOrder: 0
+  _tileSpriteSet: {fileID: 11400000, guid: 3e70556985b574b4aa549e94dbbcad51, type: 2}
+--- !u!114 &4626369126894060470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4638488678973304467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5392ce55c425c418fb3d22560a7edecf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DotsRenderer
+  _fallbackBaseRenderer: {fileID: 8567817409825067955}
+  _targets:
+  - Role: 0
+    Renderers:
+    - {fileID: 8567817409825067955}

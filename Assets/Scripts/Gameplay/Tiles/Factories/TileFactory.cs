@@ -3,17 +3,18 @@ using UnityEngine;
 
 public class TileFactory
 {
-    public static TileModel CreateTileModel(DotsObject data)
+    public static Tile CreateTile(DotsObject data)
     {
-        var type = data.GetProperty<TileType>(DotsObject.Property.Type);
+        var type = LevelLoader.FromJsonType<TileType>(data.Type);
         switch (type)
         {
+            
             default:
-                return new TileModel(new Vector2Int(data.Col, data.Row), type);
+                return new Tile(type, new Vector2Int(data.Col, data.Row));
         }
     }
 
-    internal static ITilePresenter CreateTilePresenter(TileModel tile, TileView view)
+    public static ITilePresenter CreateTilePresenter(Tile tile, TileView view)
     {
         switch (tile.TileType)
         {

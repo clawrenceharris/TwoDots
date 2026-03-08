@@ -1,4 +1,4 @@
-public interface IHittableDot : IModel
+public interface IHittableDot : IDotModel
 {
     int HitCount { get; set; }
     int HitMax { get; set; }

@@ -1,20 +1,16 @@
 using UnityEngine;
 
-public interface ISkinResolver
-{
-    DotSkin ResolveDotSkin(Dot dot);
-}
 
-public class SkinResolver : ISkinResolver
+public class DotSkinResolver : ISkinResolver<Dot>
 {
-    public DotSkin ResolveDotSkin(Dot dot)
+    public Skin ResolveSkin(Dot dot)
     {
         Color baseColor = ResolveBaseColor(dot);
         Color accentColor = ResolveAccentColor(dot);
         Color detailColor = ResolveDetailColor(dot);
-        return new DotSkin(baseColor, accentColor, detailColor);
+        return new Skin(baseColor, accentColor, detailColor);
     }
-
+   
     private static Color ResolveDetailColor(Dot dot)
     {
          if (dot.TryGetModel(out ColorableDot colorable))
@@ -55,7 +51,6 @@ public class SkinResolver : ISkinResolver
             ? Color.white
             : ColorSchemeService.FromDotColor(dotColor);
     }
-   
 
     
 }

@@ -62,7 +62,7 @@ public class LevelManager : MonoBehaviour
 
         _connectionPresenter.Initialize(_board);
 
-        _board.Initialize(level);
+        _board.Init(level);
 
         _colorSchemeService.SetColorScheme(level.levelNum - 1);
         OnLevelSetupComplete?.Invoke(new LevelContext(level, _board));
