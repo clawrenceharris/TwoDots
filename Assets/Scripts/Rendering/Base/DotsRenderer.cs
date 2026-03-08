@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class DotRenderer : MonoBehaviour
+public class DotsRenderer : MonoBehaviour
 {
     [Serializable]
     public class Target
@@ -13,14 +13,14 @@ public class DotRenderer : MonoBehaviour
     [SerializeField] private SpriteRenderer _fallbackBaseRenderer;
     [SerializeField] private Target[] _targets;
     public Target[] Targets => _targets;
-
+    public SpriteRenderer BaseRenderer => _fallbackBaseRenderer;
     private void Awake()
     {
         if (_fallbackBaseRenderer == null)
             _fallbackBaseRenderer = GetComponent<SpriteRenderer>();
     }
 
-    public void ApplySkin(DotSkin skin)
+    public void ApplySkin(Skin skin)
     {
         ApplyRoleColor(SkinColorRole.Base, skin.BaseColor);
         ApplyRoleColor(SkinColorRole.Accent, skin.AccentColor);

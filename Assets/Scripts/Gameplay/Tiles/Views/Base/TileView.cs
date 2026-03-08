@@ -1,14 +1,29 @@
+using System;
 using UnityEngine;
 
 public class TileView : MonoBehaviour
 {
-    private TileModel _model;
+    protected TileSpriteController _spriteController;
+    protected Tile _tile;
 
-    public string ID => _model.ID;
-    public TileType Type => _model.TileType;
+    private DotsRenderer _renderer;
+    public DotsRenderer Renderer => _renderer;
 
-    public void Init(TileModel model)
+
+    public virtual void Init(Tile tile)
     {
-        _model = model;
+        _tile = tile;
+        name = $"{_tile.TileType} Tile ({_tile.GridPosition.x}, {_tile.GridPosition.y})";
+        TryGetComponent(out _spriteController);
+        TryGetComponent(out _renderer);
+
+        transform.localScale = Vector3.one * BoardView.TileSize;
+
+    }
+
+    public void UpdateTileSprite(IBoardPresenter board)
+    {
+        Debug.Log($"[TileView] Updating tile sprite for {_tile.ID}");
+        _spriteController.UpdateSprite(board, _tile.GridPosition);
     }
 }

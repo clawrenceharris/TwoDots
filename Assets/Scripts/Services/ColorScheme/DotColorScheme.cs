@@ -1,7 +1,7 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "DotColorScheme", menuName = "Scriptable Objects/Dot Color Scheme")]
-public class DotColorScheme : ScriptableObject
+[CreateAssetMenu(fileName = "SkinColorScheme", menuName = "Two Dots/Skin Color Scheme")]
+public class SkinColorScheme : ScriptableObject
 {
     public Color baseColor;
     public Color accentColor;

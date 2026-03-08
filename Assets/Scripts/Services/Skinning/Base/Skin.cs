@@ -1,12 +1,12 @@
 using UnityEngine;
 
-public readonly struct DotSkin
+public readonly struct Skin
 {
     public Color BaseColor { get; }
     public Color AccentColor { get; }
     public Color DetailColor { get; }
 
-    public DotSkin(Color baseColor, Color accentColor, Color detailColor)
+    public Skin(Color baseColor, Color accentColor, Color detailColor)
     {
         BaseColor = baseColor;
         AccentColor = accentColor;

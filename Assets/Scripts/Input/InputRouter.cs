@@ -2,6 +2,16 @@ using System;
 using Dots.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
+/// <summary>
+/// The InputRouter class handles user input for the game, translating pointer and touch events 
+/// into high-level actions such as selecting/deselecting dots, connecting dots, and emitting drag positions.
+/// 
+/// This component is responsible for raising input-related events consumed by other systems (e.g., ConnectionPresenter).
+/// 
+/// Notably, InputRouter implements a throttling mechanism to prevent multiple rapid selections
+/// of the same dot. The throttle window is controlled by <see cref="_selectionThrottleTime"/>, ensuring that
+/// after a dot selection, subsequent selection events are ignored for a short period.
+/// </summary>
 
 public class InputRouter : MonoBehaviour
 {
@@ -15,8 +25,11 @@ public class InputRouter : MonoBehaviour
     public static InputGate Gate => _gate ??= new InputGate();
     [SerializeField] private float _maxHitRadius =0.5f;
     public static event Action<IDotPresenter> OnDotDeselected;
-
     private bool _isPointerDown;
+    private float _lastSelectionTime = -100f;
+    private IDotPresenter _lastSelectedDot;
+    [SerializeField] private float _selectionThrottleTime = 0.08f;
+
     private void Awake()
     {
         _cam = Camera.main;
@@ -28,18 +41,16 @@ public class InputRouter : MonoBehaviour
     {
         if (!_gate.Enabled) return;
 
-
-
         if (IsPointerPressDown())
         {
             RecordPointerDown();
         }
         else if (IsPointerPressUp())
         {
-            HandlePointerUp();
+            EndSelection();
         }
         else if (_isPointerDown)
-        {
+        {   
             EmitPointerDragPosition();
             RecordPointerMove();
         }
@@ -47,11 +58,32 @@ public class InputRouter : MonoBehaviour
 
 
     }
+    private void SelectDot(IDotPresenter dot)
+    {
+        if (dot.Dot.ID == _lastSelectedDot?.Dot.ID) return;
+
+        if (_isPointerDown && Time.unscaledTime - _lastSelectionTime < _selectionThrottleTime) return;
+        _isPointerDown = true;
+        _lastSelectedDot = dot;
+        _lastSelectionTime = Time.unscaledTime;
+        OnDotSelected?.Invoke(dot);
+    }
+    private void ConnectDot(IDotPresenter dot)
+    {
+        if (dot.Dot.ID == _lastSelectedDot?.Dot.ID) return;
+
+        if (_isPointerDown && Time.unscaledTime - _lastSelectionTime < _selectionThrottleTime) return;
+        _lastSelectedDot = dot;
+        _lastSelectionTime = Time.unscaledTime;
+        OnDotConnected?.Invoke(dot);
+
+
+    }
     
     private void RecordPointerMove()
     {
         if (!TryGetPointerHit(out IDotPresenter dot)) return;
-        OnDotConnected?.Invoke(dot);
+        ConnectDot(dot);
     }
 
     private bool TryGetPointerHit(out IDotPresenter dot)
@@ -88,16 +120,18 @@ public class InputRouter : MonoBehaviour
 
     private void RecordPointerDown()
     {
-        _isPointerDown = true;
         if (!TryGetPointerHit(out IDotPresenter dot)) return;
-        OnDotSelected?.Invoke(dot);
+        SelectDot(dot);
     }
 
-    private void HandlePointerUp()
+    private void EndSelection()
     {
+        
         _isPointerDown = false;
+        _lastSelectedDot = null;
+        _lastSelectionTime = -100f;
         OnDotSelectionEnded?.Invoke();
-        if (!TryGetPointerHit(out IDotPresenter dot)) return;
+        TryGetPointerHit(out IDotPresenter dot);
         OnDotDeselected?.Invoke(dot);
     }
 

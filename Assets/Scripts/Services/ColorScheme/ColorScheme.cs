@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-[CreateAssetMenu(fileName = "ColorScheme", menuName = "Scriptable Objects/Color Scheme")]
+[CreateAssetMenu(fileName = "ColorScheme", menuName = "Two Dots/Color Scheme")]
 public class ColorScheme : ScriptableObject
 {
     public Color purple;
@@ -15,10 +15,12 @@ public class ColorScheme : ScriptableObject
     public Color backgroundColor;
 
 
-    public DotColorScheme anchor;
-    public DotColorScheme clock;
-    public DotColorScheme bomb;
-    public DotColorScheme nesting;
-    public DotColorScheme beetle;
-    public DotColorScheme lotus;
+    public SkinColorScheme anchor;
+    public SkinColorScheme clock;
+    public SkinColorScheme bomb;
+    public SkinColorScheme nesting;
+    public SkinColorScheme beetle;
+    public SkinColorScheme lotus;
+
+    public SkinColorScheme emptyTile;
 }

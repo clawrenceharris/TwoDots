@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5620620952153395163}
   - component: {fileID: 8826741101015439247}
   - component: {fileID: 8928303601095544995}
-  - component: {fileID: 1759449101967526416}
+  - component: {fileID: 5284401485761102304}
   m_Layer: 0
   m_Name: Bomb
   m_TagString: Untagged
@@ -146,7 +146,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d46a81ae6c1cc4a308fad6a12dd6019a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BombView
---- !u!114 &1759449101967526416
+--- !u!114 &5284401485761102304
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -155,9 +155,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1116607520697210883}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c0a9eb849e24451fbd35423adb7a23e, type: 3}
+  m_Script: {fileID: 11500000, guid: 5392ce55c425c418fb3d22560a7edecf, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DotRenderer
+  m_EditorClassIdentifier: Assembly-CSharp::DotsRenderer
   _fallbackBaseRenderer: {fileID: 1716833105892258884}
   _targets:
   - Role: 0
@@ -166,8 +166,8 @@ MonoBehaviour:
     - {fileID: 8147211790846465351}
   - Role: 1
     Renderers:
-    - {fileID: 982398389764484874}
     - {fileID: 6722489279500980237}
+    - {fileID: 982398389764484874}
 --- !u!1 &4044538420008121860
 GameObject:
   m_ObjectHideFlags: 0

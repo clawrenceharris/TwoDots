@@ -1,7 +1,7 @@
 /// <summary>
-/// Represents a model that can be attached to a board entity
+/// Marker interface representing a model that can be attached to a dot
 /// </summary>
 
-public interface IModel
+public interface IDotModel
 {
 }
