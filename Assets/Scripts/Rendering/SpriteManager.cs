@@ -2,14 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(DotsRenderer))]
-public class SpriteController : MonoBehaviour
+public class SpriteManager : MonoBehaviour
 {
     [SerializeField]private int baseSortingOrder = 0;
-    protected DotsRenderer _renderer;
+    private DotView _dotView;
+    private DotRenderer _renderer;
     
     public void Awake(){
-        _renderer = GetComponent<DotsRenderer>();
+        _renderer = GetComponent<DotRenderer>();
     }
 
     private void Start(){

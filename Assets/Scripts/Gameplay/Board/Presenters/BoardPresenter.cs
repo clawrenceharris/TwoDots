@@ -10,12 +10,12 @@ using UnityEngine;
 public class BoardPresenter : MonoBehaviour, IBoardPresenter
 {
     // Board State
-    private IBoardModel _model;
+    private IBoardModel _boardModel;
 
 
-    public int Width => _model.Width;
+    public int Width => _boardModel.Width;
 
-    public int Height => _model.Height;
+    public int Height => _boardModel.Height;
 
 
 
@@ -30,7 +30,6 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     /// </summary>
     public static event Action<IBoardPresenter> OnBoardSetupComplete;
     private DotSpawner _dotSpawner;
-
     // Presenters
     private readonly Dictionary<string, IDotPresenter> _dotPresenters = new();
     private readonly Dictionary<string, ITilePresenter> _tilePresenters = new();
@@ -60,16 +59,16 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     }
 
 
-
+   
 
     #endregion
 
 
     #region  Initialization/Setup
-    public void Init(LevelData level)
+    public void Initialize(LevelData level)
     {
         ClearBoard();
-        _model = new BoardModel(level);
+        _boardModel = new BoardModel(level);
 
         if (_boardView == null)
         {
@@ -77,13 +76,13 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
             _boardView.transform.SetParent(transform);
 
         }
-        _boardView.Init(_model);
+        _boardView.Initialize(_boardModel);
         _dotsToSpawn = level.dotsToSpawn;
         OnBoardInitialized?.Invoke(this);
         SetupBoard(level);
 
     }
-
+   
     /// <summary>
     /// Gets a board mechanic tile at the specified column and row
     /// </summary>
@@ -95,15 +94,15 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     {
         if (col >= 0 && col < Width && row >= 0 && row < Height)
         {
-            Tile tile = _model.GetTileAt(col, row);
+            TileModel tile = _boardModel.GetTileAt(col, row);
             if (tile is T t && tile.TileType.IsBoardMechanicTile())
                 return t;
         }
         return default;
     }
+    
 
-
-
+    
     private IDotPresenter SpawnRandomDotAt(Vector2Int position, DotsObject[] dotsToSpawn)
     {
 
@@ -120,10 +119,6 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         {
             SpawnDot(dot);
         }
-        foreach (var tile in level.tilesOnBoard)
-        {
-            SpawnTile(tile);
-        }
         FillBoard(level.initDotsToSpawn.Length > 0 ? level.initDotsToSpawn : level.dotsToSpawn);
         OnBoardSetupComplete?.Invoke(this);
 
@@ -132,8 +127,8 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     #endregion
 
 
-
-
+   
+   
 
 
 
@@ -146,7 +141,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     {
         _tilePresenters?.Clear();
         _dotPresenters?.Clear();
-        _model?.ClearBoard();
+        _boardModel?.ClearBoard();
     }
     #endregion
 
@@ -189,8 +184,8 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     /// <returns>
     /// List of all playable dots presenters on the board.
     /// </returns>
-    public List<IDotPresenter> GetDotsOnBoard() => _model.GetAllDots().Select(b => _dotPresenters[b.ID]).ToList();
-    public List<T> GetDotsOnBoard<T>() where T : class, IPresenter => _model.GetAllDots().Select(b => _dotPresenters[b.ID].GetPresenter<T>()).ToList();
+    public List<IDotPresenter> GetDotsOnBoard() => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID]).ToList();
+    public List<T> GetDotsOnBoard<T>() where T : class, IPresenter => _boardModel.GetAllDots().Select(b => _dotPresenters[b.ID].GetPresenter<T>()).ToList();
 
     public List<IDotPresenter> GetDotNeighbors(Vector2Int position, bool includesDiagonals = true)
     {
@@ -221,7 +216,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     public void PlaceDot(Dot dot, int x, int y)
     {
         dot.GridPosition = new Vector2Int(x, y);
-        _model.SpawnDot(dot);
+        _boardModel.SpawnDot(dot);
     }
     public void PlaceDot(Dot dot, Vector2Int position)
     {
@@ -248,7 +243,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     public T GetDotAt<T>(int x, int y)
     {
 
-        var dot = _model.GetDotAt(x, y);
+        var dot = _boardModel.GetDotAt(x, y);
         if (dot != null)
         {
             if (_dotPresenters.TryGetValue(dot.ID, out var presenter) && presenter is T t)
@@ -258,7 +253,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         }
         return default;
     }
-
+    
     public IDotPresenter GetDot(string id)
     {
         if (string.IsNullOrEmpty(id)) return null;
@@ -272,7 +267,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
 
     }
 
-
+    
     public List<IDotPresenter> CollectPresenters(List<string> dotIds)
     {
         var presenters = new List<IDotPresenter>();
@@ -303,9 +298,9 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
             var presenter = GetDot(id);
             if (presenter != null && presenter.TryGetPresenter(out T t))
             {
-                presenters.Add(t);
+                 presenters.Add(t);
             }
-
+               
         }
 
         return presenters
@@ -313,21 +308,19 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
             .ThenBy(p => p.Dot.GridPosition.x)
             .ToList();
     }
-    public bool DotExists(string id, out IDotPresenter presenter)
+    public bool DotExists(string id)
     {
-        presenter = null;
         if (!_dotPresenters.TryGetValue(id, out var _))
         {
             Debug.LogError($"[BoardPresenter] Dot {id} does not exist");
             return false;
         }
-        if (_model.GetDot(id) == null)
+        if (_boardModel.GetDot(id) == null)
         {
             Debug.LogError($"[BoardPresenter] Dot {id} does not exist");
             return false;
         }
 
-        presenter = _dotPresenters[id];
         return true;
     }
     #endregion
@@ -344,7 +337,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     public ITilePresenter GetTileAt(int x, int y)
     {
 
-        var tile = _model.GetTileAt(x, y);
+        var tile = _boardModel.GetTileAt(x, y);
         if (tile != null)
         {
             if (_tilePresenters.TryGetValue(tile.ID, out var presenter))
@@ -355,34 +348,14 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         return null;
     }
 
-
-    public bool TileExists(string id, out ITilePresenter presenter)
-    {
-        presenter = null;
-        if (!_tilePresenters.TryGetValue(id, out var _))
-        {
-            Debug.LogError($"[BoardPresenter] Tile {id} does not exist");
-            return false;
-        }
-        if (_model.GetTile(id) == null)
-        {
-            Debug.LogError($"[BoardPresenter] Tile {id} does not exist");
-            return false;
-        }
-        presenter = _tilePresenters[id];
-        return true;
-}
-
     #endregion
 
-
-
     #region  Dot Management
-
+    
 
     public void MoveDot(string id, Vector2Int endPosition)
     {
-        _model.MoveDot(id, endPosition);
+        _boardModel.MoveDot(id, endPosition);
     }
 
 
@@ -445,8 +418,6 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         presenter.Initialize(this);
         return presenter;
     }
-
-    
     public IDotPresenter SpawnDot(DotsObject dObject)
     {
         if (_boardView == null)
@@ -455,9 +426,9 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
             return null;
         }
 
-        var presenter = CreateDotPresenter(dObject);
+        IDotPresenter presenter = CreateDotPresenter(dObject);
         _dotPresenters.Add(presenter.Dot.ID, presenter);
-        _model.SpawnDot(presenter.Dot);
+        _boardModel.SpawnDot(presenter.Dot);
         return presenter;
     }
 
@@ -467,7 +438,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     public void ReplaceDot(IDotPresenter oldDot, IDotPresenter newDot, Action onComplete = null)
     {
         
-        _model.ReplaceDot(oldDot.Dot.ID, newDot.Dot);
+        _boardModel.ReplaceDot(oldDot.Dot.ID, newDot.Dot);
         _boardView.ReleaseDotView(oldDot.Dot.ID);
 
         newDot.View.transform.position = oldDot.View.transform.position;
@@ -482,29 +453,22 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     }
     public void RemoveAndDestroyDot(string id)
     {
-        _model.ClearDot(id);
+        _boardModel.ClearDot(id);
         _boardView.ReleaseDotView(id);
         _dotPresenters.Remove(id);
     }
 
     public void ClearDot(string id)
     {
-        _model.ClearDot(id);
+        _boardModel.ClearDot(id);
     }
     
     
     private void RemoveDotPresenter(string dotId)
     {
 
-        if (!_tilePresenters.TryGetValue(dotId, out var presenter))
-        {
-            Debug.LogError($"[BoardPresenter] RemoveTilePresenter: no presenter for {presenter.Tile.ID}");
-            return;
-        }
-
-        _tilePresenters.Remove(presenter.Tile.ID);
-
-    
+       
+       
     }
 
     #endregion
@@ -513,59 +477,38 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
 
     public void RemoveTile(string id)
     {
-        _model.RemoveTile(id);
+        _boardModel.RemoveTile(id);
 
     }
-    private void RemoveTilePresenter( string tileId)
+    private void RemoveTilePresenter(ITilePresenter presenter)
     {
-        if (!_tilePresenters.TryGetValue(tileId, out var presenter))
+        if (!_tilePresenters.TryGetValue(presenter.Model.ID, out var _))
         {
-            Debug.LogError($"[BoardPresenter] RemoveTilePresenter: no presenter for {presenter.Tile.ID}");
+            Debug.LogError($"[BoardPresenter] RemoveTilePresenter: no presenter for {presenter.Model.ID}");
             return;
         }
 
-        Vector2Int removedPosition = presenter.Tile.GridPosition;
-        _tilePresenters.Remove(presenter.Tile.ID);
+        Vector2Int removedPosition = presenter.Model.GridPosition;
+        _tilePresenters.Remove(presenter.Model.ID);
 
         // Update neighbors after removing this tile
         UpdateNeighborTileSprites(removedPosition);
     }
-    /// <summary>
-    /// Creates and initializes a tile presenter from a DotsObject.
-    /// </summary>
-    /// <param name="dObject"></param>
-    /// <returns>The tile presenter that was created</returns>
-    public ITilePresenter CreateTilePresenter(DotsObject dObject)
+
+    public void SpawnTile(TileModel tile)
     {
         if (_boardView == null)
         {
             Debug.LogError("[BoardPresenter] BoardView is null");
-            return null;
+            return;
         }
-
-        Tile tile = TileFactory.CreateTile(dObject);
-
         var view = _boardView.CreateTileView(tile);
+
         var presenter = TileFactory.CreateTilePresenter(tile, view);
-        presenter.Initialize(this);
-        return presenter;
-    }
+        _tilePresenters.Add(tile.ID, presenter);
+        _boardModel.SpawnTile(tile);
 
-    public ITilePresenter SpawnTile(DotsObject dObject)
-    {
-        if (_boardView == null)
-        {
-            Debug.LogError("[BoardPresenter] BoardView is null");
-            return null;
-        }
-
-        ITilePresenter presenter = CreateTilePresenter(dObject);
-        _tilePresenters.Add(presenter.Tile.ID, presenter);
-        _model.SpawnTile(presenter.Tile);  
-
-        UpdateNeighborTileSprites(presenter.Tile.GridPosition);
-        return presenter;
-
+        UpdateNeighborTileSprites(tile.GridPosition);
     }
 
     public ITilePresenter GetTile(string id) => _tilePresenters.TryGetValue(id, out var presenter) ? presenter : null;
@@ -576,12 +519,11 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     /// </summary>
     private void UpdateNeighborTileSprites(Vector2Int position)
     {
-        if (_model == null) return;
+        if (_boardModel == null) return;
 
         // Check all 4 cardinal directions
         Vector2Int[] offsets = new Vector2Int[]
         {
-            Vector2Int.zero,
             Vector2Int.up,
             Vector2Int.down,
             Vector2Int.left,
@@ -592,20 +534,22 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
         {
             Vector2Int neighborPos = position + offset;
 
-            if (_model.IsValidPosition(neighborPos))
+            if (_boardModel.IsValidPosition(neighborPos))
             {
-                Tile neighborTile = _model.GetTileAt(neighborPos);
-                if (neighborTile != null && TileExists(neighborTile.ID, out var neighborPresenter))
+                TileModel neighborTile = _boardModel.GetTileAt(neighborPos);
+                if (neighborTile != null)
                 {
-                    Debug.Log($"[BoardPresenter] Updating neighbor tile sprite for {neighborTile.ID}");
-                    neighborPresenter.View.UpdateTileSprite(this);
-                    
+                    ITilePresenter neighborPresenter = GetTileAt(neighborPos);
+                    if (neighborPresenter != null && neighborPresenter.View != null)
+                    {
+                        // neighborPresenter.View.UpdateTileSprite(_boardModel);
+                    }
                 }
             }
         }
     }
 
-    public bool IsValidPosition(Vector2Int position) => _model.IsValidPosition(position);
+    public bool IsValidPosition(Vector2Int position) => _boardModel.IsValidPosition(position);
 
 
 
@@ -614,7 +558,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
 
     public override string ToString()
     {
-        return _model.ToString();
+        return _boardModel.ToString();
     }
 
 
@@ -624,7 +568,7 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
     {
         if (typeof(T) == typeof(Dot) || typeof(T).IsSubclassOf(typeof(Dot)))
         {
-            foreach (Dot dot in _model.DotGrid)
+            foreach (Dot dot in _boardModel.DotGrid)
             {
                 if (dot is T)
                 {
@@ -633,9 +577,9 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
             }
         }
 
-        else if (typeof(T) == typeof(Tile) || typeof(T).IsSubclassOf(typeof(Tile)))
+        else if (typeof(T) == typeof(TileModel) || typeof(T).IsSubclassOf(typeof(TileModel)))
         {
-            foreach (Tile tile in _model.TileGrid)
+            foreach (TileModel tile in _boardModel.TileGrid)
             {
                 if (tile is T)
                 {
@@ -674,20 +618,20 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
             for (int row = Height - 1; row >= 0; row--)
             {
                 ITilePresenter tile = GetTileAt(col, row);
-                if (tile != null && tile.Tile.TileType.IsBlockable())
+                if (tile != null && tile.Model.TileType.IsBlockable())
                 {
                     break;
 
                 }
-                if (_model.DotGrid[col, row] == null)
+                if (_boardModel.DotGrid[col, row] == null)
                 {
-                    if(tile == null || !tile.Tile.TileType.IsBoardMechanicTile()){
+                    if(tile == null || !tile.Model.TileType.IsBoardMechanicTile()){
                         for (int k = row + 1; k < Height; k++)
                         {
                             IDotPresenter dot = GetDotAt(col, k);
                             if (dot != null)
                             {
-                                _model.MoveDot(dot.Dot.ID, new Vector2Int(col, row));
+                                _boardModel.MoveDot(dot.Dot.ID, new Vector2Int(col, row));
                                 drops.Add(new DotDrop(dot, row));
                                 dotsDropped = true;
                                 break;
@@ -731,13 +675,13 @@ public class BoardPresenter : MonoBehaviour, IBoardPresenter
             for (int row = Height - 1; row >= 0; row--)
             {
                 ITilePresenter tile = GetTileAt(col, row);
-                if (tile != null && tile.Tile.TileType.IsBlockable())
+                if (tile != null && tile.Model.TileType.IsBlockable())
                 {
                     break;
                 }
                 if (GetDotAt(col, row) == null)
                 {
-                    if (tile == null || !tile.Tile.TileType.IsBoardMechanicTile())
+                    if (tile == null || !tile.Model.TileType.IsBoardMechanicTile())
                     {
                         var position = new Vector2Int(col, row);
                         IDotPresenter dot = SpawnRandomDotAt(position, dotsToSpawn ?? _dotsToSpawn);

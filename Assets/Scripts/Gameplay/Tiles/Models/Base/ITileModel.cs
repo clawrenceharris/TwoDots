@@ -1,6 +1,6 @@
 /// <summary>
 /// Marker interface representing a model that can be attached to a tile
 /// </summary>
-public interface ITileModel : IDotModel
+public interface ITileModel : IModel
 {
 }
