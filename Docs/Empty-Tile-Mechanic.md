@@ -1,6 +1,10 @@
 # Empty Tile (Board Mechanic)
 
-Empty tiles are board mechanic tiles that reserve a cell so **no dot may ever occupy it**. They are used to create permanent holes or gaps in the board (e.g. at the top row or edges) without blocking gravity in the rest of the column.
+**Empty tiles** are a type of board mechanic tile that permanently reserve a cell—meaning **no dot can ever occupy or move into that space**. They serve as indestructible holes or gaps within the board layout (for example, creating voids along the top row, board corners, or interior spaces), but unlike blocking tiles, they do **not** interrupt gravity for the rest of the column: dots can freely fall past them into fillable cells below.
+
+Empty tiles are just one kind of **board mechanic tile**: these are special tiles that exist as part of the board itself and are designed to prevent any dot from appearing in the same grid space. In contrast, standard board tiles can have a dot sitting on top of them—in those cases, a tile and a dot can share a cell, but with board mechanic tiles (including empty tiles), that cell is always off-limits to dots.
+
+In summary: empty tiles create intentional, unfillable spaces on the board, shaping the puzzle’s geometry and flow while keeping the columns around them active for dropping and spawning new dots.
 
 ## Summary
 
@@ -33,13 +37,12 @@ Result: an empty tile is a permanent hole; dots above it can fall past it (into 
 
 ## Components
 
-| Item | Location | Role |
-|------|----------|------|
-| `TileType.EmptyTile` | [TileType.cs](Assets/Scripts/Types/TileType.cs) | Enum value for empty tiles. |
-| `IsBoardMechanicTile()` | [GameTypeExtensions.cs](Assets/Scripts/Types/GameTypeExtensions.cs) | Returns true for `Block`, `OneSidedBlock`, and `EmptyTile` so all are treated as non-fillable. |
-| `EmptyTileView` | [EmptyTileView.cs](Assets/Scripts/Gameplay/Tiles/Views/EmptyTile/EmptyTileView.cs) | View for empty tiles (extends `TileView`). |
-| Prefab | `PrefabLibrary.FromTileType(TileType.EmptyTile)` → EmptyTile prefab | Used when the board spawns tiles from level data. |
-| Gravity / refill | [BoardPresenter](Assets/Scripts/Gameplay/Board/Presenters/BoardPresenter.cs) | `CollapseColumn` and `CollectRefillDrops` both skip filling cells where the tile is a board mechanic tile. |
+| Item                    | Location                                                                     | Role                                                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `TileType.EmptyTile`    | [TileType.cs](Assets/Scripts/Types/TileType.cs)                              | Enum value for empty tiles.                                                                                |
+| `IsBoardMechanicTile()` | [GameTypeExtensions.cs](Assets/Scripts/Types/GameTypeExtensions.cs)          | Returns true for `Block`, `OneSidedBlock`, and `EmptyTile` so all are treated as non-fillable.             |
+| Prefab                  | `PrefabLibrary.FromTileType(TileType.EmptyTile)` → EmptyTile prefab          | Used when the board spawns tiles from level data.                                                          |
+| Gravity / refill        | [BoardPresenter](Assets/Scripts/Gameplay/Board/Presenters/BoardPresenter.cs) | `CollapseColumn` and `CollectRefillDrops` both skip filling cells where the tile is a board mechanic tile. |
 
 ## Visuals
 
