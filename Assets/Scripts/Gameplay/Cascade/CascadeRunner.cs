@@ -237,6 +237,7 @@ public class CascadeRunner : MonoBehaviour
             }
             foreach (var explodable in explodables)
             {
+                Debug.Log($"explodable: {explodable.Dot.ID}");
                 var sequence = explodable.Explode();
                 if (sequence != null)
                     animations.Add(sequence);

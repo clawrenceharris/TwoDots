@@ -52,13 +52,13 @@ public class BombView : DotView
                 renderer.SetPosition(1, Vector3.Lerp(lineStart, targetPosition, t));
                 if (Vector3.Distance(renderer.GetPosition(0), dot.View.transform.position - (dot.View.transform.localScale / 2)) < 0.01f)
                 {
-                    dot.View.Renderer.SetColor(ColorSchemeService.CurrentColorScheme.blank);
+                    dot.View.DotRenderer.SetColor(ColorSchemeService.CurrentColorScheme.blank);
                 }
             },
             1f,
             duration * 0.5f
         )).AppendCallback(() => {
-            dot.View.Renderer.SetColor(ColorSchemeService.ToDotColor(dot.Dot));
+            dot.View.DotRenderer.SetColor(ColorSchemeService.ToDotColor(dot.Dot));
         });
 
         // Phase 2: Tail follows to target, so line 'collapses' into target

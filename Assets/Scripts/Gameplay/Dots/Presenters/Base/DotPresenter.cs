@@ -11,8 +11,8 @@ using UnityEngine;
 public class DotPresenter : IDotPresenter
 {
     protected readonly DotView _view;
-    private readonly ISkinResolver<Dot> _skinResolver;
-    private readonly ISkinApplier<DotView> _skinApplier;
+    private readonly ISkinResolver _skinResolver;
+    private readonly IDotSkinApplier _skinApplier;
     protected readonly Dot _dot;
     public Dot Dot => _dot;
     public DotView View => _view;
@@ -25,7 +25,7 @@ public class DotPresenter : IDotPresenter
 
     public DotPresenter(Dot dot, DotView view)
     {
-        _skinResolver = new DotSkinResolver();
+        _skinResolver = new SkinResolver();
         _skinApplier = new DotSkinApplier();
         _dot = dot;
         _view = view;
@@ -36,8 +36,8 @@ public class DotPresenter : IDotPresenter
     public void Initialize(IBoardPresenter board)
     {
         _view.Init(_dot);
-        _board = board;
         RefreshSkin();
+        _board = board;
     }
 
     public Sequence Spawn()
@@ -71,7 +71,7 @@ public class DotPresenter : IDotPresenter
     private void RefreshSkin()
     {
         if (_view == null || _dot == null) return;
-        var skin = _skinResolver.ResolveSkin(_dot);
+        var skin = _skinResolver.ResolveDotSkin(_dot);
         _skinApplier.Apply(_view, skin);
     }
 
@@ -90,6 +90,7 @@ public class DotPresenter : IDotPresenter
         {
             return presenter;
         }
+        Debug.LogWarning($"Presenter {typeof(T)} not found");
         return null;
     }
 

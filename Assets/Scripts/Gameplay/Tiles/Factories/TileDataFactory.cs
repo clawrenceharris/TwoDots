@@ -1,3 +1,6 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -18,7 +21,6 @@ public class TileDataFactory
             Col = position != null ? position.ToObject<int[]>()[0] : -1,
             Row = position != null ? position.ToObject<int[]>()[1] : -1,
         };
-        Debug.Log($"Creating tile data: {type} at {position}");
         switch (type)
         {
             case LevelDataKeys.Types.OneSidedBlock:
@@ -27,9 +29,8 @@ public class TileDataFactory
             case LevelDataKeys.Types.Circuit:
                 tileData.SetProperty(DotsObject.Property.Active, (bool)isActive);
                 break;
-
-        }
-        Debug.Log($"Tile data: {tileData}");
+            
+        };
         return tileData;
     }
 }

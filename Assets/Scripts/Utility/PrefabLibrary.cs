@@ -14,7 +14,7 @@ public class PrefabLibrary : MonoBehaviour
 
 
 
-    [SerializeField] private EmptyTileView EmptyTile;
+    [SerializeField] private TileView EmptyTile;
     [SerializeField] private TileView Block;
     [SerializeField] private TileView OneSidedBlock;
     [SerializeField] private TileView Ice;
@@ -44,7 +44,7 @@ public class PrefabLibrary : MonoBehaviour
             case DotType.Nesting: return NestingDot;
             case DotType.Beetle: return BeetleDot;
             case DotType.Lotus: return LotusDot;
-            default: throw new System.Exception($"Dot type {type} not found");
+            default: return null;
         }
     }
     public TileView FromTileType(TileType type)
@@ -56,7 +56,7 @@ public class PrefabLibrary : MonoBehaviour
             case TileType.OneSidedBlock: return OneSidedBlock;
             case TileType.Ice: return Ice;
             case TileType.Circuit: return Circuit;
-            default: throw new System.Exception($"Tile type {type} not found");
+            default: return null;
         }
     }
 }

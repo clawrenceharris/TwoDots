@@ -3,6 +3,24 @@ using System;
 using UnityEngine;
 
 
+// [CreateAssetMenu(fileName = "LevelData", menuName = "Scriptable Objects/Level Data")]
+
+// public class Level : ScriptableObject
+// {
+//     public int LevelNumber;
+//     public int Width;
+//     public int Height;
+//     public int MaxMoves;
+//     public string[] LevelColors;
+
+//     [NonReorderable]public List<DotSpawnData> InitialDotsToSpawn;
+//     [NonReorderable]public List<DotSpawnData> DotsToSpawn;
+//     [NonReorderable]public List<DotSpawnData> DotsOnBoard;
+//     [NonReorderable]public List<TileSpawnData> TilesOnBoard;
+//     public bool IsTutorial;
+//     [NonReorderable]public TutorialStep[] TutorialSteps;
+// }
+
 [Serializable]
 public class LevelData
 {

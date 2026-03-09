@@ -27,7 +27,7 @@ public class ColorSchemeService
         }
     }
 
-    public static SkinColorScheme GetDotColorScheme(DotType type)
+    public static DotColorScheme GetDotColorScheme(DotType type)
     {
         return type switch
         {
@@ -37,15 +37,6 @@ public class ColorSchemeService
             DotType.Nesting => CurrentColorScheme.nesting,
             DotType.Beetle => CurrentColorScheme.beetle,
             DotType.Lotus => CurrentColorScheme.lotus,
-            _ => null,
-        };
-    }
-    public static SkinColorScheme GetTileColorScheme(TileType type)
-    {
-        return type switch
-        {
-            
-            TileType.EmptyTile => CurrentColorScheme.emptyTile,
             _ => null,
         };
     }

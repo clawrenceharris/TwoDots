@@ -178,8 +178,8 @@ public class ConnectionPresenter : MonoBehaviour
         ConnectorLineView line = PoolService.Instance.GetFromPool<LinePool, ConnectorLineView>();
         if (line == null) return;
         line.transform.SetParent(transform, true);
-        
-        line.SetFinalPositions(fromWorld, toWorld);
+
+        line.SetPositions(fromWorld, toWorld);
         line.SetColor(ColorSchemeService.FromDotColor(_model.CurrentColor));
         _activeConnectionSegments.Push(line);
     }
@@ -220,7 +220,7 @@ public class ConnectionPresenter : MonoBehaviour
         line.SetColor(ColorSchemeService.FromDotColor(_model.CurrentColor));
         if (line != null)
         {
-            line.SetInitialPositions(fromWorld, toWorld);
+            line.SetPositions(fromWorld, toWorld);
         }
 
 

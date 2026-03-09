@@ -12,7 +12,7 @@ TagManager:
   - 
   - Water
   - UI
-  - Board
+  - 
   - 
   - 
   - 
@@ -42,24 +42,14 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Lines
+    uniqueID: 679300383
+    locked: 0
   - name: Tiles
     uniqueID: 428420727
-    locked: 0
-  - name: Connected Lines
-    uniqueID: 637641127
     locked: 0
   - name: Dots
     uniqueID: 2285528403
     locked: 0
-  - name: Board
-    uniqueID: 2419969445
-    locked: 0
-  - name: Lines
-    uniqueID: 679300383
-    locked: 0
   m_RenderingLayers:
   - Default
-  - Board
-  - Lines
-  - Tiles
-  - Dots
