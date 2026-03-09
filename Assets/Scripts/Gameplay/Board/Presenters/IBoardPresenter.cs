@@ -13,13 +13,15 @@ public interface IBoardPresenter
     int Height { get; }
 
     // Initialization
-    void Initialize(LevelData levelData);
+    void Init(LevelData levelData);
     void ClearBoard();
 
     // Dot management
     void MoveDot(string dotId, Vector2Int endPosition);
     void ClearDot(string dotId);
     void RemoveAndDestroyDot(string dotId);
+    IDotPresenter SpawnDot(DotsObject dObject);
+    IDotPresenter CreateDotPresenter(DotsObject dObject);
 
     /// <summary>
     /// Tries to clear a dot.
@@ -35,7 +37,7 @@ public interface IBoardPresenter
 
 
     // Tile management
-    void SpawnTile(TileModel tile);
+    ITilePresenter SpawnTile(DotsObject dObject);
     void RemoveTile(string tileId);
 
 
@@ -46,7 +48,7 @@ public interface IBoardPresenter
     T GetDotAt<T>(Vector2Int position);
     T GetDotAt<T>(int x, int y);
     T GetDot<T>(string dotId);
-    bool DotExists(string dotId);
+    bool DotExists(string dotId, out IDotPresenter presenter);
 
 
     // Tile queries
@@ -54,18 +56,16 @@ public interface IBoardPresenter
     ITilePresenter GetTileAt(int x, int y);
     ITilePresenter GetTile(string tileId);
     List<ITilePresenter> GetAllTiles();
+    bool TileExists(string id, out ITilePresenter presenter);
 
     // Grid queries
     List<IDotPresenter> GetDotsOnBoard();
     List<T> GetDotsOnBoard<T>() where T : class, IPresenter;
     bool IsValidPosition(Vector2Int position);
-    IDotPresenter CreateDotPresenter(DotsObject dObject);
-    IDotPresenter SpawnDot(DotsObject dObject);
-
+   
     void ReplaceDot(IDotPresenter oldDot, IDotPresenter newDot, System.Action onComplete = null);
     bool IsOnEdgeOfBoard(Vector2Int gridPosition);
     bool IsOnEdgeOfBoard(int column, int row);
-
     List<IDotPresenter> GetDotNeighbors(Vector2Int position, bool includesDiagonals = true);
     List<T> GetDotNeighbors<T>(int column, int row, bool includesDiagonals = true) where T : class;
     List<T> GetDotNeighbors<T>(Vector2Int position, bool includesDiagonals = true) where T : class;

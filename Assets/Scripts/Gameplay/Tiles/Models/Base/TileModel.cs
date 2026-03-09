@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class TileModel
+public class TileModel : ITileModel
 {
     public TileType TileType { get; private set; }
     public Vector2Int GridPosition { get; private set; }
