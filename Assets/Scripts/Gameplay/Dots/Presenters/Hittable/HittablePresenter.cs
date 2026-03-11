@@ -5,13 +5,14 @@ using UnityEngine;
 /// <summary>
 /// Presenter for a dot that can be hit.
 /// </summary>
-public class HittableDotPresenter : BasePresenter, IHittableDotPresenter
+public class HittablePresenter: EntityPresenter,  IHittablePresenter
 {
-    public IClearableDotPresenter Clearable { get; private set; }
-    public HittableDotPresenter(IDotPresenter dot, IBoardPresenter board, IClearableDotPresenter clearable = null)
-    : base(dot, board)
+   
+    public IClearablePresenter Clearable { get; private set; }
+    public HittablePresenter(BoardEntity entity, EntityView view, IClearablePresenter clearable = null) : base(entity, view)
     {
-        Clearable = clearable;
+        Clearable = clearable;  
+        // AddPresenter(Clearable);
     }
 
     public virtual Sequence Hit()

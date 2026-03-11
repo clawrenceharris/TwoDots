@@ -14,7 +14,7 @@ public class PrefabLibrary : MonoBehaviour
 
 
 
-    [SerializeField] private EmptyTileView EmptyTile;
+    [SerializeField] private TileView EmptyTile;
     [SerializeField] private TileView Block;
     [SerializeField] private TileView OneSidedBlock;
     [SerializeField] private TileView Ice;

@@ -4,7 +4,7 @@ using DG.Tweening;
 public interface ITilePresenter
 {
     Tile Tile { get; }
-    TileView View { get; }
+    TileView TileView { get; }
 
     void Initialize(IBoardPresenter board);
 

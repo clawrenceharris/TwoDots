@@ -9,12 +9,8 @@ public class BombPool : Pool
     private readonly Queue<BombPoolObject> _pool = new();
 
     
-    IBoardPresenter _board;
 
-    void Awake() {
-        _board = FindFirstObjectByType<BoardPresenter>();
-    }
-
+   
     public override void Fill(int size) {
         Clear(_pool);
         for (int i = 0; i < size; i++)
@@ -25,11 +21,12 @@ public class BombPool : Pool
                 Col = 0,
                 Row = 0,
             };
-            var presenter = _board.CreateDotPresenter(bombDotObject);
+            if(!ServiceProvider.Instance.TryGetService<BoardService>(out var board)) return;
+            var presenter = board.BoardPresenter.CreateDotPresenter(bombDotObject);
             var bombPoolObj = new GameObject("BombPoolObject").AddComponent<BombPoolObject>();
             bombPoolObj.Presenter = presenter;
             bombPoolObj.transform.SetParent(transform);
-            bombPoolObj.Presenter.View.transform.SetParent(bombPoolObj.transform);
+            bombPoolObj.Presenter.DotView.transform.SetParent(bombPoolObj.transform);
             _pool.Enqueue(bombPoolObj);
             bombPoolObj.gameObject.SetActive(false);
         }

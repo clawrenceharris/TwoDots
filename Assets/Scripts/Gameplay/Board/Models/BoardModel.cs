@@ -122,7 +122,7 @@ public class BoardModel : IBoardModel
             
         }
     }
-    public void RemoveTile(string id)
+    public void ClearTile(string id)
     {
         if (_tilesById.TryGetValue(id, out Tile tileToRemove))
         {

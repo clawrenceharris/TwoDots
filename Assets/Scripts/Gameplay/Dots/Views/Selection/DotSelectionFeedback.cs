@@ -37,8 +37,8 @@ public sealed class DotSelectionFeedback : MonoBehaviour
         if (!_isSelected)
         {
             KillSequences();
-            _selectionSequence.Join(PlayFillAnimation(color));
-            _selectionSequence.Join(StartPulse(color));
+            StartPulse(color).Join(PlayFillAnimation(color));
+            
             
         }
         else

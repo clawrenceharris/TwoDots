@@ -3,36 +3,37 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public class ConnectableDotPresenter : BasePresenter, IConnectableDotPresenter
+public class ConnectableDotPresenter :EntityPresenter,  IConnectableDotPresenter
 {
     private readonly DotSelectionFeedback _selectionFeedback;
-    private readonly ColorableDot _colorable;
-    public ConnectableDotPresenter(IDotPresenter dot, IBoardPresenter board)
-    : base(dot, board)
+    private readonly Colorable _colorable;
+    public Dot Dot => _entity as Dot;
+    public ConnectableDotPresenter(Dot dot, DotView view)
+    : base(dot, view)
     {
-        _selectionFeedback = dot.View.GetComponent<DotSelectionFeedback>();
-        _colorable = dot.Dot.TryGetModel(out ColorableDot colorable) ? colorable : null;
+        _selectionFeedback = view.GetComponent<DotSelectionFeedback>();
+        _colorable = dot.TryGetModel(out Colorable colorable) ? colorable : null;
     }
 
     
 
     public void Connect(DotColor connectionColor)
     {
-        _selectionFeedback.PlaySelectionAnimation(ColorSchemeService.FromDotColor(connectionColor));
+        _selectionFeedback.PlaySelectionAnimation(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(connectionColor));
         
     }
 
-    public void Select(ConnectionResult context)
+    public void Select(ConnectionSession session)
     {
-        var dotColor = _colorable.GetComparableColor(context.ConnectionColor);
-        _selectionFeedback.PlaySelectionAnimation(ColorSchemeService.FromDotColor(dotColor));
+        var dotColor = _colorable.GetComparableColor(session.Color);
+        _selectionFeedback.PlaySelectionAnimation(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(dotColor));
     }
 
 
     public void ChangeColor(DotColor color)
     {
         
-        _selectionFeedback.SetFillColor(ColorSchemeService.FromDotColor(color));
+        _selectionFeedback.SetFillColor(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(color));
     }
 
     public void Disconnect()

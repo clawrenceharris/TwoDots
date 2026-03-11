@@ -10,7 +10,7 @@ using System;
 /// </summary>
 public class BoardView : MonoBehaviour
 {
-    [SerializeField] private float _tileSize;
+    [SerializeField] private float _tileSize = 1.5f;
     public static float TileSize;
     private readonly Dictionary<string, TileView> _tileViews = new();
     private readonly Dictionary<string, DotView> _dotViews = new();
@@ -68,9 +68,9 @@ public class BoardView : MonoBehaviour
             if (dotView is BombView bombView)
             {
                 var poolObj = bombView.GetComponentInParent<BombPoolObject>();
-                if (poolObj != null)
+                if (poolObj != null && ServiceProvider.Instance.TryGetService<PoolService>(out var poolService))
                 {
-                    PoolService.Instance.ReturnToPool<BombPool>(poolObj);
+                    poolService.ReturnToPool<BombPool>(poolObj);
                 }
                 return;
             }

@@ -1,4 +1,7 @@
-public interface IPresenter{
-    Dot Dot { get; }
-    DotView View { get; }
+using UnityEngine;
+
+public interface IPresenter
+{
+    IBoardEntity GetEntity();
+    EntityView GetView();
 }

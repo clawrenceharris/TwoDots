@@ -37,19 +37,25 @@ public class CascadeRunner : MonoBehaviour
 
     private void Awake()
     {
-        _board = FindFirstObjectByType<BoardPresenter>();
         _stateManager = FindFirstObjectByType<LevelStateManager>();
         BuildProducers();
     }
-
-    private void OnEnable()
+    public void Init(IBoardPresenter board)
     {
-        ConnectionPresenter.OnConnectionCompleted += HandleConnectionCompleted;
-    }
+        _board = board;
+        if (ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService) && connectionService.ActiveConnection == null)
+        {   
+            Debug.LogError("[CascadeRunner] Missing ConnectionService ActiveConnection.");
+            return;
+        }
+        connectionService.ActiveConnection.OnConnectionCompleted += HandleConnectionCompleted;
 
+    }
+   
     private void OnDisable()
     {
-        ConnectionPresenter.OnConnectionCompleted -= HandleConnectionCompleted;
+        if (!ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService)) return;
+        connectionService.ActiveConnection.OnConnectionCompleted -= HandleConnectionCompleted;
     }
 
     private void HandleConnectionCompleted(ConnectionResult payload)
@@ -213,33 +219,56 @@ public class CascadeRunner : MonoBehaviour
     {
         var animations = new List<Sequence>();
         if (step == null) return animations;
-
         if (step.ToHit.Count > 0)
         {
-            var hittables = _board.CollectPresenters<IHittableDotPresenter>(new List<string>(step.ToHit));
-            foreach (var hittable in hittables)
+            var hittableDots = _board.CollectDotPresenters<IHittablePresenter>(new List<string>(step.ToHit));
+            var hittableTiles = _board.CollectTilePresenters<IHittablePresenter>(new List<string>(step.ToHit));
+            Debug.Log($"[CascadeRunner] ExecuteHitPhase: {hittableDots.Count} hittable dots, {hittableTiles.Count} hittable tiles ");
+            foreach (var hittableId in step.ToHit)
             {
-                if (_board.TryHitDot(hittable.Dot.ID, out _))
+                var entity = _board.GetEntity(hittableId);
+                if (entity == null) continue;
+                Debug.Log($"[CascadeRunner] ExecuteHitPhase: hittable entity {entity.GetEntity().ID}");
+                if (entity.TryGetPresenter(out IHittablePresenter hittablePresenter))
                 {
-                    var sequence = hittable.Hit();
-                    if (sequence != null)
-                        animations.Add(sequence);
+                    if (_board.TryHit(hittableId, out bool _))
+                    {
+                       
+                        var sequence = hittablePresenter.Hit();
+                        if (sequence != null)
+                            animations.Add(sequence);
+                    }
+                   
                 }
+               
+            
+               
             }
-        }
+           
 
-        if (step.ToExplode.Count > 0)
-        {
-            var explodables = _board.CollectPresenters<IExplodableDotPresenter>(new List<string>(step.ToExplode));
-            foreach (var explodable in explodables)
+            if (step.ToExplode.Count > 0)
             {
-                explodable.PrepareForExplode(new List<string>(step.ToHit), new List<string>(step.ToExplode));
-            }
-            foreach (var explodable in explodables)
-            {
-                var sequence = explodable.Explode();
-                if (sequence != null)
-                    animations.Add(sequence);
+                foreach (var explodableId in step.ToExplode)
+                {
+                    var entity = _board.GetEntity(explodableId);
+                    if(entity == null) continue;
+                    if (entity.TryGetPresenter(out IExplodablePresenter explodablePresenter))
+                    {
+                        explodablePresenter.PrepareForExplode(new List<string>(step.ToHit), new List<string>(step.ToExplode));
+                    }
+                }
+                foreach (var explodableId in step.ToExplode)
+                {
+                    var entity = _board.GetEntity(explodableId);
+                    if(entity == null) continue;
+                    if(entity.TryGetPresenter(out IExplodablePresenter explodablePresenter)){
+                        var sequence = explodablePresenter.Explode();
+                        if (sequence != null)
+                            animations.Add(sequence);
+                    }
+                }
+
+
             }
         }
 
@@ -250,31 +279,35 @@ public class CascadeRunner : MonoBehaviour
     {
         animations = new List<Sequence>();
         if (step == null) return FillStepResult.Empty;
-
         var clearCandidates = new HashSet<string>(step.ToClear);
         clearCandidates.UnionWith(step.ToHit);
-
         if (clearCandidates.Count == 0) return FillStepResult.Empty;
 
         var clearedIds = new List<string>();
         var clearedPositions = new List<Vector2Int>();
 
-        var clearables = _board.CollectPresenters<IClearableDotPresenter>(new List<string>(clearCandidates));
-        foreach (var clearable in clearables)
+       
+        Debug.Log($"[CascadeRunner] ExecuteClearPhase: {clearCandidates.Count} clearable candidates");
+        foreach (var clearableId in clearCandidates)
         {
-            if (_board.TryClearDot(clearable.Dot.ID))
+            var entity = _board.GetEntity(clearableId);
+            if (entity == null) continue;
+            Debug.Log($"[CascadeRunner] ExecuteClearPhase: clearable entity {entity.GetEntity().ID}");
+            if (_board.TryClear(entity.GetEntity().ID))
             {
-                var sequence = clearable.Clear();
-                if (sequence != null)
-                    animations.Add(sequence);
-
-                clearedIds.Add(clearable.Dot.ID);
-                clearedPositions.Add(clearable.Dot.GridPosition);
+                Debug.Log($"[CascadeRunner] ExecuteClearPhase: clearing entity {entity.GetEntity().ID}");
+                if (entity.TryGetPresenter(out IClearablePresenter clearablePresenter))
+                {
+                    Debug.Log($"[CascadeRunner] ExecuteClearPhase: clearable presenter {clearablePresenter}");
+                    var sequence = clearablePresenter.Clear();
+                    if (sequence != null)
+                        animations.Add(sequence);
+                }
             }
         }
-
+       
         foreach (var id in clearedIds)
-            _context.ClearedDotIds.Add(id);
+                _context.ClearedDotIds.Add(id);
 
         return new FillStepResult(clearedIds, clearedPositions);
     }

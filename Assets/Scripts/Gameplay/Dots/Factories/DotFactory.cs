@@ -23,8 +23,8 @@ public class DotFactory
                     var validColors = colors ?? levelColors;
                     var color = validColors[Random.Range(0, validColors.Length)];
                     var dot = new Dot(DotType.Normal, new Vector2Int(data.Col, data.Row));
-                    var colorable = dot.AddModel(new ColorableDot(dot));
-                    dot.AddModel(new HittableDot(dot, new ClearableDot(dot), hitMax: 1, hitCount: 0));
+                    var colorable = dot.AddModel(new Colorable(dot));
+                    dot.AddModel(new Hittable(dot, new Clearable(dot), hitMax: 1, conditions: new List<HitConditionType> { HitConditionType.Connection}, hitCount: 0));
                     colorable.Color = LevelLoader.FromJsonColor(color);
                   
                     return dot;
@@ -34,13 +34,13 @@ public class DotFactory
                 {
                     var dot = new Dot(DotType.Blank, new Vector2Int(data.Col, data.Row));
                     dot.AddModel(new BlankColorableDot(dot));
-                    dot.AddModel(new HittableDot(dot, new ClearableDot(dot),hitMax: 1, hitCount: 0));
+                    dot.AddModel(new Hittable(dot, new Clearable(dot),hitMax: 1, conditions: new List<HitConditionType> { HitConditionType.Connection }, hitCount: 0));
                     return dot;
                 }
                 case DotType.Bomb:
                 {
                     var dot = new Dot(DotType.Bomb, new Vector2Int(data.Col, data.Row));
-                    dot.AddModel(new ClearableDot(dot, shouldClear: () => true));
+                    dot.AddModel(new Clearable(dot, shouldClear: () => true));
                     return dot;
                 }
                 
@@ -48,32 +48,30 @@ public class DotFactory
         }
     }
 
-    public static IDotPresenter CreateDotPresenter(Dot dot, DotView view, IBoardPresenter board)
+    public static DotPresenter CreateDotPresenter(Dot dot, DotView view, IBoardPresenter board)
     {
        switch (dot.DotType)
        {
         case DotType.Normal:{
             var presenter = new DotPresenter(dot, view);
-            presenter.AddPresenter(new ConnectableDotPresenter(presenter, board));
-            presenter.AddPresenter(new HittableDotPresenter(presenter, board));
-            presenter.AddPresenter(new ClearableDotPresenter(presenter, board));
+            presenter.AddPresenter(new ConnectableDotPresenter(dot, view));
+            presenter.AddPresenter(new HittablePresenter(dot, view));
+            presenter.AddPresenter(new ClearablePresenter(dot, view));
             return presenter;
-        
         }
         case DotType.Beetle:
         {
             var presenter = new DotPresenter(dot, view);
-            presenter.AddPresenter(new ConnectableDotPresenter(presenter, board));
-            presenter.AddPresenter(new HittableDotPresenter(presenter, board));
-            presenter.AddPresenter(new ClearableDotPresenter(presenter, board));
+            presenter.AddPresenter(new ConnectableDotPresenter(dot, view));
+            presenter.AddPresenter(new HittablePresenter(dot, view, new ClearablePresenter(dot, view)));
             return presenter;
         }
         case DotType.Blank:
         {
             var presenter = new DotPresenter(dot, view);
-            presenter.AddPresenter(new ConnectableDotPresenter(presenter, board));
-            presenter.AddPresenter(new HittableDotPresenter(presenter, board));
-            presenter.AddPresenter(new ClearableDotPresenter(presenter, board));
+            presenter.AddPresenter(new ConnectableDotPresenter(dot, view));
+            presenter.AddPresenter(new HittablePresenter(dot, view));
+            presenter.AddPresenter(new ClearablePresenter(dot, view));
             return presenter;
         }
         case DotType.Bomb:
@@ -84,9 +82,9 @@ public class DotFactory
                 return null;
             }
             var presenter = new DotPresenter(dot, bombView);
-            presenter.AddPresenter(new ClearableDotPresenter(presenter, board));
-            presenter.AddPresenter(new BombDotPresenter(presenter, board));
-            return presenter;
+            presenter.AddPresenter(new ClearablePresenter(dot, view));
+            presenter.AddPresenter(new BombDotPresenter(dot, bombView));
+            return presenter;   
         }
         default: return new DotPresenter(dot, view);
        }

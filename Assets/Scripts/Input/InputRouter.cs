@@ -15,16 +15,16 @@ using UnityEngine.InputSystem;
 
 public class InputRouter : MonoBehaviour
 {
-    public static event Action<IDotPresenter> OnDotSelected;
-    public static event Action<IDotPresenter> OnDotConnected;
+    public static event Action<DotPresenter> OnDotSelected;
+    public static event Action<DotPresenter> OnDotConnected;
     public static event Action OnDotSelectionEnded;
     public static event Action<Vector3> OnPointerDragged;
     private Camera _cam;
-    private IBoardPresenter _board;
+    private BoardService _board;
     private static InputGate _gate;
     public static InputGate Gate => _gate ??= new InputGate();
     [SerializeField] private float _maxHitRadius =0.5f;
-    public static event Action<IDotPresenter> OnDotDeselected;
+    public static event Action<DotPresenter> OnDotDeselected;
     private bool _isPointerDown;
     private float _lastSelectionTime = -100f;
     private IDotPresenter _lastSelectedDot;
@@ -34,9 +34,12 @@ public class InputRouter : MonoBehaviour
     {
         _cam = Camera.main;
         _gate = new InputGate();
-        _board = FindFirstObjectByType<BoardPresenter>();
     }
-
+    private void Start()
+    {
+        if (!ServiceProvider.Instance.TryGetService<BoardService>(out var boardService)) return;
+        _board = boardService;
+    }
     private void Update()
     {
         if (!_gate.Enabled) return;
@@ -58,7 +61,7 @@ public class InputRouter : MonoBehaviour
 
 
     }
-    private void SelectDot(IDotPresenter dot)
+    private void SelectDot(DotPresenter dot)
     {
         if (dot.Dot.ID == _lastSelectedDot?.Dot.ID) return;
 
@@ -68,7 +71,7 @@ public class InputRouter : MonoBehaviour
         _lastSelectionTime = Time.unscaledTime;
         OnDotSelected?.Invoke(dot);
     }
-    private void ConnectDot(IDotPresenter dot)
+    private void ConnectDot(DotPresenter dot)
     {
         if (dot.Dot.ID == _lastSelectedDot?.Dot.ID) return;
 
@@ -82,11 +85,11 @@ public class InputRouter : MonoBehaviour
     
     private void RecordPointerMove()
     {
-        if (!TryGetPointerHit(out IDotPresenter dot)) return;
+        if (!TryGetPointerHit(out DotPresenter dot)) return;
         ConnectDot(dot);
     }
 
-    private bool TryGetPointerHit(out IDotPresenter dot)
+    private bool TryGetPointerHit(out DotPresenter dot)
     {
         dot = null;
         if (!TryGetPointerScreenPosition(out Vector2 position)) return false;
@@ -94,7 +97,7 @@ public class InputRouter : MonoBehaviour
         var worldPosition = _cam.ScreenToWorldPoint(position);
         var gridPosition = GridUtility.WorldToGrid(worldPosition);
 
-        IDotPresenter bestDot = null;
+        DotPresenter bestDot = null;
 
         // Check the clicked cell and its neighbors
         for (int dx = -1; dx <= 1; dx++)
@@ -102,10 +105,10 @@ public class InputRouter : MonoBehaviour
             for (int dy = -1; dy <= 1; dy++)
             {
                 var candidateGrid = new Vector2Int(gridPosition.x + dx, gridPosition.y + dy);
-                var candidate = _board.GetDotAt(candidateGrid);
+                var candidate = _board.BoardPresenter.GetDotAt(candidateGrid);
                 if (candidate == null) continue;
 
-                var candidateWorld = candidate.View.transform.position;
+                var candidateWorld = candidate.DotView.transform.position;
                 if (Mathf.Abs(candidateWorld.x - worldPosition.x) <= _maxHitRadius && Mathf.Abs(candidateWorld.y - worldPosition.y) <= _maxHitRadius)
                 {
                     bestDot = candidate;
@@ -120,7 +123,7 @@ public class InputRouter : MonoBehaviour
 
     private void RecordPointerDown()
     {
-        if (!TryGetPointerHit(out IDotPresenter dot)) return;
+        if (!TryGetPointerHit(out DotPresenter dot)) return;
         SelectDot(dot);
     }
 
@@ -131,7 +134,7 @@ public class InputRouter : MonoBehaviour
         _lastSelectedDot = null;
         _lastSelectionTime = -100f;
         OnDotSelectionEnded?.Invoke();
-        TryGetPointerHit(out IDotPresenter dot);
+        TryGetPointerHit(out DotPresenter dot);
         OnDotDeselected?.Invoke(dot);
     }
 

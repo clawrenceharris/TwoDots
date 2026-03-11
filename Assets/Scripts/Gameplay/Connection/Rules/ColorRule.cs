@@ -16,8 +16,8 @@ public class ColorRule : IDotConnectionRule
     /// <returns>Wether or not the two dots can form a valid connection</returns>
     public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, IConnectionModel connection, IBoardPresenter board)
     {
-        var toColorable = toDot.Dot.GetModel<ColorableDot>();
-        var connectionColor = connection.CurrentColor;
+        var toColorable = toDot.Dot.GetModel<Colorable>();
+        var connectionColor = connection.Session.Color;
 
         if (!CheckConnectionMatch(connectionColor, toColorable))
         {
@@ -27,7 +27,7 @@ public class ColorRule : IDotConnectionRule
         return true;
     }
 
-    private bool CheckConnectionMatch(DotColor connectionColor, ColorableDot toDot)
+    private bool CheckConnectionMatch(DotColor connectionColor, Colorable toDot)
     {
         // If the connection color is blank, we can connect to any dot
         if (connectionColor.IsBlank())

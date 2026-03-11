@@ -20,7 +20,6 @@ public class TileSpriteController : SpriteController
 
         if (_tileSpriteSet == null)
         {
-            Debug.LogWarning("[TileSpriteController] TileSpriteSet not assigned, cannot update sprite");
             return;
         }
 

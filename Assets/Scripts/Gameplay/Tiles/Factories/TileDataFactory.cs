@@ -18,7 +18,6 @@ public class TileDataFactory
             Col = position != null ? position.ToObject<int[]>()[0] : -1,
             Row = position != null ? position.ToObject<int[]>()[1] : -1,
         };
-        Debug.Log($"Creating tile data: {type} at {position}");
         switch (type)
         {
             case LevelDataKeys.Types.OneSidedBlock:
@@ -29,7 +28,6 @@ public class TileDataFactory
                 break;
 
         }
-        Debug.Log($"Tile data: {tileData}");
         return tileData;
     }
 }

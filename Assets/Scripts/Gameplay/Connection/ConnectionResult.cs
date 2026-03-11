@@ -24,14 +24,14 @@ public class ConnectionResult
     /// <summary>The dot IDs to hit from the resulting square connection. (e.g. all dots or all dots of a distinct color)</summary>
     public IReadOnlyList<string> DotsToHitFromSquare { get; }
 
-    public ConnectionResult(IConnectionModel connection)
+    public ConnectionResult(ConnectionSession session)
     {
-        DotIdsInPath = connection.DotIdsInPath;
-        IsSquare = connection.IsSquare;
-        ConnectionColor = connection.CurrentColor;
-        Square = connection.Square;
+        DotIdsInPath = session.Path.Select(id => id).ToList();
+        IsSquare = session.IsSquare;
+        ConnectionColor = session.Color;
+        Square = session.Square;
         IsSquare = Square != null;
         DotsToHitFromSquare = Square?.DotIdsToHit ?? new List<string>();
-        AllDotsToHit = DotIdsInPath.Union(DotsToHitFromSquare).ToList();
+        AllDotsToHit = session.GetAllDotsToHit().AsReadOnly();
     }
 }

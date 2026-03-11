@@ -114,7 +114,8 @@ public static class LevelDataKeys
             { EmptyTile, TileType.EmptyTile },
             { Ice, TileType.Ice },
             { Water, TileType.Water },
-            { Circuit, TileType.Circuit }
+            { Circuit, TileType.Circuit },
+            { Block, TileType.Block }
         };
 
         public static DotType GetDotTypeFromKey(string key)

@@ -3,13 +3,14 @@ using System.Linq;
 using DG.Tweening;
 using UnityEngine;
 
-public class BombDotPresenter : BasePresenter, IExplodableDotPresenter
+public class BombDotPresenter : EntityPresenter, IExplodablePresenter
 {
     private bool _explosionReady = false;
-     
+    private readonly BombView _bombView;
     public static Dictionary<string, List<string>> bombToDotsMap;
-    public BombDotPresenter(IDotPresenter dot, IBoardPresenter board) : base(dot, board)
+    public BombDotPresenter(Dot dot, BombView view) : base(dot, view)
     {
+        _bombView = view;
     }
 
     public void PrepareForExplode(List<string> targetHittables, List<string> bombIds)
@@ -46,7 +47,7 @@ public class BombDotPresenter : BasePresenter, IExplodableDotPresenter
                 id => id,
                 id => {
                     var dot = _board.GetDot(id);
-                    return dot?.View.transform.position ?? Vector3.zero;
+                    return dot?.DotView.transform.position ?? Vector3.zero;
                 }
             );
         
@@ -54,7 +55,7 @@ public class BombDotPresenter : BasePresenter, IExplodableDotPresenter
         foreach (string hittableId in validHittables)
         {
             var hittable = _board.GetDot(hittableId);
-            Vector2 hittablePos = hittable.View.transform.position;
+            Vector2 hittablePos = hittable.DotView.transform.position;
 
             string nearestBombId = bombIds[0];
             float minDist = Vector2.Distance(hittablePos, bombPositions[nearestBombId]);
@@ -76,19 +77,20 @@ public class BombDotPresenter : BasePresenter, IExplodableDotPresenter
 
     public Sequence Explode()
     {
-        if (View is not BombView bombView) return null;
-        if (bombToDotsMap == null || !bombToDotsMap.ContainsKey(Dot.ID))
+        IBoardEntity bomb = GetEntity();
+        if (bombToDotsMap == null || !bombToDotsMap.ContainsKey(bomb.ID))
             return DOTween.Sequence();
 
         var sequence = DOTween.Sequence();
-        var hittableIds = bombToDotsMap[Dot.ID];
-        Debug.Log($"hittableIds for bomb {Dot.ID}: {hittableIds.Count}");
+        var hittableIds = bombToDotsMap[bomb.ID];
+        Debug.Log($"hittableIds for bomb {bomb.ID}: {hittableIds.Count}");
 
         foreach (var hittableId in hittableIds)
         {
-            if (_board.GetDot(hittableId).TryGetPresenter<IHittableDotPresenter>(out var hittable))
+            if (_board.GetEntity(hittableId)
+            .TryGetPresenter<IHittablePresenter>(out var hittable))
             {
-                sequence.Join(bombView.DoLineAnimation(hittable));
+                sequence.Join(_bombView.DoLineAnimation(hittable));
             }
         }
 

@@ -7,7 +7,6 @@ public class GameManager : MonoBehaviour
 {
 
     [SerializeField] private World[] worlds;
-    private LevelManager levelManager;
     public static GameManager Instance { get; private set; }
     
     public World[] Worlds
@@ -21,7 +20,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int worldIndex;
     public int WorldIndex { get { return worldIndex; }}
     public static int TotalAmountOfLevels { get; private set; }
-    [SerializeField]private TextAsset startingLevel;
 
     private void Awake()
     {
@@ -38,10 +36,9 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
         SetTotalAmountOfLevels();
-        DOTween.SetTweensCapacity(500, 50);
-        levelManager = FindFirstObjectByType<LevelManager>();
-        LevelData level = LevelLoader.LoadLevelData(startingLevel);
-        levelManager.StartLevel(level);
+        DOTween.SetTweensCapacity(900, 50);
+       
+        
         
     }
 

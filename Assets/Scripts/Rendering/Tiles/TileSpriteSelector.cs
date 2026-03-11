@@ -26,7 +26,6 @@ public static class TileSpriteSelector
         bool hasBottom = HasNeighbor(board, gridPosition, Vector2Int.down);
         bool hasLeft = HasNeighbor(board, gridPosition, Vector2Int.left);
         bool hasRight = HasNeighbor(board, gridPosition, Vector2Int.right);
-        Debug.Log($"hasTop: {hasTop}, hasBottom: {hasBottom}, hasLeft: {hasLeft}, hasRight: {hasRight}");
         // 0: No neighbors - isolated tile
         if (!hasTop && !hasBottom && !hasLeft && !hasRight) return 0;
 

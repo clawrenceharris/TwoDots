@@ -15,10 +15,10 @@ public class PoolService : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        RegisterPools();
+        
 
     }
-    private void RegisterPools()
+    public void RegisterPools()
     {
         LinePool linePool = FindFirstObjectByType<LinePool>();
         BombPool bombPool = FindFirstObjectByType<BombPool>();
@@ -27,11 +27,11 @@ public class PoolService : MonoBehaviour
         _pools.TryAdd(typeof(BombPool), bombPool);
     }
 
-    public void FillPool<T>(int size) where T : Pool
+    public void FillPool<T>(int? size = null) where T : Pool
     {
         
         var pool = _pools[typeof(T)];
-        pool.Fill(size);
+        pool.Fill(size ?? pool.Size);
     }
     public U GetFromPool<T, U>() where T : Pool where U : MonoBehaviour
     {
