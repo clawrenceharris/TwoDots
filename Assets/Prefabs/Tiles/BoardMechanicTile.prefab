@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2213711824880215409, guid: 80178b5823b6e4cdeb9fe7d8ff1d889e, type: 3}
       propertyPath: m_Name
-      value: BoardMechanicTile Variant
+      value: BoardMechanicTile
       objectReference: {fileID: 0}
     - target: {fileID: 8434720561798622420, guid: 80178b5823b6e4cdeb9fe7d8ff1d889e, type: 3}
       propertyPath: m_SortingLayer
@@ -58,11 +58,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8434720561798622420, guid: 80178b5823b6e4cdeb9fe7d8ff1d889e, type: 3}
       propertyPath: m_SortingLayerID
-      value: -1874997851
+      value: -969548781
       objectReference: {fileID: 0}
     - target: {fileID: 8434720561798622420, guid: 80178b5823b6e4cdeb9fe7d8ff1d889e, type: 3}
       propertyPath: m_RenderingLayerMask
-      value: 10
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

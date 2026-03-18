@@ -12,6 +12,18 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: ecabe75bd96c14d099311942ff914de2, type: 3}
+    - target: {fileID: 1473844833117796065, guid: ac1a30aa79a6d44c08ef4a65d3cf463a, type: 3}
+      propertyPath: m_SortingLayer
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1473844833117796065, guid: ac1a30aa79a6d44c08ef4a65d3cf463a, type: 3}
+      propertyPath: m_SortingLayerID
+      value: -969548781
+      objectReference: {fileID: 0}
+    - target: {fileID: 1473844833117796065, guid: ac1a30aa79a6d44c08ef4a65d3cf463a, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 7509876612643650740, guid: ac1a30aa79a6d44c08ef4a65d3cf463a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -54,7 +66,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9206110345736126276, guid: ac1a30aa79a6d44c08ef4a65d3cf463a, type: 3}
       propertyPath: m_Name
-      value: BlockTile Variant
+      value: BlockTile
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
