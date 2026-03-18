@@ -25,7 +25,6 @@ public class BombProducer : IFillStepProducer
                 dotsToHit.Add(neighbor.Dot.ID);
             }
         }
-        Debug.Log($"bombIds: {bombIds.Count}, dotsToHit: {dotsToHit.Count}");
         if (bombIds.Count == 0 && dotsToHit.Count == 0) return;
         outSteps.Add(new FillStep(
                 FillStepType.BombExplode,

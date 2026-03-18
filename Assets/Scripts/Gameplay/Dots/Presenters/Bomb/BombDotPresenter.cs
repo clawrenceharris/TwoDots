@@ -83,7 +83,6 @@ public class BombDotPresenter : EntityPresenter, IExplodablePresenter
 
         var sequence = DOTween.Sequence();
         var hittableIds = bombToDotsMap[bomb.ID];
-        Debug.Log($"hittableIds for bomb {bomb.ID}: {hittableIds.Count}");
 
         foreach (var hittableId in hittableIds)
         {

@@ -586,7 +586,6 @@ public class BoardPresenter : IBoardPresenter
     }
     public bool TryClear(string entityId)
     {
-        Debug.Log($"[BoardPresenter] TryClear: {entityId}");
         EntityPresenter entity = GetEntity(entityId);
         if (entity == null)
         {
@@ -601,7 +600,6 @@ public class BoardPresenter : IBoardPresenter
             else if (entity.Entity is Tile tile)
             {
                 _model.ClearTile(tile.ID);
-                Debug.Log($"[BoardPresenter] Cleared tile {tile.ID}");
             }
 
             return true;
@@ -943,7 +941,6 @@ public class BoardPresenter : IBoardPresenter
     }
     public List<DotDrop> CollectGravityDrops()
     {
-        Debug.Log($"[BoardPresenter] CollectGravityDrops");
         var allDrops = new List<DotDrop>();
         bool dotsDropped;
         do
@@ -954,7 +951,6 @@ public class BoardPresenter : IBoardPresenter
 
 
         } while (dotsDropped);
-        Debug.Log($"[BoardPresenter] CollectGravityDrops: {allDrops.Count} drops");
 
         return allDrops;
     }
