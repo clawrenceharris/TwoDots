@@ -9,9 +9,16 @@ public static class GameTypeExtensions
 {
 
     
-    public static bool IsBlockable(this TileType type){
+    public static bool IsBlockingTile(this TileType type){
         return type == TileType.Block || type == TileType.OneSidedBlock;
 
+    }
+    public static bool IsOpenTile(this TileType type)
+    {
+        return type == TileType.Water || type == TileType.Ice || type == TileType.Train || type == TileType.Slime || type == TileType.Circuit || type == TileType.SunGate;
+    }
+    public static bool TileHasDot(this TileType type){
+        return type == TileType.Water || type == TileType.Ice || type == TileType.Train || type == TileType.Slime || type == TileType.Glacier || type == TileType.Circuit || type == TileType.SunGate || type == TileType.Vine;
     }
 
     public static bool IsLotusDot(this DotType type)

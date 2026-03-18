@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 868622482926032383}
   - component: {fileID: 4073236610067921480}
-  - component: {fileID: 5648905683831243604}
-  - component: {fileID: 3346958265654662394}
+  - component: {fileID: 8535703434827970573}
+  - component: {fileID: 2668438621095136954}
   m_Layer: 0
   m_Name: OneSidedBlock
   m_TagString: Untagged
@@ -36,6 +36,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4073236610067921480
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -51,7 +52,12 @@ SpriteRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
-  m_RenderingLayerMask: 1
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 2
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
@@ -72,9 +78,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 463975771
-  m_SortingLayer: -1
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: -1874997851
+  m_SortingLayer: 4
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: bc43f26b1f230484d90cd37e8d617040, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -84,9 +92,8 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &5648905683831243604
+--- !u!114 &8535703434827970573
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -95,10 +102,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 6419172350481164951}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 98ecc1b482d9e43c2b604f76fdc2e8c2, type: 3}
+  m_Script: {fileID: 11500000, guid: bfef8c820d35f45349ac65d6d351a9b6, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &3346958265654662394
+  m_EditorClassIdentifier: Assembly-CSharp::TileView
+--- !u!114 &2668438621095136954
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -107,11 +114,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 6419172350481164951}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 373956d9bfad14e7686fa92c931c758f, type: 3}
+  m_Script: {fileID: 11500000, guid: 5392ce55c425c418fb3d22560a7edecf, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
-  spriteRenderer: {fileID: 4073236610067921480}
-  sprite: {fileID: 0}
-  hittableVisuals:
-    hitDuration: 0
-    clearDuration: 0.4
+  m_EditorClassIdentifier: Assembly-CSharp::DotsRenderer
+  _fallbackBaseRenderer: {fileID: 4073236610067921480}
+  _targets: []

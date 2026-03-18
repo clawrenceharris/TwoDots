@@ -12,7 +12,6 @@ public enum TileType
     Slime,
     CeramicTile,
     SunGate,
-    Circut,
     Glacier,
     OneSidedBlock,
     EmptyTile,

@@ -3,19 +3,15 @@ using System.Net.NetworkInformation;
 using UnityEngine;
 using Color = UnityEngine.Color;
 
-public class ColorSchemeService
+public class ColorSchemeService : MonoBehaviour
 {
-    private readonly ColorScheme[] _colorSchemes;
+    [SerializeField] private ColorScheme[] _colorSchemes;
+    public ColorScheme CurrentColorScheme { get; private set; }
 
-    public static ColorScheme CurrentColorScheme { get; private set; }
 
-    public ColorSchemeService(ColorScheme[] colorSchemes, int initialIndex)
-    {
-        _colorSchemes = colorSchemes;
-        SetColorScheme(initialIndex);
-    }
+    
 
-    public void SetColorScheme(int index)
+    public void Initialize(int index)
     {
         if (index >= 0 && index < _colorSchemes.Length)
         {
@@ -27,29 +23,8 @@ public class ColorSchemeService
         }
     }
 
-    public static SkinColorScheme GetDotColorScheme(DotType type)
-    {
-        return type switch
-        {
-            DotType.Anchor => CurrentColorScheme.anchor,
-            DotType.Clock => CurrentColorScheme.clock,
-            DotType.Bomb => CurrentColorScheme.bomb,
-            DotType.Nesting => CurrentColorScheme.nesting,
-            DotType.Beetle => CurrentColorScheme.beetle,
-            DotType.Lotus => CurrentColorScheme.lotus,
-            _ => null,
-        };
-    }
-    public static SkinColorScheme GetTileColorScheme(TileType type)
-    {
-        return type switch
-        {
-            
-            TileType.EmptyTile => CurrentColorScheme.emptyTile,
-            _ => null,
-        };
-    }
-    public static Color FromDotColor(DotColor dotColor)
+
+    public Color FromDotColor(DotColor dotColor)
     {
         return dotColor switch
         {
@@ -63,9 +38,9 @@ public class ColorSchemeService
             _ => CurrentColorScheme.blank,
         };
     }
-    public static Color ToDotColor(Dot dot)
+    public Color ToDotColor(IBoardEntity entity)
     {
-        if (dot.TryGetModel(out ColorableDot colorable))
+        if (entity.TryGetModel(out Colorable colorable))
         {
             return FromDotColor(colorable.Color);
         }
@@ -73,7 +48,18 @@ public class ColorSchemeService
         {
             return CurrentColorScheme.blank;
         }
-       
+    }
+    public Color ToDotColor(Dot dot)
+    {
+        if (dot.TryGetModel(out Colorable colorable))
+        {
+            return FromDotColor(colorable.Color);
+        }
+        else
+        {
+            return CurrentColorScheme.blank;
+        }
+
     }
 
 }

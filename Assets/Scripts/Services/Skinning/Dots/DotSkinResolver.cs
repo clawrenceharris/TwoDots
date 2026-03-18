@@ -5,52 +5,24 @@ public class DotSkinResolver : ISkinResolver<Dot>
 {
     public Skin ResolveSkin(Dot dot)
     {
-        Color baseColor = ResolveBaseColor(dot);
-        Color accentColor = ResolveAccentColor(dot);
-        Color detailColor = ResolveDetailColor(dot);
-        return new Skin(baseColor, accentColor, detailColor);
+        return ResolveDotSkin(dot);
+    }
+    public Skin ResolveDotSkin(Dot dot)
+    {
+        var colorScheme = ServiceProvider.Instance.GetService<ColorSchemeService>().CurrentColorScheme;
+        if (dot.TryGetModel(out Colorable colorable))
+        {
+            var color = ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(colorable.Color);
+            return new Skin(color, color, color);
+        }
+        return dot.DotType switch
+        {
+            DotType.Bomb => new Skin(colorScheme.bomb.baseColor, colorScheme.bomb.accentColor, colorScheme.bomb.detailColor),
+            _ => throw new System.Exception("Invalid dot type."),
+        };
+    
     }
    
-    private static Color ResolveDetailColor(Dot dot)
-    {
-         if (dot.TryGetModel(out ColorableDot colorable))
-            return ResolveDotColor(colorable.Color);
-        if (ColorSchemeService.GetDotColorScheme(dot.DotType) is { } colorScheme)
-        {
-            return colorScheme.detailColor;
-        }
-        return Color.white;
-    }
-    private static Color ResolveAccentColor(Dot dot)
-    {
-         if (dot.TryGetModel(out ColorableDot colorable))
-            return ResolveDotColor(colorable.Color);
-        if (ColorSchemeService.GetDotColorScheme(dot.DotType) is { } colorScheme)
-        {
-            return colorScheme.accentColor;
-        }
-        return Color.white;
-    }
-    private static Color ResolveBaseColor(Dot dot)
-    {
-        if (dot.TryGetModel(out ColorableDot colorable))
-        {
-            return ResolveDotColor(colorable.Color);
-        }
-
-        if (ColorSchemeService.GetDotColorScheme(dot.DotType) is { } colorScheme)
-        {
-            return colorScheme.baseColor;
-        }
-        return Color.white;
-    }
-
-    private static Color ResolveDotColor(DotColor dotColor)
-    {
-        return ColorSchemeService.CurrentColorScheme == null
-            ? Color.white
-            : ColorSchemeService.FromDotColor(dotColor);
-    }
 
     
 }

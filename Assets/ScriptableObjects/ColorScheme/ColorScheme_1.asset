@@ -19,10 +19,4 @@ MonoBehaviour:
   red: {r: 0.990566, g: 0.6401299, b: 0.70453495, a: 1}
   blank: {r: 1, g: 1, b: 1, a: 1}
   backgroundColor: {r: 0.5229936, g: 0.3504361, b: 0.5943396, a: 1}
-  anchor: {fileID: 0}
-  clock: {fileID: 0}
-  bomb: {fileID: 11400000, guid: 5bd1b8fdf51324591a639d68f24a107c, type: 2}
-  nesting: {fileID: 0}
-  beetle: {fileID: 0}
-  lotus: {fileID: 0}
-  emptyTile: {fileID: 11400000, guid: d408f9b44953945f2aa93611254d0db7, type: 2}
+  bomb: {fileID: 11400000, guid: 731155bae2222402f94839eb75c45a66, type: 2}

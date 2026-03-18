@@ -14,10 +14,11 @@ public class ColorRule : IDotConnectionRule
     /// <param name="connection">The connection model</param>
     /// <param name="board">The board presenter object</param>
     /// <returns>Wether or not the two dots can form a valid connection</returns>
-    public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, IConnectionModel connection, IBoardPresenter board)
+    public bool CanConnect(string fromDotId, string toDotId, Connection connectionSession, IBoardPresenter board)
     {
-        var toColorable = toDot.Dot.GetModel<ColorableDot>();
-        var connectionColor = connection.CurrentColor;
+        var toDot = board.GetDot(toDotId);
+        var toColorable = toDot.Dot.GetModel<Colorable>();
+        var connectionColor = connectionSession.Color;
 
         if (!CheckConnectionMatch(connectionColor, toColorable))
         {
@@ -26,8 +27,13 @@ public class ColorRule : IDotConnectionRule
        
         return true;
     }
-
-    private bool CheckConnectionMatch(DotColor connectionColor, ColorableDot toDot)
+    /// <summary>
+    /// Checks if the connection color matches the color of the dot we are trying to connect to
+    /// </summary>
+    /// <param name="connectionColor"></param>
+    /// <param name="toDot"></param>
+    /// <returns></returns>
+    private bool CheckConnectionMatch(DotColor connectionColor, Colorable toDot)
     {
         // If the connection color is blank, we can connect to any dot
         if (connectionColor.IsBlank())

@@ -12,7 +12,7 @@ public interface IBoardModel
     List<Tile> GetAllTiles();
     void SpawnTile(Tile tile);
     void SpawnDot(Dot dot);
-    void RemoveTile(string tileId);
+    void ClearTile(string tileId);
     void ClearDot(string dotId);
     void MoveDot(string id, Vector2Int toPosition);
     Dot GetDotAt(Vector2Int position);

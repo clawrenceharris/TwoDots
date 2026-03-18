@@ -18,13 +18,10 @@ public class LevelStateManager : MonoBehaviour
     private IStateMachine _stateMachine;
     public event Action<int> OnMoveCountChanged;
 
-    private BoardPresenter _board;
 
     private GameManager _gameManager;
     private ITutorialPresenter _tutorial;
     public ITutorialPresenter Tutorial => _tutorial;
-    
-    public IBoardPresenter Board => _board;
     public GameManager GameManager => _gameManager;
 
     private void Awake()
@@ -32,7 +29,6 @@ public class LevelStateManager : MonoBehaviour
         _stateMachine = new StateMachine();
         _tutorial = new TutorialPresenter();
         _gameManager = FindFirstObjectByType<GameManager>();
-        _board = FindFirstObjectByType<BoardPresenter>();
     }
 
 

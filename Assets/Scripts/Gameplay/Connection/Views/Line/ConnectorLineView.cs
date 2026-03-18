@@ -14,6 +14,7 @@ public class ConnectorLineView : MonoBehaviour
     {
         _lineRenderer = GetComponent<LineRenderer>();
     }
+    
     private void Start()
     {
         _lineRenderer.startWidth = _width;
@@ -24,21 +25,26 @@ public class ConnectorLineView : MonoBehaviour
     }
     private void OnEnable()
     {
-        ConnectionPresenter.OnColorChanged += OnColorChanged;
+        if (!ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService)) return;
+        connectionService.ActiveConnection.OnColorChanged += OnColorChanged;
         _lineRenderer.sortingLayerName = "Lines";
         _lineRenderer.sortingLayerID = SortingLayer.NameToID("Lines");
     }
 
     private void OnColorChanged(DotColor color)
     {
-        SetColor(ColorSchemeService.FromDotColor(color));
+        SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(color));
     }
 
     private void OnDisable()
     {
-        ConnectionPresenter.OnColorChanged -= OnColorChanged;
+        if (!ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService)) return;
+
+        connectionService.ActiveConnection.OnColorChanged -= OnColorChanged;
+
         _lineRenderer.sortingLayerName = "Lines";
         _lineRenderer.sortingLayerID = SortingLayer.NameToID("Lines");
+
     }
 
     public void SetColor(Color color)

@@ -13,14 +13,7 @@ public class ColorScheme : ScriptableObject
     public Color red;
     public Color blank;
     public Color backgroundColor;
-
-
-    public SkinColorScheme anchor;
-    public SkinColorScheme clock;
     public SkinColorScheme bomb;
-    public SkinColorScheme nesting;
-    public SkinColorScheme beetle;
-    public SkinColorScheme lotus;
+   
 
-    public SkinColorScheme emptyTile;
 }
