@@ -30,41 +30,28 @@ public class LevelLoader
         LevelData level = JsonConvert.DeserializeObject<LevelData>(json, settings);
         return level;
     }
-   
 
- public static T FromJsonType<T>(string typeKey) where T : Enum
-        {
-            if (typeof(T) == typeof(DotType))
-            {
-                if (LevelDataKeys.Types.dotTypeMap.TryGetValue(typeKey, out DotType dotType))
-                {
-                    return (T)(object)dotType; // Correct cast
-                }
-            }
-            else if (typeof(T) == typeof(TileType))
-            {
-                if (LevelDataKeys.Types.tileTypeMap.TryGetValue(typeKey, out TileType tileType))
-                {
-                    return (T)(object)tileType; // Correct cast
-                }
-            }
 
-            throw new ArgumentException($"Type key '{typeKey}' is not a valid {typeof(T).Name} type.");
-        }
-    public static TileType FromJsonTileType(string type)
+    public static T FromJsonType<T>(string typeKey) where T : Enum
     {
-        return type switch
+        if (typeof(T) == typeof(DotType))
         {
-            LevelDataKeys.Types.Ice => TileType.Ice,
-            "slime" => TileType.Slime,
-            LevelDataKeys.Types.Block => TileType.Block,
-            LevelDataKeys.Types.OneSidedBlock => TileType.OneSidedBlock,
-            LevelDataKeys.Types.EmptyTile => TileType.EmptyTile,
-           LevelDataKeys.Types.Water => TileType.Water,
-            LevelDataKeys.Types.Circuit => TileType.Circuit,
-            _ => TileType.None,
-        };
+            if (LevelDataKeys.Types.dotTypeMap.TryGetValue(typeKey, out DotType dotType))
+            {
+                return (T)(object)dotType; // Correct cast
+            }
+        }
+        else if (typeof(T) == typeof(TileType))
+        {
+            if (LevelDataKeys.Types.tileTypeMap.TryGetValue(typeKey, out TileType tileType))
+            {
+                return (T)(object)tileType; // Correct cast
+            }
+        }
+
+        throw new ArgumentException($"Type key '{typeKey}' is not a valid {typeof(T).Name} type.");
     }
+    
 
    
     public static DotColor FromJsonColor(string color)
@@ -96,19 +83,6 @@ public class LevelLoader
             DotType.Beetle => LevelDataKeys.Types.Beetle,
             DotType.SquareGem => LevelDataKeys.Types.SquareGem,
             DotType.RectangleGem => LevelDataKeys.Types.RectangleGem,
-            _ => throw new ArgumentException(),
-        };
-    }
-    public static string ToJsonTileType(TileType type)
-    {
-        return type switch
-        {
-            TileType.Slime => "slime",
-            TileType.Ice => LevelDataKeys.Types.Ice,
-            TileType.Block => LevelDataKeys.Types.Block,
-            TileType.OneSidedBlock => LevelDataKeys.Types.OneSidedBlock,
-            TileType.Water => LevelDataKeys.Types.Water,
-            TileType.Circuit => LevelDataKeys.Types.Circuit,
             _ => throw new ArgumentException(),
         };
     }

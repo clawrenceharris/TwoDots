@@ -37,19 +37,25 @@ public class CascadeRunner : MonoBehaviour
 
     private void Awake()
     {
-        _board = FindFirstObjectByType<BoardPresenter>();
         _stateManager = FindFirstObjectByType<LevelStateManager>();
         BuildProducers();
     }
-
-    private void OnEnable()
+    public void Init(IBoardPresenter board)
     {
-        ConnectionPresenter.OnConnectionCompleted += HandleConnectionCompleted;
-    }
+        _board = board;
+        if (ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService) && connectionService.ActiveConnection == null)
+        {   
+            Debug.LogError("[CascadeRunner] Missing ConnectionService ActiveConnection.");
+            return;
+        }
+        connectionService.ActiveConnection.OnConnectionCompleted += HandleConnectionCompleted;
 
+    }
+   
     private void OnDisable()
     {
-        ConnectionPresenter.OnConnectionCompleted -= HandleConnectionCompleted;
+        if (!ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService)) return;
+        connectionService.ActiveConnection.OnConnectionCompleted -= HandleConnectionCompleted;
     }
 
     private void HandleConnectionCompleted(ConnectionResult payload)
@@ -213,34 +219,47 @@ public class CascadeRunner : MonoBehaviour
     {
         var animations = new List<Sequence>();
         if (step == null) return animations;
-
         if (step.ToHit.Count > 0)
         {
-            var hittables = _board.CollectPresenters<IHittableDotPresenter>(new List<string>(step.ToHit));
-            foreach (var hittable in hittables)
+            foreach (var hittableId in step.ToHit)
             {
-                if (_board.TryHitDot(hittable.Dot.ID, out _))
+                var entity = _board.GetEntity(hittableId);
+                if (entity == null) continue;
+                if (entity.TryGetPresenter(out IHittablePresenter hittablePresenter))
                 {
-                    var sequence = hittable.Hit();
-                    if (sequence != null)
-                        animations.Add(sequence);
+                    if (_board.TryHit(hittableId, out bool _))
+                    {
+
+                        var sequence = hittablePresenter.Hit();
+                        if (sequence != null)
+                            animations.Add(sequence);
+                    }  
                 }
             }
-        }
+           
+            if (step.ToExplode.Count > 0)
+            {
+                foreach (var explodableId in step.ToExplode)
+                {
+                    var entity = _board.GetEntity(explodableId);
+                    if(entity == null) continue;
+                    if (entity.TryGetPresenter(out IExplodablePresenter explodablePresenter))
+                    {
+                        explodablePresenter.PrepareForExplode(new List<string>(step.ToHit), new List<string>(step.ToExplode));
+                    }
+                }
+                foreach (var explodableId in step.ToExplode)
+                {
+                    var entity = _board.GetEntity(explodableId);
+                    if(entity == null) continue;
+                    if(entity.TryGetPresenter(out IExplodablePresenter explodablePresenter)){
+                        var sequence = explodablePresenter.Explode();
+                        if (sequence != null)
+                            animations.Add(sequence);
+                    }
+                }
 
-        if (step.ToExplode.Count > 0)
-        {
-            var explodables = _board.CollectPresenters<IExplodableDotPresenter>(new List<string>(step.ToExplode));
-            foreach (var explodable in explodables)
-            {
-                explodable.PrepareForExplode(new List<string>(step.ToHit), new List<string>(step.ToExplode));
-            }
-            foreach (var explodable in explodables)
-            {
-                Debug.Log($"explodable: {explodable.Dot.ID}");
-                var sequence = explodable.Explode();
-                if (sequence != null)
-                    animations.Add(sequence);
+
             }
         }
 
@@ -251,31 +270,31 @@ public class CascadeRunner : MonoBehaviour
     {
         animations = new List<Sequence>();
         if (step == null) return FillStepResult.Empty;
-
         var clearCandidates = new HashSet<string>(step.ToClear);
         clearCandidates.UnionWith(step.ToHit);
-
         if (clearCandidates.Count == 0) return FillStepResult.Empty;
 
         var clearedIds = new List<string>();
         var clearedPositions = new List<Vector2Int>();
 
-        var clearables = _board.CollectPresenters<IClearableDotPresenter>(new List<string>(clearCandidates));
-        foreach (var clearable in clearables)
+       
+        foreach (var clearableId in clearCandidates)
         {
-            if (_board.TryClearDot(clearable.Dot.ID))
+            var entity = _board.GetEntity(clearableId);
+            if (entity == null) continue;
+            if (_board.TryClear(entity.Entity.ID))
             {
-                var sequence = clearable.Clear();
-                if (sequence != null)
-                    animations.Add(sequence);
-
-                clearedIds.Add(clearable.Dot.ID);
-                clearedPositions.Add(clearable.Dot.GridPosition);
+                if (entity.TryGetPresenter(out IClearablePresenter clearablePresenter))
+                {
+                    var sequence = clearablePresenter.Clear();
+                    if (sequence != null)
+                        animations.Add(sequence);
+                }
             }
         }
-
+       
         foreach (var id in clearedIds)
-            _context.ClearedDotIds.Add(id);
+                _context.ClearedDotIds.Add(id);
 
         return new FillStepResult(clearedIds, clearedPositions);
     }
@@ -285,6 +304,7 @@ public class CascadeRunner : MonoBehaviour
         if (drops == null || drops.Count == 0) yield break;
 
         int remaining = 0;
+        var animations = new List<Sequence>();
         foreach (var drop in drops)
         {
             if (drop.Presenter == null) continue;
@@ -296,11 +316,12 @@ public class CascadeRunner : MonoBehaviour
         foreach (var drop in drops)
         {
             if (drop.Presenter == null) continue;
-            drop.Presenter.Drop(drop.TargetRow);
+            var sequence = drop.Presenter.Drop(drop.TargetRow);
+            if (sequence != null)
+                animations.Add(sequence);
         }
-
-        if (remaining > 0)
-            yield return new WaitUntil(() => remaining == 0);
+        if (animations.Count > 0)
+            yield return WaitForAnimations(animations);
 
         void HandleDropComplete(string dotId)
         {

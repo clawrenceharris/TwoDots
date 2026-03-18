@@ -14,19 +14,19 @@ public class BombView : DotView
         _visuals = GetComponent<BombVisuals>();
     }
     
-    public Sequence DoLineAnimation(IHittableDotPresenter dot, Action callback = null)
+    public Sequence DoLineAnimation(IHittablePresenter hittable, Action callback = null)
     {
         var sequence = DOTween.Sequence();
         float duration = 0.35f;
         Vector3 startPos = transform.position;
-        Vector3 targetPosition = GridUtility.GridToWorld(dot.Dot.GridPosition);
+        Vector3 targetPosition = GridUtility.GridToWorld(hittable.Entity.GridPosition);
         float angle = Vector2.SignedAngle(Vector2.right, targetPosition - startPos);
         float distance = Vector2.Distance(startPos, targetPosition);
-        distance -= dot.View.transform.localScale.x / 2 + dot.View.transform.localScale.x / 2;
+        distance -= hittable.View.transform.localScale.x / 2 + hittable.View.transform.localScale.x / 2;
 
         GameObject line = Instantiate(_visuals.BombLine, startPos, Quaternion.Euler(0, 0, angle));
         var renderer = line.GetComponent<LineRenderer>();
-        renderer.material.color = ColorSchemeService.CurrentColorScheme.blank;
+        renderer.material.color = ServiceProvider.Instance.GetService<ColorSchemeService>().CurrentColorScheme.blank;
         renderer.sortingLayerName = "Bomb";
         renderer.sortingOrder = 100;
 
@@ -50,15 +50,21 @@ public class BombView : DotView
             {
                 renderer.SetPosition(0, lineStart);
                 renderer.SetPosition(1, Vector3.Lerp(lineStart, targetPosition, t));
-                if (Vector3.Distance(renderer.GetPosition(0), dot.View.transform.position - (dot.View.transform.localScale / 2)) < 0.01f)
+                if (Vector3.Distance(renderer.GetPosition(0), hittable.View.transform.position - (hittable.View.transform.localScale / 2)) < 0.01f)
                 {
-                    dot.View.DotRenderer.SetColor(ColorSchemeService.CurrentColorScheme.blank);
+                    if(hittable.View.Renderer != null)
+                    {
+                        hittable.View.Renderer.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().CurrentColorScheme.blank);
+                    }
                 }
             },
             1f,
             duration * 0.5f
         )).AppendCallback(() => {
-            dot.View.DotRenderer.SetColor(ColorSchemeService.ToDotColor(dot.Dot));
+            if(hittable.View.Renderer != null)
+            {
+                hittable.View.Renderer.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().ToDotColor(hittable.Entity));
+            }
         });
 
         // Phase 2: Tail follows to target, so line 'collapses' into target

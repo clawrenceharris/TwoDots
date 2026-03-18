@@ -14,9 +14,10 @@ public class DotPool : Pool
     private readonly Queue<DotPoolObject> _dotPool = new();
     private IBoardPresenter _board;
 
-    private void Awake()
+    private void Start()
     {
-        _board = FindFirstObjectByType<BoardPresenter>();
+        if (!ServiceProvider.Instance.TryGetService<BoardService>(out var boardService)) return;
+        _board = boardService.BoardPresenter;
     }
 
     public override void Fill(int size)

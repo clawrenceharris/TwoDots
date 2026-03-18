@@ -2,21 +2,18 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DotView : MonoBehaviour
+/// <summary>
+/// A view component for a dot entity on the board
+/// </summary>
+public class DotView : EntityView
 {
     
     private Dot _dot;
-    private DotRenderer _dotRenderer;
-    public DotRenderer DotRenderer
-    {
-        get
-        {
-            if (_dotRenderer == null)
-                _dotRenderer = TryGetComponent(out DotRenderer renderer) ? renderer : null;
-            return _dotRenderer;
-        }
-    }
 
+    /// <summary>
+    /// Initializes the dot view
+    /// </summary>
+    /// <param name="dot">The dot entity</param>
     public virtual void Init(Dot dot)
     {
         _dot = dot;

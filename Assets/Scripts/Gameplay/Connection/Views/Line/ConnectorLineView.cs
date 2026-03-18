@@ -8,12 +8,13 @@ public class ConnectorLineView : MonoBehaviour
     public Color Color => _color;
     [SerializeField] private float _width = 0.2f;
     private LineRenderer _lineRenderer;
-    public LineRenderer LineRenderer  => _lineRenderer;
+    public LineRenderer LineRenderer => _lineRenderer;
 
     private void Awake()
     {
         _lineRenderer = GetComponent<LineRenderer>();
     }
+    
     private void Start()
     {
         _lineRenderer.startWidth = _width;
@@ -24,18 +25,26 @@ public class ConnectorLineView : MonoBehaviour
     }
     private void OnEnable()
     {
-        ConnectionPresenter.OnColorChanged += OnColorChanged;
-
+        if (!ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService)) return;
+        connectionService.ActiveConnection.OnColorChanged += OnColorChanged;
+        _lineRenderer.sortingLayerName = "Lines";
+        _lineRenderer.sortingLayerID = SortingLayer.NameToID("Lines");
     }
 
     private void OnColorChanged(DotColor color)
     {
-        SetColor(ColorSchemeService.FromDotColor(color));
+        SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(color));
     }
 
     private void OnDisable()
     {
-        ConnectionPresenter.OnColorChanged -= OnColorChanged;
+        if (!ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService)) return;
+
+        connectionService.ActiveConnection.OnColorChanged -= OnColorChanged;
+
+        _lineRenderer.sortingLayerName = "Lines";
+        _lineRenderer.sortingLayerID = SortingLayer.NameToID("Lines");
+
     }
 
     public void SetColor(Color color)
@@ -43,10 +52,18 @@ public class ConnectorLineView : MonoBehaviour
         _color = color;
         _lineRenderer.material.color = color;
     }
-    
-    public void SetPositions(Vector3 fromWorld, Vector3 toWorld)
+
+    public void SetFinalPositions(Vector3 from, Vector3 to)
     {
-        _lineRenderer.SetPosition(0, fromWorld);
-        _lineRenderer.SetPosition(1, toWorld);
+        _lineRenderer.SetPosition(0, from);
+        _lineRenderer.SetPosition(1, to);
+        _lineRenderer.sortingLayerName = "Connected Lines";
+
+
+    }
+    public void SetInitialPositions(Vector3 from, Vector3 to)
+    {
+        _lineRenderer.SetPosition(0, from);
+        _lineRenderer.SetPosition(1, to);
     }
 }

@@ -1,6 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -24,13 +21,14 @@ public class TileDataFactory
         switch (type)
         {
             case LevelDataKeys.Types.OneSidedBlock:
-                tileData.SetProperty(DotsObject.Property.Directions, direction.ToObject<int[,]>());
+                // Expecting direction to be a 1D array, not a 2D array
+                tileData.SetProperty(DotsObject.Property.Directions,  direction.ToObject<int[]>());
                 break;
             case LevelDataKeys.Types.Circuit:
                 tileData.SetProperty(DotsObject.Property.Active, (bool)isActive);
                 break;
-            
-        };
+
+        }
         return tileData;
     }
 }

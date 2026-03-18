@@ -5,11 +5,7 @@ public abstract class Pool : MonoBehaviour
 {
     [SerializeField] private int _size;
 
-    private void Start()
-    {
-        Fill(_size);
-    }
-
+    public int Size => _size;
     public abstract void Fill(int size);
 
     public abstract T Get<T>() where T : MonoBehaviour;

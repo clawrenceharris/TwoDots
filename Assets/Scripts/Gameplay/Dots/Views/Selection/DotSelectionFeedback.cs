@@ -1,7 +1,8 @@
 using DG.Tweening;
 using UnityEngine;
+using System;
 
-public sealed class DotSelectionFeedback : MonoBehaviour, IModel
+public sealed class DotSelectionFeedback : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer _pulseRenderer;
     [SerializeField] private SpriteRenderer _fillRenderer;
@@ -15,6 +16,7 @@ public sealed class DotSelectionFeedback : MonoBehaviour, IModel
     [SerializeField] private float _fillEndScale = 1f;
     [SerializeField] private float _fillStartScale = 0.2f;
 
+
     private Sequence _selectionSequence;
     private Sequence _deselectionSequence;
     private bool _isSelected;
@@ -27,7 +29,7 @@ public sealed class DotSelectionFeedback : MonoBehaviour, IModel
         _deselectionSequence = null;
     }
 
-    public void PlaySelectionAnimation(Color color)
+       public void PlaySelectionAnimation(Color color)
     {
         if (_pulseRenderer == null) return;
 
@@ -35,9 +37,9 @@ public sealed class DotSelectionFeedback : MonoBehaviour, IModel
         if (!_isSelected)
         {
             KillSequences();
-
-            StartPulse(color)
-            .JoinCallback(() => PlayFillAnimation(color));
+            StartPulse(color).Join(PlayFillAnimation(color));
+            
+            
         }
         else
         {
@@ -54,7 +56,7 @@ public sealed class DotSelectionFeedback : MonoBehaviour, IModel
         c.a = _pulseStartAlpha;
         _pulseRenderer.color = c;
         _pulseRenderer.gameObject.SetActive(true);
-        
+
         _selectionSequence?.Kill();
         _selectionSequence = DOTween.Sequence();
         _selectionSequence.Append(
@@ -74,17 +76,18 @@ public sealed class DotSelectionFeedback : MonoBehaviour, IModel
         return _selectionSequence;
     }
 
-    public void PlayFillAnimation(Color color)
+    public Tween PlayFillAnimation(Color color)
     {
-        if (_fillRenderer == null || _isSelected) return;
+        if (_fillRenderer == null || _isSelected) return null;
 
         _isSelected = true;
         _fillRenderer.color = color;
         _fillRenderer.transform.localScale = Vector3.one * _fillStartScale;
         _fillRenderer.gameObject.SetActive(true);
-        _fillRenderer.transform
+        Tween fillTween = _fillRenderer.transform
             .DOScale(Vector3.one * _fillEndScale, _fillDuration)
             .SetEase(_fillEase);
+        return fillTween;
     }
 
     public void PlayDeselectionAnimation()
@@ -109,5 +112,4 @@ public sealed class DotSelectionFeedback : MonoBehaviour, IModel
     {
         _fillRenderer.color = color;
     }
-
 }

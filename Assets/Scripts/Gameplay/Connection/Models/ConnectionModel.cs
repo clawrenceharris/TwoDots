@@ -5,14 +5,18 @@ using UnityEngine;
 
 public class ConnectionModel : IConnectionModel
 {
+    /// <summary>The history of completed connections. </summary>
+    private readonly Stack<ConnectionResult> _connectionHistory = new();
+    public Stack<ConnectionResult> ConnectionHistory => _connectionHistory;
     private readonly List<IDotPresenter> _path = new();
-
+    private readonly Connection _connection = new();
+    public Connection Connection => _connection;
     /// <summary> Set of unique dot IDs in the path. </summary>
     private readonly HashSet<string> _dotIdsInPath = new();
     private Square _square;
-    public Square Square => _square;
+    public Square Square => _connection.Square;
     /// <summary>The dot IDs to hit from the resulting square connection.</summary>
-    private HashSet<string> _dotsToHitFromSquare = new();
+    private readonly HashSet<string> _dotsToHitFromSquare = new();
     /// <summary> The dot IDs to hit in by the connection from the square.</summary>
     public IReadOnlyList<string> DotsToHitFromSquare => _dotsToHitFromSquare.ToList();
 
@@ -20,11 +24,10 @@ public class ConnectionModel : IConnectionModel
     private bool _isSessionActive;
 
 
-    public bool IsSquare => _square != null;
+    public bool IsSquare => _connection.IsSquare;
 
     public bool IsSessionActive => _isSessionActive;
-    private readonly IBoardPresenter _board;
-    private readonly IDotConnectionRule _rule;
+    private IBoardPresenter _board;
 
     public event Action<DotColor> OnColorChanged;
     public event Action<string> OnDotRemovedFromPath;
@@ -42,15 +45,16 @@ public class ConnectionModel : IConnectionModel
 
 
 
-    public ConnectionModel(IBoardPresenter board, IDotConnectionRule rule)
+    public ConnectionModel()
     {
         _path = new List<IDotPresenter>();
         _dotIdsInPath = new HashSet<string>();
         _dotsToHitFromSquare = new HashSet<string>();
-        _square = null;
-        _isSessionActive = false;
+        _connection = new();
+    }
+    public void Initialize(IBoardPresenter board)
+    {
         _board = board;
-        _rule = rule;
     }
 
 
@@ -58,14 +62,16 @@ public class ConnectionModel : IConnectionModel
     public void Begin(IDotPresenter dot)
     {
         if (dot == null) return;
+
         Cancel();
         _path.Add(dot);
         _dotIdsInPath.Add(dot.Dot.ID);
         _square = null;
+        _connection.BeginSession(dot);
         _isSessionActive = true;
 
-        OnPathChanged?.Invoke();
-        OnDotAddedToPath?.Invoke(dot.Dot.ID);
+
+
     }
 
     public bool TryBacktrack(IDotPresenter dot)
@@ -79,16 +85,16 @@ public class ConnectionModel : IConnectionModel
             if (IsSquare)
             {
                 // if the connection is a square, backtrack needs to deactivate the it
-                HandleSquareDeactivated();
+               
+                _connection.DeactivateSquare();
                 _path.RemoveAt(_path.Count - 1);
-                OnPathChanged?.Invoke();
+                _connection.Backtrack();
                 return true;
             }
             _dotIdsInPath.Remove(head.Dot.ID);
             _path.RemoveAt(_path.Count - 1);
             _square = null;
-            OnPathChanged?.Invoke();
-            OnDotRemovedFromPath?.Invoke(head.Dot.ID);
+            _connection.Backtrack();
             return true;
         }
         return false;
@@ -107,85 +113,48 @@ public class ConnectionModel : IConnectionModel
             return false;
         }
 
-        // Cycle-close: revisiting an earlier dot (not the previous)
-        if (_dotIdsInPath.Contains(dot.Dot.ID))
+
+        if (dot.Dot.TryGetModel(out Connectable connectable) && connectable.CanConnect(head.Dot.ID))
         {
-            if (!_rule.CanConnect(head, dot, this, _board)) return false;
-            _path.Add(dot);
-            HandleSquareActivated(dot);
-            OnDotAddedToPath?.Invoke(dot.Dot.ID);
-            OnPathChanged?.Invoke();
-
-            return true;
+            // Cycle-close: revisiting an earlier dot (not the previous)
+            if (_dotIdsInPath.Contains(dot.Dot.ID))
+            {
+                _path.Add(dot);
+                _connection.Append(dot);
+                HandleSquareActivated(dot);
+                return true;
+            }
+            // New dot - append if rule allows
+            else
+            {
+                _path.Add(dot);
+                _dotIdsInPath.Add(dot.Dot.ID);
+                _connection.Append(dot);
+                return true;
+            }
         }
-
-        // New dot - append if rule allows
-        if (!_rule.CanConnect(head, dot, this, _board)) return false;
-        _path.Add(dot);
-        _dotIdsInPath.Add(dot.Dot.ID);
-
-        OnDotAddedToPath?.Invoke(dot.Dot.ID);
-        OnPathChanged?.Invoke();
-        return true;
+       
+        return false;
     }
 
 
     private void HandleSquareActivated(IDotPresenter dot)
     {
-
         _square = new Square(_board, this);
-        _square.Activate();
-        OnSquareActivated?.Invoke(_square.DotIdsToHit);
-    }
-    private void HandleSquareDeactivated()
-    {
-        // All the dots that would have been hit from the square excluding the dots that are still in the path
-        List<string> dotsToDeactivate = new(_square.DotIdsToHit.Where(id => !_dotIdsInPath.Contains(id)));
-        _square.Deactivate();
-        _square = null;
-
-
-        OnSquareDeactivated?.Invoke(dotsToDeactivate);
+        _connection.ActivateSquare(_square);
+        OnSquareActivated?.Invoke(_square.DotsToHit);
     }
 
-    private DotColor GetConnectionColor()
-    {
 
-
-        // find the color of the connection
-        foreach (var d in _path)
-        {
-            // skip if not a color dot
-            if (!d.Dot.DotType.IsColorable()) continue;
-            if (d.Dot.TryGetModel(out ColorableDot colorable))
-            {
-                // skip if the dot's color is blank. We only care about dots with a definitive color
-                if (colorable.Color.IsBlank()) continue;
-
-                // set color to the first colorable dot found
-                return colorable.Color;
-            }
-        }
-        // if no color dot found, return blank color
-        return DotColor.Blank;
-    }
     public void UpdateColor()
     {
-
-        var newColor = GetConnectionColor();
-        if (newColor != _currentColor)
-        {
-            _currentColor = newColor;
-            OnColorChanged?.Invoke(_currentColor);
-        }
+        _connection.UpdateColor();
     }
 
     public void End()
     {
         if (!_isSessionActive) return;
-        _square?.Commit();
-        var payload = new ConnectionResult(this);
-        OnConnectionCompleted?.Invoke(payload);
+        _connection.EndSession();
         Cancel();
     }
 
@@ -197,7 +166,6 @@ public class ConnectionModel : IConnectionModel
         _square = null;
         _isSessionActive = false;
         _currentColor = DotColor.Blank;
-        OnPathChanged?.Invoke();
     }
 
 }

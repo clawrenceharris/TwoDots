@@ -7,60 +7,47 @@ using UnityEngine;
 /// Owns connection session state: path building, backtracking, and cycle-close.
 /// Uses IDotConnectionRule for connectability; emits events for visuals and completion.
 /// </summary>
-public class ConnectionPresenter : MonoBehaviour
+public class ConnectionPresenter : IConnectionPresenter
 {
     private ConnectorLineView _activeDragLine;
     private IConnectionModel _model;
     public static event Action<DotColor> OnColorChanged;
     private readonly Stack<ConnectorLineView> _activeConnectionSegments = new();
-    public static event Action<IReadOnlyList<IDotPresenter>> OnPathChanged;
-    public static event Action<IDotPresenter> OnDotSelected;
-    public static event Action<IDotPresenter> OnDotDeselected;
-    public static event Action<IDotPresenter> OnDotConnected;
-    public static event Action<ConnectionResult> OnConnectionCompleted;
-    private IBoardPresenter _board;
    
-    private void Start()
+    private IBoardPresenter _board;
+    public Stack<ConnectionResult> ConnectionHistory => _model.ConnectionHistory;
+    public Connection Connection => _model.Connection;
+    public ConnectionPresenter()
     {
+        _model = new ConnectionModel();
+    }
+    public void Initialize(IBoardPresenter board)
+    {
+       
+        _model.Initialize(board);
+        
+        _board = board;
+       
         InputRouter.OnPointerDragged += OnPointerDragged;
         InputRouter.OnDotConnected += OnInputDotConnected;
         InputRouter.OnDotSelectionEnded += OnInputDotSelectionEnded;
         InputRouter.OnDotSelected += OnInputDotSelected;
-    }
-    public void Initialize(IBoardPresenter board)
-    {
-        _model = new ConnectionModel(board, new BaseConnectionRule());
-        _board = board;
-        _model.OnConnectionCompleted += HandleConnectionCompleted;
-        _model.OnPathChanged += HandlePathChanged;
-        _model.OnColorChanged += OnConnectionColorChanged;
-        _model.OnSquareActivated += HandleSquareActivated;
-        _model.OnSquareDeactivated += HandleSquareDeactivated;
-        _model.OnDotRemovedFromPath += HandleDotRemovedFromPath;
+        _model.Connection.OnColorChanged += OnConnectionColorChanged;
+        _model.Connection.OnPathChanged += HandlePathChanged;
+        _model.Connection.OnSquareActivated += HandleSquareActivated;
+        _model.Connection.OnSquareDeactivated += HandleSquareDeactivated;
+        _model.Connection.OnDotRemovedFromPath += HandleDotRemovedFromPath;
     }
     private void HandlePathChanged()
     {
         _model.UpdateColor();
-        OnPathChanged?.Invoke(_model.Path);
     }
 
-    private void OnDestroy()
-    {
-        InputRouter.OnPointerDragged -= OnPointerDragged;
-        InputRouter.OnDotConnected -= OnInputDotConnected;
-        InputRouter.OnDotSelectionEnded -= OnInputDotSelectionEnded;
-        InputRouter.OnDotSelected -= OnInputDotSelected;
-        _model.OnColorChanged -= OnConnectionColorChanged;
-        _model.OnConnectionCompleted -= HandleConnectionCompleted;
-        _model.OnPathChanged -= HandlePathChanged;
-        _model.OnSquareActivated -= HandleSquareActivated;
-        _model.OnSquareDeactivated -= HandleSquareDeactivated;
-        _model.OnDotRemovedFromPath -= HandleDotRemovedFromPath;
-    }
+   
     private void HandleDotRemovedFromPath(string dotId)
     {
         var dot = _board.GetDot(dotId);
-        if (dot.TryGetPresenter(out ConnectableDotPresenter presenter))
+        if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
         {
             presenter.Disconnect();
         }
@@ -70,7 +57,7 @@ public class ConnectionPresenter : MonoBehaviour
         foreach (var dotId in dotsToDeactivate)
         {
             var dot = _board.GetDot(dotId);
-            if (dot.TryGetPresenter(out ConnectableDotPresenter presenter)) {
+            if (dot.TryGetPresenter(out IConnectableDotPresenter presenter)) {
                 presenter.Deselect();
             }
         }
@@ -79,8 +66,8 @@ public class ConnectionPresenter : MonoBehaviour
     {
         foreach (var dotId in dotsToActivate)
         {
-            if(_board.GetDot(dotId).TryGetPresenter(out ConnectableDotPresenter presenter)){
-                presenter.Select(new ConnectionResult(_model));
+            if(_board.GetDot(dotId).TryGetPresenter(out IConnectableDotPresenter presenter)){
+                presenter.Select(_model.Connection);
             }
         }
     }
@@ -90,61 +77,57 @@ public class ConnectionPresenter : MonoBehaviour
         foreach (var dotId in _model.DotIdsInPath)
         {
             var dot = _board.GetDot(dotId);
-            if (dot.TryGetPresenter(out ConnectableDotPresenter presenter))
+            if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
             {
                 presenter.ChangeColor(color);
             }
         }
         OnColorChanged?.Invoke(color);
     }
-    private void OnInputDotSelected(IDotPresenter dot)
+    private void OnInputDotSelected(DotPresenter dot)
     {
-        if ( _model.IsSessionActive) return;
+        if ( _model.Connection.IsActive) return;
         
         _model.Begin(dot);
-        if (dot.TryGetPresenter(out ConnectableDotPresenter presenter))
+        if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
         {
-            presenter.Connect(_model.CurrentColor);
+            presenter.Connect(_model.Connection.Color);
         }
         
-        OnDotSelected?.Invoke(dot);
         
     }
 
     
-    private void OnInputDotConnected(IDotPresenter dot)
+    private void OnInputDotConnected(DotPresenter dot)
     {
-        if (!_model.IsSessionActive || _model.Path.Count == 0) return;
+        if (!_model.Connection.IsActive || _model.Path.Count == 0) return;
         var previousDot = _model.Path[^1];
 
         if (_model.TryAppend(dot))
         {
             
-            AddConnectionSegment(previousDot.View.transform.position, dot.View.transform.position);
+            AddConnectionSegment(previousDot.DotView.transform.position, dot.DotView.transform.position);
     
-            if (dot.TryGetPresenter(out ConnectableDotPresenter presenter))
+            if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
             {
-                presenter.Connect(_model.CurrentColor);
+                presenter.Connect(_model.Connection.Color);
             }
-            OnDotConnected?.Invoke(dot);
         }
         else if (_model.TryBacktrack(dot))
         {
             RemoveLastConnectionSegment();
-            
-            OnDotDeselected?.Invoke(previousDot);
         }
 
     }
     private void OnPointerDragged(Vector3 worldPos)
     {
-        if (!_model.IsSessionActive || _model.Path.Count == 0 || _model.IsSquare)
+        if (!_model.Connection.IsActive || _model.Path.Count == 0 || _model.Connection.IsSquare)
         {
             HideDragLine();
             return;
         }
 
-        Vector3 from = _model.Path[^1].View.transform.position;
+        Vector3 from = _model.Path[^1].DotView.transform.position;
         UpdateDragLine(from, worldPos);
 
 
@@ -157,7 +140,7 @@ public class ConnectionPresenter : MonoBehaviour
         foreach (var dotId in _model.DotIdsInPath)
         {
             var dot = _board.GetDot(dotId);
-            if (dot.TryGetPresenter(out ConnectableDotPresenter presenter))
+            if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
             {
                 presenter.Disconnect();
             }
@@ -177,10 +160,10 @@ public class ConnectionPresenter : MonoBehaviour
     {
         ConnectorLineView line = PoolService.Instance.GetFromPool<LinePool, ConnectorLineView>();
         if (line == null) return;
-        line.transform.SetParent(transform, true);
-
-        line.SetPositions(fromWorld, toWorld);
-        line.SetColor(ColorSchemeService.FromDotColor(_model.CurrentColor));
+        line.transform.SetParent(ServiceProvider.Instance.GetService<ConnectionService>().transform, true);
+        
+        line.SetFinalPositions(fromWorld, toWorld);
+        line.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(_model.Connection.Color));
         _activeConnectionSegments.Push(line);
     }
 
@@ -213,14 +196,14 @@ public class ConnectionPresenter : MonoBehaviour
         {
             _activeDragLine = PoolService.Instance.GetFromPool<LinePool, ConnectorLineView>();
             if (_activeDragLine == null) return;
-            _activeDragLine.transform.SetParent(transform, true);
+            _activeDragLine.transform.SetParent(ServiceProvider.Instance.GetService<ConnectionService>().transform, true);
         }
 
         var line = _activeDragLine;
-        line.SetColor(ColorSchemeService.FromDotColor(_model.CurrentColor));
+        line.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(_model.Connection.Color));
         if (line != null)
         {
-            line.SetPositions(fromWorld, toWorld);
+            line.SetInitialPositions(fromWorld, toWorld);
         }
 
 
@@ -237,9 +220,5 @@ public class ConnectionPresenter : MonoBehaviour
     }
     
 
-    private void HandleConnectionCompleted(ConnectionResult payload)
-    {
-        
-        OnConnectionCompleted?.Invoke(payload);
-    }
+   
 }

@@ -19,14 +19,14 @@ public class LotusProducer : IFillStepProducer
         {
             if (dot == null) continue;
             if (dot.Dot.DotType != DotType.Lotus) continue;
-            if (!dot.Dot.TryGetModel(out ColorableDot lotusColorable)) continue;
+            if (!dot.Dot.TryGetModel(out Colorable lotusColorable)) continue;
 
             var matchedIds = new HashSet<string> { dot.Dot.ID };
             var neighbors = context.Board.GetDotNeighbors<IDotPresenter>(dot.Dot.GridPosition, includesDiagonals: false);
             foreach (var neighbor in neighbors)
             {
                 if (neighbor == null) continue;
-                if (!neighbor.Dot.TryGetModel(out ColorableDot neighborColorable)) continue;
+                if (!neighbor.Dot.TryGetModel(out Colorable neighborColorable)) continue;
                 if (neighborColorable.Color != lotusColorable.Color) continue;
                 matchedIds.Add(neighbor.Dot.ID);
             }

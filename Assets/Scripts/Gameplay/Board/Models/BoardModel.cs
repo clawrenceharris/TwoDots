@@ -11,31 +11,31 @@ public class BoardModel : IBoardModel
     
     // Board State
     public Dot[,] DotGrid { get; private set; }
-    public TileModel[,] TileGrid { get; private set; }
+    public Tile[,] TileGrid { get; private set; }
     public int Width { get; private set; }
     public int Height { get; private set; }
     public int DotCount => _dotsById.Count;
 
     private readonly Dictionary<string, Dot> _dotsById = new();
-    private readonly Dictionary<string, TileModel> _tilesById = new();
+    private readonly Dictionary<string, Tile> _tilesById = new();
 
     // Board Queries
     public List<Dot> GetAllDots() => _dotsById.Values.ToList();
-    public List<TileModel> GetAllTiles() => _tilesById.Values.ToList();
+    public List<Tile> GetAllTiles() => _tilesById.Values.ToList();
     
     
     // Events for the Presenter to subscribe to
 
     public event Action<Dot> OnDotCleared;
     public event Action<Dot> OnDotSpawned;
-    public event Action<TileModel> OnTileRemoved;
-    public event Action<TileModel> OnTileSpawned;
+    public event Action<Tile> OnTileRemoved;
+    public event Action<Tile> OnTileSpawned;
     public BoardModel(LevelData level)
     {
         Width = level.width;
         Height = level.height;
         DotGrid = new Dot[Width, Height];
-        TileGrid = new TileModel[Width, Height];
+        TileGrid = new Tile[Width, Height];
        
     }
 
@@ -55,12 +55,12 @@ public class BoardModel : IBoardModel
 
         return dots;
     }
-    public List<TileModel> InitTiles(LevelData level)
+    public List<Tile> InitTiles(LevelData level)
     {
-        var tiles = new List<TileModel>();
+        var tiles = new List<Tile>();
         foreach (var spawn in level.tilesOnBoard)
         {
-            var tile = TileFactory.CreateTileModel(spawn);
+            var tile = TileFactory.CreateTile(spawn);
             if (tile != null)
                 tiles.Add(tile);
             
@@ -72,7 +72,7 @@ public class BoardModel : IBoardModel
 
     
    
-    public void SpawnTile(TileModel tile)
+    public void SpawnTile(Tile tile)
     {
         if (!IsValidPosition(tile.GridPosition))
         {
@@ -85,7 +85,7 @@ public class BoardModel : IBoardModel
         }
 
         _tilesById.Add(tile.ID, tile);
-        TileGrid[tile.GridPosition.x, tile.GridPosition.y] = tile; // Place in grid
+        TileGrid[tile.GridPosition.x, tile.GridPosition.y] = tile;
         OnTileSpawned?.Invoke(tile);
     }
     public void SpawnDot(Dot dot)
@@ -122,9 +122,9 @@ public class BoardModel : IBoardModel
             
         }
     }
-    public void RemoveTile(string id)
+    public void ClearTile(string id)
     {
-        if (_tilesById.TryGetValue(id, out TileModel tileToRemove))
+        if (_tilesById.TryGetValue(id, out Tile tileToRemove))
         {
             _tilesById.Remove(id);
             TileGrid[tileToRemove.GridPosition.x, tileToRemove.GridPosition.y] = null;
@@ -176,7 +176,7 @@ public class BoardModel : IBoardModel
 
     public T GetTileAt<T>(Vector2Int position)
     {
-        if (position.x >= 0 && position.x < Width && position.y >= 0 && position.y < Height)
+        if (IsValidPosition(position))
         {
             if (TileGrid[position.x, position.y] is T t)
                 return t;
@@ -242,7 +242,7 @@ public class BoardModel : IBoardModel
         }
         return null;
     }
-    public TileModel GetTileAt(Vector2Int position)
+    public Tile GetTileAt(Vector2Int position)
     {
         if (position.x >= 0 && position.x < Width && position.y >= 0 && position.y < Height)
         {
@@ -250,9 +250,9 @@ public class BoardModel : IBoardModel
         }
         return null;
     }
-    public TileModel GetTileAt(int x, int y)
+    public Tile GetTileAt(int x, int y)
     {
-        if (x >= 0 && y < Width && y >= 0 && y < Height)
+        if (IsValidPosition(new Vector2Int(x, y)))
         {
             return TileGrid[x, y];
         }
@@ -282,14 +282,14 @@ public class BoardModel : IBoardModel
 
     public Dot GetDot(string id) => _dotsById.TryGetValue(id, out var dot) ? dot : null;
        
-    public TileModel GetTile(string id) => _tilesById.TryGetValue(id, out var tile) ? tile : null;
+    public Tile GetTile(string id) => _tilesById.TryGetValue(id, out var tile) ? tile : null;
 
     public void ClearBoard()
     {
         _dotsById?.Clear();
         _tilesById?.Clear();
         DotGrid = new Dot[Width, Height];
-        TileGrid = new TileModel[Width, Height];
+        TileGrid = new Tile[Width, Height];
     }
 
    

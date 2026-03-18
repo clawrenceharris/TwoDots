@@ -101,9 +101,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2818817833734586123}
   - component: {fileID: 5224356030327197459}
-  - component: {fileID: 6480254893941272487}
   - component: {fileID: 1842759899835583463}
   - component: {fileID: 4478629231230152698}
+  - component: {fileID: 3936153308775757099}
   m_Layer: 0
   m_Name: NormalDot
   m_TagString: Color Dot
@@ -151,7 +151,7 @@ SpriteRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 16
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
@@ -176,7 +176,7 @@ SpriteRenderer:
   m_SortingLayerID: -2009438893
   m_SortingLayer: 3
   m_SortingOrder: 0
-  m_MaskInteraction: 0
+  m_MaskInteraction: 1
   m_Sprite: {fileID: 21300000, guid: 7ef069ccf03fd4c089b48d011cf3eefe, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -187,20 +187,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &6480254893941272487
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6629530070703699901}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c0a9eb849e24451fbd35423adb7a23e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DotRenderer
-  _fallbackBaseRenderer: {fileID: 5224356030327197459}
-  _targets: []
 --- !u!114 &1842759899835583463
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -227,8 +213,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DotSelectionFeedback
   _pulseRenderer: {fileID: 7796637422996918524}
   _fillRenderer: {fileID: 480599722393274306}
-  _pulseDuration: 0.65
-  _fillDuration: 0.2
+  _pulseDuration: 0.7
+  _fillDuration: 0.1
   _pulseStartScale: 0.8
   _pulseEndScale: 2.5
   _fillEase:
@@ -279,9 +265,23 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  _pulseStartAlpha: 0.8
+  _pulseStartAlpha: 1
   _fillEndScale: 1
   _fillStartScale: 0.2
+--- !u!114 &3936153308775757099
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6629530070703699901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5392ce55c425c418fb3d22560a7edecf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DotsRenderer
+  _fallbackBaseRenderer: {fileID: 5224356030327197459}
+  _targets: []
 --- !u!1 &6915616125363496934
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,33 +2,47 @@ using System;
 using Dots.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
+/// <summary>
+/// The InputRouter class handles user input for the game, translating pointer and touch events 
+/// into high-level actions such as selecting/deselecting dots, connecting dots, and emitting drag positions.
+/// 
+/// This component is responsible for raising input-related events consumed by other systems (e.g., ConnectionPresenter).
+/// 
+/// Notably, InputRouter implements a throttling mechanism to prevent multiple rapid selections
+/// of the same dot. The throttle window is controlled by <see cref="_selectionThrottleTime"/>, ensuring that
+/// after a dot selection, subsequent selection events are ignored for a short period.
+/// </summary>
 
 public class InputRouter : MonoBehaviour
 {
-    public static event Action<IDotPresenter> OnDotSelected;
-    public static event Action<IDotPresenter> OnDotConnected;
+    public static event Action<DotPresenter> OnDotSelected;
+    public static event Action<DotPresenter> OnDotConnected;
     public static event Action OnDotSelectionEnded;
     public static event Action<Vector3> OnPointerDragged;
     private Camera _cam;
-    private IBoardPresenter _board;
+    private BoardService _board;
     private static InputGate _gate;
     public static InputGate Gate => _gate ??= new InputGate();
     [SerializeField] private float _maxHitRadius =0.5f;
-    public static event Action<IDotPresenter> OnDotDeselected;
-
+    public static event Action<DotPresenter> OnDotDeselected;
     private bool _isPointerDown;
+    private float _lastSelectionTime = -100f;
+    private IDotPresenter _lastSelectedDot;
+    [SerializeField] private float _selectionThrottleTime = 0.08f;
+
     private void Awake()
     {
         _cam = Camera.main;
         _gate = new InputGate();
-        _board = FindFirstObjectByType<BoardPresenter>();
     }
-
+    private void Start()
+    {
+        if (!ServiceProvider.Instance.TryGetService<BoardService>(out var boardService)) return;
+        _board = boardService;
+    }
     private void Update()
     {
         if (!_gate.Enabled) return;
-
-
 
         if (IsPointerPressDown())
         {
@@ -36,10 +50,10 @@ public class InputRouter : MonoBehaviour
         }
         else if (IsPointerPressUp())
         {
-            HandlePointerUp();
+            EndSelection();
         }
         else if (_isPointerDown)
-        {
+        {   
             EmitPointerDragPosition();
             RecordPointerMove();
         }
@@ -47,14 +61,35 @@ public class InputRouter : MonoBehaviour
 
 
     }
+    private void SelectDot(DotPresenter dot)
+    {
+        if (dot.Dot.ID == _lastSelectedDot?.Dot.ID) return;
+
+        if (_isPointerDown && Time.unscaledTime - _lastSelectionTime < _selectionThrottleTime) return;
+        _isPointerDown = true;
+        _lastSelectedDot = dot;
+        _lastSelectionTime = Time.unscaledTime;
+        OnDotSelected?.Invoke(dot);
+    }
+    private void ConnectDot(DotPresenter dot)
+    {
+        if (dot.Dot.ID == _lastSelectedDot?.Dot.ID) return;
+
+        if (_isPointerDown && Time.unscaledTime - _lastSelectionTime < _selectionThrottleTime) return;
+        _lastSelectedDot = dot;
+        _lastSelectionTime = Time.unscaledTime;
+        OnDotConnected?.Invoke(dot);
+
+
+    }
     
     private void RecordPointerMove()
     {
-        if (!TryGetPointerHit(out IDotPresenter dot)) return;
-        OnDotConnected?.Invoke(dot);
+        if (!TryGetPointerHit(out DotPresenter dot)) return;
+        ConnectDot(dot);
     }
 
-    private bool TryGetPointerHit(out IDotPresenter dot)
+    private bool TryGetPointerHit(out DotPresenter dot)
     {
         dot = null;
         if (!TryGetPointerScreenPosition(out Vector2 position)) return false;
@@ -62,7 +97,7 @@ public class InputRouter : MonoBehaviour
         var worldPosition = _cam.ScreenToWorldPoint(position);
         var gridPosition = GridUtility.WorldToGrid(worldPosition);
 
-        IDotPresenter bestDot = null;
+        DotPresenter bestDot = null;
 
         // Check the clicked cell and its neighbors
         for (int dx = -1; dx <= 1; dx++)
@@ -70,10 +105,10 @@ public class InputRouter : MonoBehaviour
             for (int dy = -1; dy <= 1; dy++)
             {
                 var candidateGrid = new Vector2Int(gridPosition.x + dx, gridPosition.y + dy);
-                var candidate = _board.GetDotAt(candidateGrid);
+                var candidate = _board.BoardPresenter.GetDotAt(candidateGrid);
                 if (candidate == null) continue;
 
-                var candidateWorld = candidate.View.transform.position;
+                var candidateWorld = candidate.DotView.transform.position;
                 if (Mathf.Abs(candidateWorld.x - worldPosition.x) <= _maxHitRadius && Mathf.Abs(candidateWorld.y - worldPosition.y) <= _maxHitRadius)
                 {
                     bestDot = candidate;
@@ -88,16 +123,18 @@ public class InputRouter : MonoBehaviour
 
     private void RecordPointerDown()
     {
-        _isPointerDown = true;
-        if (!TryGetPointerHit(out IDotPresenter dot)) return;
-        OnDotSelected?.Invoke(dot);
+        if (!TryGetPointerHit(out DotPresenter dot)) return;
+        SelectDot(dot);
     }
 
-    private void HandlePointerUp()
+    private void EndSelection()
     {
+        
         _isPointerDown = false;
+        _lastSelectedDot = null;
+        _lastSelectionTime = -100f;
         OnDotSelectionEnded?.Invoke();
-        if (!TryGetPointerHit(out IDotPresenter dot)) return;
+        TryGetPointerHit(out DotPresenter dot);
         OnDotDeselected?.Invoke(dot);
     }
 
