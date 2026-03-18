@@ -1,18 +1,38 @@
+using System.Linq;
 using UnityEngine;
 
+/// <summary>
+/// A rule that determines if a one-sided block tile should be hit.
+/// </summary>
 public class OneSidedBlockHitRule : TileHitRule
 {
-    public override bool CanHit(IBoardPresenter board, ConnectionSession connectionSession, string tileId)
+    public override bool CanHit(IBoardPresenter board, Connection connection, string tileId)
     {
-        var entity = board.GetEntity(tileId);
-        if (entity == null) return false;
-        if (entity.GetEntity().TryGetModel(out Directional directional))
+        var tile = board.GetTile(tileId);
+        var neighbors = board.GetDotNeighbors(tile.Tile.GridPosition, includesDiagonals: false);
+        var dotsInConnection = connection.Path;
+        if(connection.IsSquare)
         {
-            var targetPosition = new Vector2Int(directional.DirectionX + entity.GetEntity().GridPosition.x, directional.DirectionY + entity.GetEntity().GridPosition.y);
-            var targetDot = board.GetDotAt(targetPosition);
-            if (targetDot == null) return false;
+            dotsInConnection = dotsInConnection.Concat(connection.Square.DotsToHit).Distinct().ToList();
+        }
+        Directional directional = tile.Tile.GetModel<Directional>();
+        foreach (var dot in neighbors)
+        {
+            if (!dotsInConnection.Contains(dot.Dot.ID))
+            {
+                continue;
+            }
             
-            return false;
+            if (!dot.Dot.TryGetModel(out Hittable hittableDot))
+            {
+                continue;
+            }
+
+            if (directional.FacingDirection + tile.Tile.GridPosition != dot.Dot.GridPosition)
+            {
+                continue;
+            }
+            if (hittableDot.ShouldClearAfterHit()) return true;
         }
         return false;
     }

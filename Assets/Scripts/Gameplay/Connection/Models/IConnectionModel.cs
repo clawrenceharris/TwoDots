@@ -12,7 +12,7 @@ public interface IConnectionModel
 
     /// <summary>The history of completed connections. </summary>
     Stack<ConnectionResult> ConnectionHistory { get; }
-    ConnectionSession Session { get; }
+    Connection Connection { get; }
 
     /// <summary>Start a session with the given dot as the first node.</summary>
     void Begin(IDotPresenter dot);
@@ -31,4 +31,5 @@ public interface IConnectionModel
     
     /// <summary>Try to backtrack the connection.</summary>
     bool TryBacktrack(IDotPresenter dot);
+    void Initialize(IBoardPresenter board);
 }

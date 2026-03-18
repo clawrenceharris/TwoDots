@@ -77,7 +77,7 @@ public class BombDotPresenter : EntityPresenter, IExplodablePresenter
 
     public Sequence Explode()
     {
-        IBoardEntity bomb = GetEntity();
+        IBoardEntity bomb = Entity;
         if (bombToDotsMap == null || !bombToDotsMap.ContainsKey(bomb.ID))
             return DOTween.Sequence();
 

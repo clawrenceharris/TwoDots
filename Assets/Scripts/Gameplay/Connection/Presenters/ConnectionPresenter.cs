@@ -16,22 +16,27 @@ public class ConnectionPresenter : IConnectionPresenter
    
     private IBoardPresenter _board;
     public Stack<ConnectionResult> ConnectionHistory => _model.ConnectionHistory;
-    public ConnectionSession Session => _model.Session;
-   
-      public void Initialize(IBoardPresenter board)
+    public Connection Connection => _model.Connection;
+    public ConnectionPresenter()
     {
-        _model = new ConnectionModel(board, new BaseConnectionRule());
+        _model = new ConnectionModel();
+    }
+    public void Initialize(IBoardPresenter board)
+    {
+       
+        _model.Initialize(board);
+        
         _board = board;
-
+       
         InputRouter.OnPointerDragged += OnPointerDragged;
         InputRouter.OnDotConnected += OnInputDotConnected;
         InputRouter.OnDotSelectionEnded += OnInputDotSelectionEnded;
         InputRouter.OnDotSelected += OnInputDotSelected;
-        _model.Session.OnColorChanged += OnConnectionColorChanged;
-        _model.Session.OnPathChanged += HandlePathChanged;
-        _model.Session.OnSquareActivated += HandleSquareActivated;
-        _model.Session.OnSquareDeactivated += HandleSquareDeactivated;
-        _model.Session.OnDotRemovedFromPath += HandleDotRemovedFromPath;
+        _model.Connection.OnColorChanged += OnConnectionColorChanged;
+        _model.Connection.OnPathChanged += HandlePathChanged;
+        _model.Connection.OnSquareActivated += HandleSquareActivated;
+        _model.Connection.OnSquareDeactivated += HandleSquareDeactivated;
+        _model.Connection.OnDotRemovedFromPath += HandleDotRemovedFromPath;
     }
     private void HandlePathChanged()
     {
@@ -62,7 +67,7 @@ public class ConnectionPresenter : IConnectionPresenter
         foreach (var dotId in dotsToActivate)
         {
             if(_board.GetDot(dotId).TryGetPresenter(out IConnectableDotPresenter presenter)){
-                presenter.Select(_model.Session);
+                presenter.Select(_model.Connection);
             }
         }
     }
@@ -81,12 +86,12 @@ public class ConnectionPresenter : IConnectionPresenter
     }
     private void OnInputDotSelected(DotPresenter dot)
     {
-        if ( _model.Session.IsActive) return;
+        if ( _model.Connection.IsActive) return;
         
         _model.Begin(dot);
         if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
         {
-            presenter.Connect(_model.Session.Color);
+            presenter.Connect(_model.Connection.Color);
         }
         
         
@@ -95,7 +100,7 @@ public class ConnectionPresenter : IConnectionPresenter
     
     private void OnInputDotConnected(DotPresenter dot)
     {
-        if (!_model.Session.IsActive || _model.Path.Count == 0) return;
+        if (!_model.Connection.IsActive || _model.Path.Count == 0) return;
         var previousDot = _model.Path[^1];
 
         if (_model.TryAppend(dot))
@@ -105,7 +110,7 @@ public class ConnectionPresenter : IConnectionPresenter
     
             if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
             {
-                presenter.Connect(_model.Session.Color);
+                presenter.Connect(_model.Connection.Color);
             }
         }
         else if (_model.TryBacktrack(dot))
@@ -116,7 +121,7 @@ public class ConnectionPresenter : IConnectionPresenter
     }
     private void OnPointerDragged(Vector3 worldPos)
     {
-        if (!_model.Session.IsActive || _model.Path.Count == 0 || _model.Session.IsSquare)
+        if (!_model.Connection.IsActive || _model.Path.Count == 0 || _model.Connection.IsSquare)
         {
             HideDragLine();
             return;
@@ -158,7 +163,7 @@ public class ConnectionPresenter : IConnectionPresenter
         line.transform.SetParent(ServiceProvider.Instance.GetService<ConnectionService>().transform, true);
         
         line.SetFinalPositions(fromWorld, toWorld);
-        line.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(_model.Session.Color));
+        line.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(_model.Connection.Color));
         _activeConnectionSegments.Push(line);
     }
 
@@ -195,7 +200,7 @@ public class ConnectionPresenter : IConnectionPresenter
         }
 
         var line = _activeDragLine;
-        line.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(_model.Session.Color));
+        line.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(_model.Connection.Color));
         if (line != null)
         {
             line.SetInitialPositions(fromWorld, toWorld);

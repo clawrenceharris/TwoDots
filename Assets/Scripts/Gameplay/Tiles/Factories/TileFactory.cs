@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-
+/// <summary>
+/// A factory for creating tiles and their presenters
+/// </summary>
 public class TileFactory
 {
     public static Tile CreateTile(DotsObject data)
@@ -13,9 +15,16 @@ public class TileFactory
                 {
                     var tile = new Tile(type, new Vector2Int(data.Col, data.Row));
                     
-                    tile.AddModel(new Hittable(tile, new Clearable(tile), hitMax: 1, conditions: new List<HitConditionType> { HitConditionType.AdjacentToConnection, HitConditionType.AdjacentToSquare }));
+                    tile.AddModel(new HittableTile(tile, new Clearable(tile)));
                     return tile;
             }
+            case TileType.OneSidedBlock:
+                {
+                    var tile = new Tile(type, new Vector2Int(data.Col, data.Row));
+                    var direction = data.GetProperty<int[]>(DotsObject.Property.Directions);
+                    tile.AddModel(new HittableOneSidedBlock(tile, new Vector2Int(direction[0], direction[1])));
+                    return tile;
+                }
             default:
                 return new Tile(type, new Vector2Int(data.Col, data.Row));
         }
@@ -31,6 +40,14 @@ public class TileFactory
                 presenter.AddPresenter(new ClearablePresenter(tile, view));
                 return presenter;
             }
+            case TileType.OneSidedBlock:
+                {
+                    var presenter = new OneSidedBlockPresenter(tile, view);
+                    presenter.AddPresenter(new DirectionalPresenter(tile, view));
+                    presenter.AddPresenter(new HittablePresenter(tile, view));
+                    presenter.AddPresenter(new ClearablePresenter(tile, view));
+                    return presenter;
+                }
             default: return new TilePresenter(tile, view);
         }
     }

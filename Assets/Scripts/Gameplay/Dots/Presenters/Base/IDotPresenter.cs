@@ -11,5 +11,5 @@ public interface IDotPresenter
     void Initialize(IBoardPresenter board);
     Sequence Spawn();
    
-    void Drop(int targetRow);
+    Sequence Drop(int targetRow);
 }

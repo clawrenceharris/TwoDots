@@ -2,20 +2,19 @@ using UnityEngine;
 
 public class ConnectionService : MonoBehaviour
 {
-    private IConnectionPresenter _connectionPresenter;
+    private readonly IConnectionPresenter _connectionPresenter = new ConnectionPresenter();
     
     public void Initialize(IBoardPresenter board)
     {
-        _connectionPresenter = new ConnectionPresenter();
         _connectionPresenter.Initialize(board);
     }
 
-    public ConnectionSession ActiveConnection
+    public Connection ActiveConnection
     {
         get
         {
             if(_connectionPresenter == null) return null;
-            return _connectionPresenter.Session;
+            return _connectionPresenter.Connection;
         }
 
     }

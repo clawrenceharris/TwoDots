@@ -19,12 +19,16 @@ public class ConnectableDotPresenter :EntityPresenter,  IConnectableDotPresenter
 
     public void Connect(DotColor connectionColor)
     {
+        Dot.TryGetModel(out Connectable connectable);
+        connectable?.Connect();
         _selectionFeedback.PlaySelectionAnimation(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(connectionColor));
         
     }
 
-    public void Select(ConnectionSession session)
+    public void Select(Connection session)
     {
+        Dot.TryGetModel(out Connectable connectable);
+        connectable?.Connect();
         var dotColor = _colorable.GetComparableColor(session.Color);
         _selectionFeedback.PlaySelectionAnimation(ServiceProvider.Instance.GetService<ColorSchemeService>().FromDotColor(dotColor));
     }
@@ -38,12 +42,16 @@ public class ConnectableDotPresenter :EntityPresenter,  IConnectableDotPresenter
 
     public void Disconnect()
     {
+        Dot.TryGetModel(out Connectable connectable);
+        connectable?.Disconnect();
         _selectionFeedback.PlayDeselectionAnimation();
        
     }
 
     public void Deselect()
     {
+        Dot.TryGetModel(out Connectable connectable);
+        connectable?.Disconnect();
         _selectionFeedback.PlayDeselectionAnimation();
     }
 }

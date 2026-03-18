@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using Dots.Utilities;
 using UnityEngine;
 
 
@@ -98,10 +99,10 @@ public class BoardPresenter : IBoardPresenter
     private IDotPresenter SpawnRandomDotAt(Vector2Int position, DotsObject[] dotsToSpawn)
     {
 
-        DotsObject data = _dotSpawner.GetRandomDot(dotsToSpawn.ToList());
-        data.Col = position.x;
-        data.Row = position.y;
-        return SpawnDot(data);
+        DotsObject dot = _dotSpawner.GetRandomDot(dotsToSpawn.ToList());
+        dot.Col = position.x;
+        dot.Row = position.y;
+        return SpawnDot(dot);
     }
 
 
@@ -109,7 +110,8 @@ public class BoardPresenter : IBoardPresenter
     {
         foreach (var dot in level.dotsOnBoard)
         {
-            SpawnDot(dot);
+            var dotPresenter = SpawnDot(dot);
+            dotPresenter.Drop(dot.Row);
         }
         foreach (var tile in level.tilesOnBoard)
         {
@@ -151,12 +153,12 @@ public class BoardPresenter : IBoardPresenter
         var dot = GetDotAt(x, y);
         if(dot != null)
         {
-            return dot.GetEntity();
+            return dot.Entity;
         }
         var tile = GetTileAt(x, y);
         if(tile != null)
         {
-            return tile.GetEntity();
+            return tile.Entity;
         }
         return null;
     }
@@ -201,7 +203,7 @@ public class BoardPresenter : IBoardPresenter
         {
             return false;
         }
-        if (hittable.GetEntity().TryGetModel(out Hittable hittableModel) && hittableModel.ShouldHit())
+        if (hittable.Entity.TryGetModel(out Hittable hittableModel) && hittableModel.ShouldHit())
         {
             hittableModel.Hit();
             shouldClear = hittableModel.Clearable.ShouldClear();
@@ -584,32 +586,34 @@ public class BoardPresenter : IBoardPresenter
     }
     public bool TryClear(string entityId)
     {
+        Debug.Log($"[BoardPresenter] TryClear: {entityId}");
         EntityPresenter entity = GetEntity(entityId);
         if (entity == null)
         {
             return false;
         }
-        if (entity.GetEntity().TryGetModel(out Hittable hittable) && hittable.Clearable.ShouldClear())
+        if (entity.Entity.TryGetModel(out Hittable hittable) && hittable.Clearable.ShouldClear())
         {
-            if (entity.GetEntity() is Dot dot)
+            if (entity.Entity is Dot dot)
             {
                 _model.ClearDot(dot.ID);
             }
-            else if (entity.GetEntity() is Tile tile)
+            else if (entity.Entity is Tile tile)
             {
                 _model.ClearTile(tile.ID);
+                Debug.Log($"[BoardPresenter] Cleared tile {tile.ID}");
             }
 
             return true;
         }
 
-        else if (entity.GetEntity().TryGetModel(out IClearable clearable) && clearable.ShouldClear())
+        else if (entity.Entity.TryGetModel(out IClearable clearable) && clearable.ShouldClear())
         {
-            if (entity.GetEntity() is Dot dot)
+            if (entity.Entity is Dot dot)
             {
                 _model.ClearDot(dot.ID);
             }
-            else if (entity.GetEntity() is Tile tile)
+            else if (entity.Entity is Tile tile)
             {
                 _model.ClearTile(tile.ID);
             }
@@ -652,7 +656,8 @@ public class BoardPresenter : IBoardPresenter
 
         var presenter = CreateDotPresenter(dObject);
         _dotPresenters.Add(presenter.Dot.ID, presenter);
-        _model.SpawnDot(presenter.Dot);
+        _model.SpawnDot(presenter.Dot);  
+
         return presenter;
     }
 
@@ -870,44 +875,65 @@ public class BoardPresenter : IBoardPresenter
         return drops.Count > 0;
     }
 
-
+    public bool CanHostDot(int col, int row)
+    {
+        ITilePresenter tile = GetTileAt(col, row);
+        DotPresenter dot = GetDotAt(col, row);
+        
+        if (tile != null && !tile.Tile.TileType.IsOpenTile())
+        {
+            return false;
+        }
+        
+        return true;
+    }
    
     public bool CollapseColumn(out List<DotDrop> drops)
     {
         drops = new List<DotDrop>();
 
         bool dotsDropped = false;
-        for (int col = 0; col < Width; col++)
+        for (int x = 0; x < Width; x++)
         {
+            int writeRow = GetBottomMostRow(x); // next row in this column where a dot is allowed to land
 
-            for (int row = Height - 1; row >= 0; row--)
+            for (int y = 0; y < Height; y++)
             {
-                ITilePresenter tile = GetTileAt(col, row);
-                if (tile != null && tile.Tile.TileType.IsBlockable())
+                ITilePresenter tile = GetTileAt(x, y);
+                IDotPresenter dot = GetDotAt(x, y);
+
+                if (tile != null && tile.Tile.TileType.IsBlockingTile())
                 {
-                    break;
+                    writeRow = y + 1;
+                    continue;
 
                 }
-                if (_model.DotGrid[col, row] == null)
+                if (dot == null)
                 {
-                    if(tile == null || !tile.Tile.TileType.IsBoardMechanicTile()){
-                        for (int k = row + 1; k < Height; k++)
+                    continue;
+                }
+                // Find the next row ≥ writeRow that can actually host a dot
+                int landingRow = writeRow;
+                while (landingRow < y && !CanHostDot(x, landingRow))
+                {
+                    landingRow++;
+
+                }
+                
+                    // If we found a different valid landing cell, move the dot there
+                    if (landingRow != y)
+                    {
+                        if(!IsValidPosition(new Vector2Int(x, landingRow)))
                         {
-                            IDotPresenter dot = GetDotAt(col, k);
-                            if (dot != null)
-                            {
-                                _model.MoveDot(dot.Dot.ID, new Vector2Int(col, row));
-                                drops.Add(new DotDrop(dot, row));
-                                dotsDropped = true;
-                                break;
-                            }
-
+                            Debug.LogError($"[BoardPresenter] CollapseColumn: Invalid position {new Vector2Int(x, landingRow)}");
+                            continue;
                         }
+                        MoveDot(dot.Dot.ID, new Vector2Int(x, landingRow));
+                        drops.Add(new DotDrop(dot, landingRow));
+                        dotsDropped = true;
                     }
-
-                    
-                }
-
+                    // Next dot in this segment must land strictly above the last landing cell
+                    writeRow = landingRow + 1;
 
             }
 
@@ -917,6 +943,7 @@ public class BoardPresenter : IBoardPresenter
     }
     public List<DotDrop> CollectGravityDrops()
     {
+        Debug.Log($"[BoardPresenter] CollectGravityDrops");
         var allDrops = new List<DotDrop>();
         bool dotsDropped;
         do
@@ -927,7 +954,7 @@ public class BoardPresenter : IBoardPresenter
 
 
         } while (dotsDropped);
-        
+        Debug.Log($"[BoardPresenter] CollectGravityDrops: {allDrops.Count} drops");
 
         return allDrops;
     }
@@ -940,18 +967,22 @@ public class BoardPresenter : IBoardPresenter
             for (int row = Height - 1; row >= 0; row--)
             {
                 ITilePresenter tile = GetTileAt(col, row);
-                if (tile != null && tile.Tile.TileType.IsBlockable())
-                {
-                    break;
-                }
+                    if (tile != null && tile.Tile.TileType.IsBlockingTile())
+                    {
+                        break;
+                    }
+                    if (!CanHostDot(col, row))
+                    {
+                        continue;
+                    }
+               
                 if (GetDotAt(col, row) == null)
                 {
-                    if (tile == null || !tile.Tile.TileType.IsBoardMechanicTile())
-                    {
-                        var position = new Vector2Int(col, row);
-                        IDotPresenter dot = SpawnRandomDotAt(position, dotsToSpawn ?? _dotsToSpawn);
-                        drops.Add(new DotDrop(dot, row));
-                    }
+
+                    var position = new Vector2Int(col, row);
+                    IDotPresenter dot = SpawnRandomDotAt(position, dotsToSpawn ?? _dotsToSpawn);
+                    drops.Add(new DotDrop(dot, row));
+
                 }
             }
         }
@@ -1047,6 +1078,23 @@ public class BoardPresenter : IBoardPresenter
 
         return true;
 
+    }
+    /// <summary>
+    /// Gets the bottom most row. This is the first row from the bottom of the board that has a dot or a tile that contains a dot.
+    /// </summary>
+    /// <param name="col">The column to check</param>
+    /// <returns>The bottommost row</returns>
+    public int GetBottomMostRow(int col)
+    {
+        for (int row = 0; row < Height; row++)
+        {
+           
+            if (CanHostDot(col, row))
+            {
+                return row;
+            }   
+        }
+        return 0;
     }
     public IDotPresenter GetBottomMostDot(int col)
     {

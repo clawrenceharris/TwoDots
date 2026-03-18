@@ -6,8 +6,8 @@ public abstract class EntityPresenter : IEntityPresenter
 {
     protected BoardEntity _entity;
     protected EntityView _view;
-    public virtual IBoardEntity GetEntity() => _entity;
-    public virtual EntityView GetView() => _view;
+    public virtual IBoardEntity Entity => _entity;
+    public virtual EntityView View => _view;
     protected IBoardPresenter _board;
     private readonly Dictionary<Type, IPresenter> _presenters = new();
     public EntityPresenter(BoardEntity entity, EntityView view)
@@ -23,7 +23,9 @@ public abstract class EntityPresenter : IEntityPresenter
     }
     public void AddPresenter<T>(T presenter) where T : class, IPresenter
     {
+         presenter.Initialize(_board);
         _presenters.Add(typeof(T), presenter);
+       
     }
 
     public void RemovePresenter<T>() where T : class, IPresenter

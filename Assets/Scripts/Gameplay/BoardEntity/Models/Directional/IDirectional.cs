@@ -3,8 +3,10 @@ using UnityEngine;
 
 public interface IDirectional
 {
-    int DirectionX { get; }
-    int DirectionY { get; }
+    /// <summary>
+    /// The direction the directional object is facing.
+    /// </summary>
+    Vector2Int FacingDirection { get; }
      /// <summary>
     /// Determines and returns the optimal direction for the directional object to face, 
     /// based on the validity of neighboring game objects in each direction.

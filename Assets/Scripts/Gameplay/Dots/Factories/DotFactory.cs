@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using System.Linq;
 
+/// <summary>
+/// A factory for creating dots and their presenters
+/// </summary>
 public class DotFactory
 {
 
@@ -24,7 +27,9 @@ public class DotFactory
                     var color = validColors[Random.Range(0, validColors.Length)];
                     var dot = new Dot(DotType.Normal, new Vector2Int(data.Col, data.Row));
                     var colorable = dot.AddModel(new Colorable(dot));
-                    dot.AddModel(new Hittable(dot, new Clearable(dot), hitMax: 1, conditions: new List<HitConditionType> { HitConditionType.Connection}, hitCount: 0));
+                    dot.AddModel(new HittableNormalDot(dot, new Clearable(dot)));
+                    dot.AddModel(new Connectable(dot));
+                    dot.AddModel(new TargetableNormalDot(dot));
                     colorable.Color = LevelLoader.FromJsonColor(color);
                   
                     return dot;
@@ -34,7 +39,9 @@ public class DotFactory
                 {
                     var dot = new Dot(DotType.Blank, new Vector2Int(data.Col, data.Row));
                     dot.AddModel(new BlankColorableDot(dot));
-                    dot.AddModel(new Hittable(dot, new Clearable(dot),hitMax: 1, conditions: new List<HitConditionType> { HitConditionType.Connection }, hitCount: 0));
+                    dot.AddModel(new HittableNormalDot(dot, new Clearable(dot)));
+                    dot.AddModel(new TargetableNormalDot(dot));
+                    dot.AddModel(new Connectable(dot));
                     return dot;
                 }
                 case DotType.Bomb:

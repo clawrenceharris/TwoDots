@@ -79,7 +79,7 @@ public class LevelManager : MonoBehaviour
         colorScheme.Initialize(Level.levelNum - 1);
         board.Initialize(Level);
         connection.Initialize(board.BoardPresenter);
-        
+
         pool.RegisterPools();
         pool.FillPool<LinePool>();
         pool.FillPool<BombPool>();

@@ -12,7 +12,7 @@ using UnityEngine;
 
 public class Square
 {
-    public List<string> DotIdsToHit { get; private set; } = new();
+    public List<string> DotsToHit { get; private set; } = new();
     private readonly IBoardPresenter _board;
     private readonly IConnectionModel _connection;
     public readonly Dictionary<string, BombPoolObject> PreviewBombs = new();
@@ -23,14 +23,20 @@ public class Square
         _connection = connection;
         
     }
+    /// <summary>
+    /// Activates the square by selecting the dots to hit and activating any bombs inside the square
+    /// </summary>
     public void Activate()
     {
         SelectDotsToHit();
         ActivateBombsInsideSquare();
     }
+    /// <summary>
+    /// Deactivates the square by removing the dots to hit and deactivating any the bombs inside the square
+    /// </summary>
     public void Deactivate()
     {
-        RemoveDotIdsFromSquare();
+        DotsToHit.Clear();
         DeactivateBombsInsideSquare();
     }
 
@@ -40,18 +46,18 @@ public class Square
     /// </summary>
     public void SelectDotsToHit()
     {
-        DotIdsToHit = new List<string>(_connection.DotIdsInPath);
+        DotsToHit = new List<string>(_connection.DotIdsInPath);
 
         var dots = _board.GetDotsOnBoard();
         foreach (var d in dots)
         {
-            if (DotIdsToHit.Contains(d.Dot.ID)) continue;
+            if (DotsToHit.Contains(d.Dot.ID)) continue;
             if (!d.Dot.DotType.IsColorable()) continue;
 
             // if the connection color is blank, we can clear any dot
-            if (_connection.Session.Color.IsBlank())
+            if (_connection.Connection.Color.IsBlank())
             {
-                DotIdsToHit.Add(d.Dot.ID);
+                DotsToHit.Add(d.Dot.ID);
                 continue;
             }
 
@@ -60,16 +66,16 @@ public class Square
                 // We know the connection color is not blank at this point so we can exclude blank dots
                 if (colorableDot.Color.IsBlank()) continue;
 
-                if (colorableDot.GetComparableColor(_connection.Session.Color) == _connection.Session.Color)
+                if (colorableDot.GetComparableColor(_connection.Connection.Color) == _connection.Connection.Color)
                 {
 
-                    DotIdsToHit.Add(d.Dot.ID);
+                    DotsToHit.Add(d.Dot.ID);
                 }
             }
             // if the dot is not a colorable dot but can still be hit by a square then add it to hit list
             else if (d.Dot.DotType.ShouldBeHitBySquare())
             {
-                DotIdsToHit.Add(d.Dot.ID);
+                DotsToHit.Add(d.Dot.ID);
             }
 
 
@@ -77,15 +83,11 @@ public class Square
         }
     }
 
+   
     /// <summary>
-    /// Removes dot ids that would of been hit by the square.
+    /// Activates any bombs inside the square by replacing the dots with bombs
     /// </summary>
-    public void RemoveDotIdsFromSquare()
-    {
-        DotIdsToHit.Clear();
-    }
-
-    public void ActivateBombsInsideSquare()
+    private void ActivateBombsInsideSquare()
     {
 
         DotIdsInSquare = FindDotIdsInsideSquare();
@@ -175,12 +177,12 @@ public class Square
         List<string> squareBorder = GetSquareBorderDots();
         var borderSet = new HashSet<string>(squareBorder);
         var pathSet = new HashSet<string>(_connection.DotIdsInPath);
-
+        var dotsOnBoard = _board.GetDotsOnBoard();
         // Flood-fill from board-edge dots to identify "outside" region, then classify remaining
         // non-border dots as "inside". This avoids classifying isolated outside pockets as inside.
         var outside = new HashSet<string>();
         var queue = new Queue<IDotPresenter>();
-        foreach (var dot in _board.GetDotsOnBoard())
+        foreach (var dot in dotsOnBoard)
         {
             if (dot == null) continue;
             if (borderSet.Contains(dot.Dot.ID)) continue;
@@ -194,7 +196,8 @@ public class Square
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
-            foreach (var neighbor in _board.GetDotNeighbors(current.Dot.GridPosition, includesDiagonals: false))
+            var neighbors = _board.GetDotNeighbors(current.Dot.GridPosition, includesDiagonals: false);
+            foreach (var neighbor in neighbors)
             {
                 if (neighbor == null) continue;
                 if (borderSet.Contains(neighbor.Dot.ID)) continue;
@@ -203,7 +206,7 @@ public class Square
             }
         }
 
-        foreach (var dot in _board.GetDotsOnBoard())
+        foreach (var dot in dotsOnBoard)
         {
             if (dot == null) continue;
             if (borderSet.Contains(dot.Dot.ID)) continue;
@@ -217,7 +220,9 @@ public class Square
     }
 
 
-
+    /// <summary>
+    /// Commits and completes the square logic by permanently replacing any dots found inside the square with bombs
+    /// </summary>
     public void Commit()
     {
         foreach (var dotId in DotIdsInSquare)

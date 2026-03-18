@@ -9,6 +9,6 @@ public interface IConnectableDotPresenter : IPresenter
     void Connect(DotColor connectionColor);
     void Disconnect();
     void ChangeColor(DotColor color);
-    void Select(ConnectionSession session);
+    void Select(Connection session);
     void Deselect();
 }

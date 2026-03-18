@@ -6,8 +6,10 @@ using System.Collections.Generic;
 /// </summary>
 public class BaseConnectionRule : IDotConnectionRule
 {
-    public bool CanConnect(IDotPresenter fromDot, IDotPresenter toDot, IConnectionModel connection, IBoardPresenter board)
+    public bool CanConnect(string fromDotId, string toDotId, Connection connectionSession, IBoardPresenter board)
     {
+        var fromDot = board.GetDot(fromDotId);
+        var toDot = board.GetDot(toDotId);
         var defaultRules = new List<IDotConnectionRule>
         {
             new AdjacencyRule(),
@@ -15,7 +17,7 @@ public class BaseConnectionRule : IDotConnectionRule
         };
         foreach (var rule in defaultRules)
         {
-            if (!rule.CanConnect(fromDot, toDot, connection, board)) return false;
+            if (!rule.CanConnect(fromDotId, toDotId, connectionSession, board)) return false;
         }
         return true;
 

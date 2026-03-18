@@ -19,10 +19,10 @@ public class BombView : DotView
         var sequence = DOTween.Sequence();
         float duration = 0.35f;
         Vector3 startPos = transform.position;
-        Vector3 targetPosition = GridUtility.GridToWorld(hittable.GetEntity().GridPosition);
+        Vector3 targetPosition = GridUtility.GridToWorld(hittable.Entity.GridPosition);
         float angle = Vector2.SignedAngle(Vector2.right, targetPosition - startPos);
         float distance = Vector2.Distance(startPos, targetPosition);
-        distance -= hittable.GetView().transform.localScale.x / 2 + hittable.GetView().transform.localScale.x / 2;
+        distance -= hittable.View.transform.localScale.x / 2 + hittable.View.transform.localScale.x / 2;
 
         GameObject line = Instantiate(_visuals.BombLine, startPos, Quaternion.Euler(0, 0, angle));
         var renderer = line.GetComponent<LineRenderer>();
@@ -50,20 +50,20 @@ public class BombView : DotView
             {
                 renderer.SetPosition(0, lineStart);
                 renderer.SetPosition(1, Vector3.Lerp(lineStart, targetPosition, t));
-                if (Vector3.Distance(renderer.GetPosition(0), hittable.GetView().transform.position - (hittable.GetView().transform.localScale / 2)) < 0.01f)
+                if (Vector3.Distance(renderer.GetPosition(0), hittable.View.transform.position - (hittable.View.transform.localScale / 2)) < 0.01f)
                 {
-                    if(hittable.GetView().Renderer != null)
+                    if(hittable.View.Renderer != null)
                     {
-                        hittable.GetView().Renderer.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().CurrentColorScheme.blank);
+                        hittable.View.Renderer.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().CurrentColorScheme.blank);
                     }
                 }
             },
             1f,
             duration * 0.5f
         )).AppendCallback(() => {
-            if(hittable.GetView().Renderer != null)
+            if(hittable.View.Renderer != null)
             {
-                hittable.GetView().Renderer.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().ToDotColor(hittable.GetEntity()));
+                hittable.View.Renderer.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().ToDotColor(hittable.Entity));
             }
         });
 

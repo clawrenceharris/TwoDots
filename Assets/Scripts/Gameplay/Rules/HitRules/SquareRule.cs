@@ -1,14 +1,10 @@
+/// <summary>
+/// Used to defines whether a hittable should be hit if a square has been made in the connection
+/// </summary>
 public class SquareRule : IHitRule
 {
-    public bool CanHit(IBoardPresenter board, ConnectionSession connectionSession, string hittableId)
+    public bool CanHit(IBoardPresenter board, Connection connectionSession, string hittableId)
     {
-        var hittable = board.GetEntity(hittableId);
-        if (hittable == null) return false;
-        if(connectionSession.Square == null) return false;
-        if(connectionSession.Square.DotIdsToHit.Contains(hittableId))
-        {
-            return true;
-        }
-        return false;
+        return connectionSession.IsSquare;
     }
 }

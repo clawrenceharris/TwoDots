@@ -1,12 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// Result of a connection session
+/// The final result of a connection session
 /// </summary>
 public class ConnectionResult
 {
-    /// <summary>Ordered dot IDs in the path.</summary>
+    /// <summary>Ordered, unique dot IDs in the path.</summary>
     public IReadOnlyList<string> DotIdsInPath { get; }
 
     /// <summary>True if the path was closed by revisiting an earlier dot.</summary>
@@ -24,14 +25,14 @@ public class ConnectionResult
     /// <summary>The dot IDs to hit from the resulting square connection. (e.g. all dots or all dots of a distinct color)</summary>
     public IReadOnlyList<string> DotsToHitFromSquare { get; }
 
-    public ConnectionResult(ConnectionSession session)
+    public ConnectionResult(Connection session)
     {
-        DotIdsInPath = session.Path.Select(id => id).ToList();
+        DotIdsInPath = session.Path.AsReadOnly();
         IsSquare = session.IsSquare;
         ConnectionColor = session.Color;
         Square = session.Square;
         IsSquare = Square != null;
-        DotsToHitFromSquare = Square?.DotIdsToHit ?? new List<string>();
-        AllDotsToHit = session.GetAllDotsToHit().AsReadOnly();
+        DotsToHitFromSquare = Square?.DotsToHit.AsReadOnly() ?? new List<string>().AsReadOnly();
+        AllDotsToHit = session.DotsToHit.AsReadOnly();
     }
 }

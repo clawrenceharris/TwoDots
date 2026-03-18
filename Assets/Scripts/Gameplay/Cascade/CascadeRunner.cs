@@ -221,31 +221,22 @@ public class CascadeRunner : MonoBehaviour
         if (step == null) return animations;
         if (step.ToHit.Count > 0)
         {
-            var hittableDots = _board.CollectDotPresenters<IHittablePresenter>(new List<string>(step.ToHit));
-            var hittableTiles = _board.CollectTilePresenters<IHittablePresenter>(new List<string>(step.ToHit));
-            Debug.Log($"[CascadeRunner] ExecuteHitPhase: {hittableDots.Count} hittable dots, {hittableTiles.Count} hittable tiles ");
             foreach (var hittableId in step.ToHit)
             {
                 var entity = _board.GetEntity(hittableId);
                 if (entity == null) continue;
-                Debug.Log($"[CascadeRunner] ExecuteHitPhase: hittable entity {entity.GetEntity().ID}");
                 if (entity.TryGetPresenter(out IHittablePresenter hittablePresenter))
                 {
                     if (_board.TryHit(hittableId, out bool _))
                     {
-                       
+
                         var sequence = hittablePresenter.Hit();
                         if (sequence != null)
                             animations.Add(sequence);
-                    }
-                   
+                    }  
                 }
-               
-            
-               
             }
            
-
             if (step.ToExplode.Count > 0)
             {
                 foreach (var explodableId in step.ToExplode)
@@ -287,18 +278,14 @@ public class CascadeRunner : MonoBehaviour
         var clearedPositions = new List<Vector2Int>();
 
        
-        Debug.Log($"[CascadeRunner] ExecuteClearPhase: {clearCandidates.Count} clearable candidates");
         foreach (var clearableId in clearCandidates)
         {
             var entity = _board.GetEntity(clearableId);
             if (entity == null) continue;
-            Debug.Log($"[CascadeRunner] ExecuteClearPhase: clearable entity {entity.GetEntity().ID}");
-            if (_board.TryClear(entity.GetEntity().ID))
+            if (_board.TryClear(entity.Entity.ID))
             {
-                Debug.Log($"[CascadeRunner] ExecuteClearPhase: clearing entity {entity.GetEntity().ID}");
                 if (entity.TryGetPresenter(out IClearablePresenter clearablePresenter))
                 {
-                    Debug.Log($"[CascadeRunner] ExecuteClearPhase: clearable presenter {clearablePresenter}");
                     var sequence = clearablePresenter.Clear();
                     if (sequence != null)
                         animations.Add(sequence);
@@ -317,6 +304,7 @@ public class CascadeRunner : MonoBehaviour
         if (drops == null || drops.Count == 0) yield break;
 
         int remaining = 0;
+        var animations = new List<Sequence>();
         foreach (var drop in drops)
         {
             if (drop.Presenter == null) continue;
@@ -328,11 +316,12 @@ public class CascadeRunner : MonoBehaviour
         foreach (var drop in drops)
         {
             if (drop.Presenter == null) continue;
-            drop.Presenter.Drop(drop.TargetRow);
+            var sequence = drop.Presenter.Drop(drop.TargetRow);
+            if (sequence != null)
+                animations.Add(sequence);
         }
-
-        if (remaining > 0)
-            yield return new WaitUntil(() => remaining == 0);
+        if (animations.Count > 0)
+            yield return WaitForAnimations(animations);
 
         void HandleDropComplete(string dotId)
         {

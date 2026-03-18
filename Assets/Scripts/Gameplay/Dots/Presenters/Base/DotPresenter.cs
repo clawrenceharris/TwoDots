@@ -5,8 +5,8 @@ using Dots.Utilities;
 using UnityEngine;
 
 /// <summary>
-/// Base class for all dot presenters. Handles dropping, spawning, 
-/// and clearing and other dot management as it relates to the dot's presentation on the board.
+/// Base class for all dot presenters. Handles dropping, spawning,
+///  and other dot management as it relates to the dot's presentation on the board.
 /// </summary>
 public class DotPresenter : EntityPresenter, IDotPresenter
 {
@@ -42,11 +42,11 @@ public class DotPresenter : EntityPresenter, IDotPresenter
 
 
 
-    public void Drop(int targetRow)
+    public Sequence Drop(int targetRow)
     {
 
         var endPos = GridUtility.GridToWorld(Dot.GridPosition);
-        _view.transform.DOMoveY(targetRow * BoardView.TileSize, 0.5f).SetEase(Ease.OutBounce).OnComplete(() =>
+        return DOTween.Sequence().Append(_view.transform.DOMoveY(targetRow * BoardView.TileSize, 0.5f).SetEase(Ease.OutBounce)).OnComplete(() =>
         {
             _view.transform.position = endPos;
             OnDotDropped?.Invoke(Dot.ID);

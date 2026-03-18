@@ -176,7 +176,7 @@ public class BoardModel : IBoardModel
 
     public T GetTileAt<T>(Vector2Int position)
     {
-        if (position.x >= 0 && position.x < Width && position.y >= 0 && position.y < Height)
+        if (IsValidPosition(position))
         {
             if (TileGrid[position.x, position.y] is T t)
                 return t;
@@ -252,7 +252,7 @@ public class BoardModel : IBoardModel
     }
     public Tile GetTileAt(int x, int y)
     {
-        if (x >= 0 && y < Width && y >= 0 && y < Height)
+        if (IsValidPosition(new Vector2Int(x, y)))
         {
             return TileGrid[x, y];
         }
