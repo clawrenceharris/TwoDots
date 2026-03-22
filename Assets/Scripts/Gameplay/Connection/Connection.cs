@@ -1,26 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
-using UnityEngine;
-/// <summary>
-/// A step in the active connection session that holds the current (last) dot in the connection path.
-/// </summary>
-public record ConnectionStep
-{
-    public readonly IDotPresenter Dot;
-    public List<string> ToHit;
-    public List<string> ToPreview;
-    public List<string> ToClear;
-    private readonly Connection _session;
-    public ConnectionStep(IDotPresenter dot, Connection session)
-    {
-        Dot = dot;
-        _session = session;
 
-    }
-   
-}
 
 /// <summary>
 /// <summary>
@@ -60,8 +41,8 @@ public sealed class Connection
     /// <summary>Raised when the connection is completed.</summary>
     public event Action<ConnectionResult> OnConnectionCompleted;
 
-    private readonly List<string> _path;
-    public string CurrentDot => Path.Last();
+    private List<string> _path;
+    public string CurrentDot => _path.Last();
 
     /// <summary>Ordered, unique dot IDs in the path.</summary>
     public List<string> Path => _path;
@@ -80,21 +61,23 @@ public sealed class Connection
         _path = new List<string>();
         Color = DotColor.Blank;
         Square = null;
-       
+        IsActive = false;
     }
     public void BeginSession(IDotPresenter dot)
     {
-        _path.Clear();
+        _path = new List<string>();
         Color = DotColor.Blank;
         Square = null;
         IsActive = true;
         OnConnectionStarted?.Invoke();
         Append(dot);
 
+       
+
     }
     public void Append(IDotPresenter dot)
     {
-        Path.Add(dot.Dot.ID);
+        _path.Add(dot.Dot.ID);
 
         OnDotAddedToPath?.Invoke(dot.Dot.ID);
         OnPathChanged?.Invoke();
@@ -103,10 +86,10 @@ public sealed class Connection
 
     public void Backtrack()
     {
-        if (Path.Count == 0) return;
-        string dotToRemove = Path[^1];
-        Path.RemoveAt(Path.Count - 1);
-        if (!Path.Contains(dotToRemove)) OnDotRemovedFromPath?.Invoke(dotToRemove);
+        if (_path.Count == 0) return;
+        string dotToRemove = _path[^1];
+        _path.RemoveAt(_path.Count - 1);
+        if (!_path.Contains(dotToRemove)) OnDotRemovedFromPath?.Invoke(dotToRemove);
         OnPathChanged?.Invoke();
         
     }
@@ -116,7 +99,7 @@ public sealed class Connection
     public void DeactivateSquare()
     {
         // All the dots that would have been hit from the square excluding the dots that are still in the path
-        List<string> dotsToDeactivate = new(Square.DotsToHit.Where(id => !Path.Contains(id)));
+        List<string> dotsToDeactivate = new(Square.DotsToHitBySquare.ToList());
         OnSquareDeactivated?.Invoke(dotsToDeactivate);
         
         Square.Deactivate();
@@ -127,63 +110,22 @@ public sealed class Connection
     {
         Square = square;
         Square.Activate();
-        OnSquareActivated?.Invoke(Square.DotsToHit);
+        OnSquareActivated?.Invoke(Square.AllDotsToHit);
     }
     /// <summary>
-    ///     Gathers all entities that should be "hit" by the current connection, including reached dots
-    ///     and any additional targets that propagate via ITargetable neighbors (chain reactions).
+    /// Gathers all entities that should be "hit" by the current connection, including reached dots
+    /// and any additional targets that propagate via ITargetable neighbors (chain reactions).
     ///     - If path is empty or BoardService unavailable, returns an empty list.
     ///     - Adds any hit-worthy entity (via Hittable.ShouldHit()) in the path, square, or as discovered targets.
     /// </summary>
     /// <returns>
     ///     A <see cref="List{String}"/> of all entity IDs to be hit as part of the current connection.
     /// </returns>
-
-    private List<string> GetAllToHit()
-    {
-        if(Path.Count <= 1) return new List<string>();
-        if (!ServiceProvider.Instance.TryGetService<BoardService>(out var boardService)) return new List<string>();
-        var toHit = new List<string>();
-        var board = boardService.BoardPresenter;
-        var queue = new Queue<string>();
-        var visited = new HashSet<string>();
-        var dotsInConnection = Path.Concat(Square?.DotsToHit ?? new List<string>()).Distinct().ToList();
-        foreach (var dotId in dotsInConnection)
-        {
-            queue.Enqueue(dotId);
-            while (queue.Count > 0)
-            {
-                var entityId = queue.Dequeue();
-                var entity = board.GetEntity(entityId);
-                if (entity == null) continue;
-                if (visited.Contains(entityId)) continue;
-                if (entity.Entity.TryGetModel(out Hittable hittable) && hittable.ShouldHit())
-                {
-                    toHit.Add(entityId);
-                }
-                if (entity.Entity.TryGetModel(out Targetable targetable))
-                {
-
-                    var targets = targetable.GetTargets(board, this);
-                    foreach (var target in targets)
-                    {
-                        var targetEntity = board.GetEntity(target.ID);
-                        if (targetEntity.Entity.TryGetModel(out Hittable hittableTarget) && hittableTarget.ShouldHit())
-                        {
-                            queue.Enqueue(target.ID);
-                        }
-                    }
-                }
-                visited.Add(entityId);
-            }
-        }
-        return toHit.ToList();
-    }
     public void EndSession()
     {
         IsActive = false;
         Square?.Commit();
-        DotsToHit = GetAllToHit();
+       
         OnConnectionCompleted?.Invoke(new ConnectionResult(this));
     }
     
@@ -192,7 +134,7 @@ public sealed class Connection
         if (!ServiceProvider.Instance.TryGetService<BoardService>(out var boardService)) return DotColor.Blank;
         var board = boardService.BoardPresenter;
         // find the color of the connection
-        foreach (var dotId in Path)
+        foreach (var dotId in _path)
         {
             var dot = board.GetDot(dotId);
 

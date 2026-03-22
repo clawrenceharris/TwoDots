@@ -30,4 +30,5 @@ public interface IBoardModel
     bool IsValidPosition(Vector2Int position);
     void ClearBoard();
     void ReplaceDot(string dotId, Dot dot);
+    void Initialize(LevelData level);
 }

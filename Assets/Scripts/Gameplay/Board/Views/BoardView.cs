@@ -22,7 +22,7 @@ public class BoardView : MonoBehaviour
         _boardMask = GetComponentInChildren<SpriteMask>();
     }
 
-    public void Init(IBoardModel model)
+    public void Initialize(IBoardModel model)
     {
         _model = model;
         TileSize = _tileSize;

@@ -3,7 +3,7 @@ using System.Linq;
 /// A rule that determines if a hittable entity is adjacent to a connection.
 /// It considers all dots selected by a square as also part of the connection.
 /// </summary>
-public class AdjacentToConnectionRule : IHitRule
+public class AdjacentToConnectionRule : IRule
 {
     public bool CanHit(IBoardPresenter board, Connection connection, string hittableId)
     {
@@ -12,7 +12,7 @@ public class AdjacentToConnectionRule : IHitRule
         var dotsInConnection = connection.Path;
         if (connection.IsSquare)
         {
-            dotsInConnection = dotsInConnection.Concat(connection.Square.DotsToHit).Distinct().ToList();
+            dotsInConnection = dotsInConnection.Concat(connection.Square.AllDotsToHit).Distinct().ToList();
         }
         foreach (var dot in neighbors)
         {

@@ -19,4 +19,9 @@ public class Dot : BoardEntity
     {
         _dotType = type;
     }
+    public override T GetEntityType<T>()
+    {
+        return (T)(object)DotType;
+    }
+   
 }

@@ -13,13 +13,13 @@ public class ConnectionClearProducer : IFillStepProducer
         {
                 if (context == null || outSteps == null) return;
                 if (!context.TryConsumeConnectionPayload(out var payload)) return;
-                if (payload == null || payload.DotIdsInPath == null || payload.DotIdsInPath.Count < 2) return;
+                if (payload.HasValue && (payload.Value.DotIdsInPath == null || payload.Value.DotIdsInPath.Count < 2)) return;
                 
                 outSteps.Add(new FillStep(
                         FillStepType.ConnectionClear,
                         FillStepPriority.VeryHigh,
                         FillStepPhase.PreGravity,
-                        toHit:payload.AllDotsToHit,
+                        toHit:payload.Value.DotIdsInPath.Concat(payload.Value.DotsToHitFromSquare).Distinct().ToList(),
                         source: "Connection"));
         }
 

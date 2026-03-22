@@ -15,19 +15,24 @@ public abstract class EntityPresenter : IEntityPresenter
         _entity = entity;
         _view = view;
     }
-
-    public virtual void Initialize(IBoardPresenter board)
-    {
-        _board = board;
-        
-    }
     public void AddPresenter<T>(T presenter) where T : class, IPresenter
     {
-         presenter.Initialize(_board);
+        presenter.Initialize();
         _presenters.Add(typeof(T), presenter);
        
     }
+    public virtual void Initialize()
+    {
 
+        if (ServiceProvider.Instance.TryGetService(out BoardService boardService))
+        {
+            _board = boardService.BoardPresenter;
+        }
+        else
+        {
+            Debug.LogError("Board presenter not found");
+        }
+    }
     public void RemovePresenter<T>() where T : class, IPresenter
     {
         _presenters.Remove(typeof(T));

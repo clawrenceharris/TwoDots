@@ -9,30 +9,36 @@ public class BombProducer : IFillStepProducer
     public void CollectSteps(CascadeContext context, List<FillStep> outSteps)
     {
         if (context == null || outSteps == null) return;
-        var bombs = context.Board.GetDotsOnBoard().Where(d => d.Dot.DotType.IsBomb()).ToList();
-        if (bombs.Count == 0) return;
+        var dots = context.Board.GetDotsOnBoard();
 
         var bombIds = new HashSet<string>();
         var dotsToHit = new HashSet<string>();
-        foreach (var bomb in bombs)
+        foreach (var dot in dots)
         {
-            bombIds.Add(bomb.Dot.ID);
-            var neighbors = context.Board.GetDotNeighbors(bomb.Dot.GridPosition, true);
-            foreach (var neighbor in neighbors)
+            if(dot.Dot.DotType.IsBomb())
             {
-                if (neighbor == null) continue;
-                if (neighbor.Dot.DotType.IsBomb()) continue;
-                dotsToHit.Add(neighbor.Dot.ID);
+                if (context.ClearedDotIds.Contains(dot.Entity.ID)) continue;
+                bombIds.Add(dot.Entity.ID);
+                var neighbors = context.Board.GetNeighbors(dot.Entity.GridPosition, true);
+                neighbors.Sort((a, b) => Vector2Int.Distance(a.GridPosition, dot.Entity.GridPosition)
+                .CompareTo(Vector2Int.Distance(b.GridPosition, dot.Entity.GridPosition)));
+                foreach (var neighbor in neighbors)
+                {
+                    if (neighbor == null) continue;
+                    if (neighbor.GetEntityType<DotType>() == DotType.Bomb) continue;
+                    if (context.ClearedDotIds.Contains(neighbor.ID)) continue;
+                    dotsToHit.Add(neighbor.ID);
+                }
             }
         }
-        if (bombIds.Count == 0 && dotsToHit.Count == 0) return;
+        if (bombIds.Count == 0) return;
+        Debug.Log($"BombProducer: bombIds: {bombIds.Count}, dotsToHit: {dotsToHit.Count}");
         outSteps.Add(new FillStep(
                 FillStepType.BombExplode,
                 FillStepPriority.VeryHigh,
                 FillStepPhase.PostFill,
                 toHit: dotsToHit,
                 toExplode: bombIds,
-                toClear: bombIds,
                 source: "BombSpawn"));
     }
 }

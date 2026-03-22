@@ -28,7 +28,7 @@ public class FillStep
     /// <summary>Label for debugging (e.g. "Connection", "SeedAdjacency").</summary>
     public string Source { get; }
     /// <summary>Enqueue order; used to break priority ties. Set by the queue.</summary>
-    public int Sequence { get; internal set; }
+    public int Sequence { get; set; }
 
     /// <summary>Creates a fill step for the given type, priority, phase, and optional dot IDs/positions/source.</summary>
     public FillStep(

@@ -13,34 +13,21 @@ public interface IBoardPresenter
     int Height { get; }
 
     // Initialization
-    void Init(LevelData level, BoardView boardView, DotSpawner dotSpawner);
+    void Initialize(BoardView boardView, DotSpawner dotSpawner);
     void ClearBoard();
-
+    void SetupBoard(LevelData level);
     // Dot management
     void MoveDot(string dotId, Vector2Int endPosition);
     void ClearDot(string dotId);
     void RemoveAndDestroyDot(string dotId);
-    IDotPresenter SpawnDot(DotsObject dObject);
+    IDotPresenter SpawnDot(Dot dot);
     DotPresenter CreateDotPresenter(DotsObject dObject);
 
-    /// <summary>
-    /// Tries to clear a dot.
-    /// </summary>
-    /// <param name="dotId">The dot id to hit</param>
-    bool TryClearDot(string dotId);
-
-    /// <summary>
-    /// Tries to hit a dot.
-    /// </summary>
-    /// <param name="dotId">The dot id to hit</param>
-    bool TryHitDot(string dotId, out bool shouldClear);
-
-
+    DotPresenter CreateDotPresenter(Dot dot);
     // Tile management
     ITilePresenter SpawnTile(DotsObject dObject);
     void RemoveTile(string tileId);
     TilePresenter CreateTilePresenter(DotsObject dObject);
-    bool TryHitTile(string tileId, out bool shouldClear);
 
     // Dot queries
     DotPresenter GetDotAt(Vector2Int position);
@@ -86,7 +73,9 @@ public interface IBoardPresenter
     List<T> CollectDotPresenters<T>(List<string> dotIds) where T : class, IPresenter;
     List<T> CollectTilePresenters<T>(List<string> tileIds) where T : class, IPresenter;
     bool TryClear(string clearableId);
-    bool TryHit(string hittableId, out bool v);
+    bool TryHit(string hittableId, out bool shouldClear);
     IBoardEntity GetEntityAt(Vector2Int targetPosition);
     IBoardEntity GetEntityAt(int x, int y);
+    List<T> CollectPresenters<T>(List<string> ids) where T : class, IPresenter;
+    int GetBottomMostRow(int x);
 }
