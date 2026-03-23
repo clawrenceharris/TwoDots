@@ -8,11 +8,8 @@ using UnityEngine;
 public class HittablePresenter: EntityPresenter,  IHittablePresenter
 {
    
-    public IClearablePresenter Clearable { get; private set; }
-    public HittablePresenter(BoardEntity entity, EntityView view, IClearablePresenter clearable = null) : base(entity, view)
+    public HittablePresenter(BoardEntity entity, EntityView view) : base(entity, view)
     {
-        Clearable = clearable;  
-        // AddPresenter(Clearable);
     }
 
     public virtual Sequence Hit()

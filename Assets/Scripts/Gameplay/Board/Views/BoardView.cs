@@ -106,11 +106,7 @@ public class BoardView : MonoBehaviour
        
         DotView view = Instantiate(PrefabLibrary.Instance.FromDotType(dot.DotType), transform);
         view.transform.localPosition = worldPos;
-        if (!_dotViews.TryAdd(dot.ID, view))
-        {
-            Debug.LogError($"[BoardView] CreateDotView: dot {dot.ID} already exists");
-            return null;
-        }
+        _dotViews.TryAdd(dot.ID, view);
         return view;
     }
 

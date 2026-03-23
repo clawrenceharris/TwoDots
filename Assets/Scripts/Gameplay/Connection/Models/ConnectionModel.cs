@@ -5,9 +5,6 @@ using UnityEngine;
 
 public class ConnectionModel : IConnectionModel
 {
-    /// <summary>The history of completed connections. </summary>
-    private readonly Stack<ConnectionResult> _connectionHistory = new();
-    public Stack<ConnectionResult> ConnectionHistory => _connectionHistory;
     private readonly Connection _connection = new();
     public Connection Connection => _connection;
     /// <summary> Set of unique dot IDs in the path. </summary>
@@ -44,17 +41,20 @@ public class ConnectionModel : IConnectionModel
     }
 
 
-
-    public void Begin(IDotPresenter dot)
+    
+    public bool TryBegin(IDotPresenter dot)
     {
-        if (dot == null) return;
-        Cancel();
-        _dotIdsInPath.Add(dot.Dot.ID);
-        _square = null;
-        _connection.BeginSession(dot);
+        if (dot == null) return false;
+        if (dot.Dot.TryGetModel(out Connectable _))
+        {
+            Cancel();
+            _connection.StartSession(dot);
+            _dotIdsInPath.Add(dot.Dot.ID);
+            return true;
+            
+        }
 
-
-
+        return false;
     }
 
     public bool TryBacktrack(IDotPresenter dot)
@@ -63,12 +63,12 @@ public class ConnectionModel : IConnectionModel
 
         var head = Path[^1]; // last dot in the path
         if (head == dot.Dot.ID) return false; // same dot, no-op
+        
         if (Path.Count >= 2 && Path[^2] == dot.Dot.ID)
         {
             if (IsSquare)
             {
                 // if the connection is a square, backtrack needs to deactivate the it
-               
                 _connection.DeactivateSquare();
                 _connection.Backtrack();
                 return true;
@@ -97,9 +97,12 @@ public class ConnectionModel : IConnectionModel
 
         if (dot.Dot.TryGetModel(out Connectable connectable) && connectable.CanConnect(head))
         {
+            
             // Cycle-close: revisiting an earlier dot (not the previous)
             if (_dotIdsInPath.Contains(dot.Dot.ID))
             {
+                // do not add dot to path since it already exists
+                /* _dotIdsInPath.Add(dot.Dot.ID); */
                 _connection.Append(dot);
                 HandleSquareActivated(dot);
                 return true;
@@ -131,14 +134,15 @@ public class ConnectionModel : IConnectionModel
 
     public void End()
     {
-        if (!_connection.IsActive) return;
         _connection.EndSession();
         Cancel();
+
     }
 
     public void Cancel()
     {
         _dotIdsInPath.Clear();
+        _connection.CancelSession();
         _dotsToHitFromSquare.Clear();
         _square = null;
         _currentColor = DotColor.Blank;

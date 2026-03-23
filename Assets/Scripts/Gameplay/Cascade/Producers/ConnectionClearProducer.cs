@@ -14,13 +14,36 @@ public class ConnectionClearProducer : IFillStepProducer
                 if (context == null || outSteps == null) return;
                 if (!context.TryConsumeConnectionPayload(out var payload)) return;
                 if (payload.HasValue && (payload.Value.DotIdsInPath == null || payload.Value.DotIdsInPath.Count < 2)) return;
-                
+                var dots = context.Board.GetDotsOnBoard();
+                var toHit = new List<string>();
+                var toClear = new List<string>();
+                foreach (var dot in dots)
+                {
+                        if (dot.Dot.TryGetModel(out Hittable hittable))
+                        {
+                                if (hittable.ShouldHit())
+                                {
+                                        toHit.Add(dot.Entity.ID);
+
+                                }
+
+                        }
+                        if(dot.Dot.TryGetModel(out Clearable clearable))
+                        {
+                                if (clearable.ShouldClear())
+                                {
+                                        toClear.Add(dot.Entity.ID);
+                                }
+                        }
+                }
+
                 outSteps.Add(new FillStep(
-                        FillStepType.ConnectionClear,
-                        FillStepPriority.VeryHigh,
-                        FillStepPhase.PreGravity,
-                        toHit:payload.Value.DotIdsInPath.Concat(payload.Value.DotsToHitFromSquare).Distinct().ToList(),
-                        source: "Connection"));
+                    FillStepType.ConnectionClear,
+                    FillStepPriority.VeryHigh,
+                    FillStepPhase.PreGravity,
+                    toHit: toHit,
+                    toClear: toClear,
+                    source: "Connection"));
         }
 
 }

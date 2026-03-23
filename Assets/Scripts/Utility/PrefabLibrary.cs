@@ -8,7 +8,7 @@ public class PrefabLibrary : MonoBehaviour
     [SerializeField] private DotView AnchorDot;
     [SerializeField] private DotView ClockDot;
     [SerializeField] private BombView Bomb;
-    [SerializeField] private DotView NestingDot;
+    [SerializeField] private NestingDotView NestingDot;
     [SerializeField] private DotView BeetleDot;
     [SerializeField] private DotView LotusDot;
     [SerializeField] private TileView TileView;

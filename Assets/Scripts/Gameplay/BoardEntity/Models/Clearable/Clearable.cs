@@ -8,23 +8,26 @@ public class Clearable : ModelBase, IClearable
     
     public IRule ClearRule { get; set; }
     public Hittable Hittable { get; set; }
-    
-    public Clearable(BoardEntity entity, Hittable hittable) : base(entity)
+    public Action<IClearable> OnClear { get; set; }
+    public Clearable(BoardEntity entity, Hittable hittable, Action<IClearable> onClear = null) : base(entity)
     {
         Hittable = hittable;
+        OnClear = onClear;
     }
-    public Clearable(BoardEntity entity, IRule clearRule) : base(entity)
+    public Clearable(BoardEntity entity, IRule clearRule, Action<IClearable> onClear = null) : base(entity)
     {
         ClearRule = clearRule;
+        OnClear = onClear;
     }
-    public Clearable(BoardEntity entity) : base(entity)
+    public Clearable(BoardEntity entity, Action<IClearable> onClear = null) : base(entity)
     {
-        
+        OnClear = onClear;
     }
-    public Clearable(BoardEntity entity, IRule clearRule, Hittable hittable) : base(entity)
+    public Clearable(BoardEntity entity, IRule clearRule, Hittable hittable, Action<IClearable> onClear = null) : base(entity)
     {
         ClearRule = clearRule;
         Hittable = hittable;
+        OnClear = onClear;
     }
     
     public bool ShouldClear()
@@ -44,6 +47,6 @@ public class Clearable : ModelBase, IClearable
     }
     public void Clear()
     {
-        return;
+        OnClear?.Invoke(this);
     }
 }

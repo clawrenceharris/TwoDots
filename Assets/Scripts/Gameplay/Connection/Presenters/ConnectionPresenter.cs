@@ -14,7 +14,8 @@ public class ConnectionPresenter : IConnectionPresenter
     private readonly Stack<ConnectorLineView> _activeConnectionSegments = new();
    
     private IBoardPresenter _board;
-    public Stack<ConnectionResult> ConnectionHistory => _model.ConnectionHistory;
+    private PreviewStateManager _previewStateManager;
+    private PreviewConfig _previewConfig;
     public Connection Connection => _model.Connection;
     public ConnectionPresenter()
     {
@@ -36,10 +37,34 @@ public class ConnectionPresenter : IConnectionPresenter
         _model.Connection.OnSquareActivated += HandleSquareActivated;
         _model.Connection.OnSquareDeactivated += HandleSquareDeactivated;
         _model.Connection.OnDotRemovedFromPath += HandleDotRemovedFromPath;
+        _model.Connection.OnConnectionStarted += HandleConnectionStarted;
+        _model.Connection.OnConnectionCancelled += HandleConnectionCancelled;
+        _model.Connection.OnConnectionCompleted += HandleConnectionCompleted;
+
+        _previewConfig = Resources.Load<PreviewConfig>("Preview/PreviewConfig");
+        _previewStateManager = new PreviewStateManager(_board, _model.Connection, _previewConfig);
+        _previewStateManager.RegisterRule(new NestingPreviewRule(_previewConfig));
+        _previewStateManager.RegisterRule(new BeetlePreviewRule(_previewConfig));
     }
     private void HandlePathChanged()
     {
         _model.UpdateColor();
+        _previewStateManager?.Recompute();
+    }
+
+    private void HandleConnectionStarted()
+    {
+        _previewStateManager?.Recompute();
+    }
+
+    private void HandleConnectionCancelled()
+    {
+        _previewStateManager?.ResetAllPreview();
+    }
+
+    private void HandleConnectionCompleted(ConnectionResult _)
+    {
+        _previewStateManager?.ResetAllPreview();
     }
 
    
@@ -83,31 +108,31 @@ public class ConnectionPresenter : IConnectionPresenter
         }
     }
     private void OnInputDotSelected(DotPresenter dot)
-    {        
-        _model.Begin(dot);
-        
-        if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
+    {
+
+        if (_model.TryBegin(dot))
         {
-            presenter.Connect(_model.Connection.Color);
+            if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
+            {
+                presenter.Connect(_model.Connection.Color);
+            }
         }
-        
-        
+
+
+
+
     }
 
     
     private void OnInputDotConnected(DotPresenter dot)
     {
-        Debug.Log("OnInputDotConnected");
 
         if (_model.Path.Count == 0) return;
         var previousDot = _model.Path[^1];
-        Debug.Log("Previous Dot: " + previousDot);
-        Debug.Log("Dot: " + dot.Dot.ID);
         if (_model.TryAppend(dot))
         {
             var previousDotView = _board.GetDot(previousDot).DotView;
             AddConnectionSegment(previousDotView.transform.position, dot.DotView.transform.position);
-            Debug.Log("Connecting dot: " + dot.Dot.ID);
 
             if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
             {
@@ -122,7 +147,6 @@ public class ConnectionPresenter : IConnectionPresenter
     }
     private void OnPointerDragged(Vector3 worldPos)
     {
-        Debug.Log("OnPointerDragged");
         if ( _model.Path.Count == 0 || _model.Connection.IsSquare)
         {
             HideDragLine();
