@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// Post-fill producer that finds anchor dots at the bottom of the board (no dots below) and
@@ -15,22 +16,27 @@ public class AnchorSinkProducer : IFillStepProducer
     {
         if (context == null || outSteps == null) return;
 
-        var anchors = new List<string>();
-        foreach (var dot in context.Board.GetDotsOnBoard())
+        var toHit = new List<string>();
+        
+        for (int x = 0; x < context.Board.Width; x++)
         {
+            int y = context.Board.GetBottomMostRow(x);
+            var dot = context.Board.GetDotAt(x, y);
             if (dot == null) continue;
             if (dot.Dot.DotType != DotType.Anchor) continue;
-            if (!context.Board.IsAtBottomOfBoard(dot.Dot.GridPosition)) continue;
-            anchors.Add(dot.Dot.ID);
-        }
 
-        if (anchors.Count == 0) return;
+            toHit.Add(dot.Dot.ID);
+            
+        }
+        if (toHit.Count == 0) {
+            return;
+        }
 
         outSteps.Add(new FillStep(
             FillStepType.AnchorSink,
             FillStepPriority.High,
             FillStepPhase.PostFill,
-            toClear: anchors,
+            toHit: toHit,
             source: "AnchorSink"));
     }
 }

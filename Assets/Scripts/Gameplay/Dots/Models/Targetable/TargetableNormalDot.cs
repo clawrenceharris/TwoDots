@@ -11,7 +11,7 @@ public class TargetableNormalDot : Targetable
     }
     public override List<IBoardEntity> GetTargets(IBoardPresenter board, Connection connection)
     {
-        var dotsInConnection = connection.Path.Concat(connection.Square?.DotsToHit ?? new List<string>()).Distinct().ToList();
+        var dotsInConnection = connection.Path.Concat(connection.Square?.AllDotsToHit ?? new List<string>()).Distinct().ToList();
         if (dotsInConnection.Contains(_entity.ID))
         {
             return board.GetNeighbors(_entity.GridPosition, includesDiagonals: false);

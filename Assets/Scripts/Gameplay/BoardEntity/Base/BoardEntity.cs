@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BoardEntity : IBoardEntity
+public abstract class BoardEntity : IBoardEntity
 {
     public string ID { get; private set; }
     private Vector2Int _gridPosition;
@@ -17,8 +17,7 @@ public class BoardEntity : IBoardEntity
         ID = Guid.NewGuid().ToString();
         GridPosition = gridPosition;
     }
-
-
+    public abstract T GetEntityType<T>() where T : Enum, IConvertible;
     public T AddModel<T>(T component) where T : class, IModel
     {
         _models.Add(typeof(T), component);

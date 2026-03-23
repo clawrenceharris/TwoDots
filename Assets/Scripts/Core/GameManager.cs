@@ -36,7 +36,7 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
         SetTotalAmountOfLevels();
-        DOTween.SetTweensCapacity(900, 50);
+        DOTween.SetTweensCapacity(900, 500);
        
         
         

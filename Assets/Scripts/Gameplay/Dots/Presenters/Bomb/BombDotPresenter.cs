@@ -7,7 +7,8 @@ public class BombDotPresenter : EntityPresenter, IExplodablePresenter
 {
     private bool _explosionReady = false;
     private readonly BombView _bombView;
-    public static Dictionary<string, List<string>> bombToDotsMap;
+    private static Dictionary<string, List<string>> _bombToDotsMap;
+
     public BombDotPresenter(Dot dot, BombView view) : base(dot, view)
     {
         _bombView = view;
@@ -25,10 +26,10 @@ public class BombDotPresenter : EntityPresenter, IExplodablePresenter
     {
         if (_explosionReady) return;
 
-        bombToDotsMap = new Dictionary<string, List<string>>();
+        _bombToDotsMap = new Dictionary<string, List<string>>();
         foreach (string bombId in bombIds)
         {
-            bombToDotsMap[bombId] = new List<string>();
+            _bombToDotsMap[bombId] = new List<string>();
         }
 
         // Filter valid hittables (not null, not bombs)
@@ -36,7 +37,7 @@ public class BombDotPresenter : EntityPresenter, IExplodablePresenter
         foreach (string hittableId in targetHittables)
         {
             var hittable = _board.GetDot(hittableId);
-            if (hittable == null || hittable.Dot.DotType.IsBomb())
+            if (hittable == null || hittable.Dot.IsBomb())
                 continue;
             validHittables.Add(hittableId);
         }
@@ -68,7 +69,7 @@ public class BombDotPresenter : EntityPresenter, IExplodablePresenter
                     nearestBombId = bombId;
                 }
             }
-            bombToDotsMap[nearestBombId].Add(hittableId);
+            _bombToDotsMap[nearestBombId].Add(hittableId);
         }
 
         // Optional: make distribution more even by "round robin", if needed—
@@ -78,22 +79,31 @@ public class BombDotPresenter : EntityPresenter, IExplodablePresenter
     public Sequence Explode()
     {
         IBoardEntity bomb = Entity;
-        if (bombToDotsMap == null || !bombToDotsMap.ContainsKey(bomb.ID))
+        if (_bombToDotsMap == null || !_bombToDotsMap.ContainsKey(bomb.ID))
             return DOTween.Sequence();
 
         var sequence = DOTween.Sequence();
-        var hittableIds = bombToDotsMap[bomb.ID];
-        Debug.Log($"hittableIds for bomb {bomb.ID}: {hittableIds.Count}");
+        var hittableIds = _bombToDotsMap[bomb.ID];
 
         foreach (var hittableId in hittableIds)
         {
             if (_board.GetEntity(hittableId)
             .TryGetPresenter<IHittablePresenter>(out var hittable))
             {
-                sequence.Join(_bombView.DoLineAnimation(hittable));
+                // INSERT_YOUR_CODE
+                // To stagger each line animation, use the Insert method with an incremental delay.
+                // We'll use a simple step, e.g. 0.08f per hittable.
+                float stagger = 0.04f;
+                int hitIndex = hittableIds.IndexOf(hittableId);
+                // The DoLineAnimation returns a Sequence, which we can Append to the main sequence with a delay.
+                // So, we insert it at the scheduled time.
+                sequence.Insert(hitIndex * stagger, _bombView.DoLineAnimation(hittable));
+                continue; // prevent double Join
             }
         }
 
         return sequence;
     }
+
+    
 }

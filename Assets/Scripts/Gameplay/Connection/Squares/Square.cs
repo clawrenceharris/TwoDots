@@ -12,16 +12,17 @@ using UnityEngine;
 
 public class Square
 {
-    public List<string> DotsToHit { get; private set; } = new();
+    public List<string> AllDotsToHit { get; private set; } = new();
     private readonly IBoardPresenter _board;
     private readonly IConnectionModel _connection;
     public readonly Dictionary<string, BombPoolObject> PreviewBombs = new();
     public List<string> DotIdsInSquare { get; private set; } = new();
+    public List<string> DotsToHitBySquare { get; private set; } = new();
     public Square(IBoardPresenter board, IConnectionModel connection)
     {
         _board = board;
         _connection = connection;
-        
+
     }
     /// <summary>
     /// Activates the square by selecting the dots to hit and activating any bombs inside the square
@@ -36,7 +37,7 @@ public class Square
     /// </summary>
     public void Deactivate()
     {
-        DotsToHit.Clear();
+        AllDotsToHit.Clear();
         DeactivateBombsInsideSquare();
     }
 
@@ -46,18 +47,18 @@ public class Square
     /// </summary>
     public void SelectDotsToHit()
     {
-        DotsToHit = new List<string>(_connection.DotIdsInPath);
+        AllDotsToHit = new List<string>(_connection.DotIdsInPath);
 
         var dots = _board.GetDotsOnBoard();
         foreach (var d in dots)
         {
-            if (DotsToHit.Contains(d.Dot.ID)) continue;
+            if (AllDotsToHit.Contains(d.Dot.ID)) continue;
             if (!d.Dot.DotType.IsColorable()) continue;
 
             // if the connection color is blank, we can clear any dot
             if (_connection.Connection.Color.IsBlank())
             {
-                DotsToHit.Add(d.Dot.ID);
+                AllDotsToHit.Add(d.Dot.ID);
                 continue;
             }
 
@@ -69,18 +70,19 @@ public class Square
                 if (colorableDot.GetComparableColor(_connection.Connection.Color) == _connection.Connection.Color)
                 {
 
-                    DotsToHit.Add(d.Dot.ID);
+                    AllDotsToHit.Add(d.Dot.ID);
                 }
             }
             // if the dot is not a colorable dot but can still be hit by a square then add it to hit list
             else if (d.Dot.DotType.ShouldBeHitBySquare())
             {
-                DotsToHit.Add(d.Dot.ID);
+                AllDotsToHit.Add(d.Dot.ID);
             }
 
 
 
         }
+        DotsToHitBySquare = AllDotsToHit.Where(id => !_connection.DotIdsInPath.Contains(id)).ToList();
     }
 
    
@@ -147,8 +149,8 @@ public class Square
 
         for (int i = _connection.Path.Count - 2; i >= 0; i--)
         {
-            square.Add(_connection.Path[i].Dot.ID);
-            if (_connection.Path[i].Dot.ID == _connection.Path[^1].Dot.ID)
+            square.Add(_connection.Path[i]);
+            if (_connection.Path[i] == _connection.Path[^1])
             {
                 return square;
             }
@@ -230,7 +232,9 @@ public class Square
             var dot = _board.GetDot(dotId);
             if (dot == null) continue;
             var bomb = PreviewBombs[dotId].Presenter;
-            _board.ReplaceDot(dot, bomb);
+            AllDotsToHit.RemoveAll(id => id == dotId);
+            _board.ReplaceDot(dot.Dot, bomb.Dot);
+            _board.RemoveAndDestroyDot(dotId);
         }
     }
 }

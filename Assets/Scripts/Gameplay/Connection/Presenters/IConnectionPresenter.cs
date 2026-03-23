@@ -2,7 +2,9 @@ using System.Collections.Generic;
 
 public interface IConnectionPresenter
 {
-    Stack<ConnectionResult> ConnectionHistory { get; }
+    /// <summary>
+    /// The connection instance.
+    /// </summary>
     Connection Connection { get; }
     void Initialize(IBoardPresenter board);
 }

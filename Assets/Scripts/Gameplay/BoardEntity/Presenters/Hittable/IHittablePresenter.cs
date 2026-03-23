@@ -7,7 +7,6 @@ using UnityEngine;
 /// </summary>
 public interface IHittablePresenter : IPresenter
 {
-    IClearablePresenter Clearable { get; }
 
     Sequence Hit();
 }

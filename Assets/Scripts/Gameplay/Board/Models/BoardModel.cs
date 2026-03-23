@@ -23,22 +23,15 @@ public class BoardModel : IBoardModel
     public List<Dot> GetAllDots() => _dotsById.Values.ToList();
     public List<Tile> GetAllTiles() => _tilesById.Values.ToList();
     
-    
-    // Events for the Presenter to subscribe to
 
-    public event Action<Dot> OnDotCleared;
-    public event Action<Dot> OnDotSpawned;
-    public event Action<Tile> OnTileRemoved;
-    public event Action<Tile> OnTileSpawned;
-    public BoardModel(LevelData level)
+    
+    public void Initialize(LevelData level)
     {
         Width = level.width;
         Height = level.height;
         DotGrid = new Dot[Width, Height];
         TileGrid = new Tile[Width, Height];
-       
     }
-
     public List<Dot> InitDots(LevelData level)
     {
         var dots = new List<Dot>();
@@ -72,12 +65,11 @@ public class BoardModel : IBoardModel
 
     
    
-    public void SpawnTile(Tile tile)
+    public void PlaceTile(Tile tile, Vector2Int position)
     {
         if (!IsValidPosition(tile.GridPosition))
         {
-            Debug.LogError($"Attempted to place tile outside board bounds: {tile.GridPosition}");
-            return;
+            throw new ArgumentException("Attempted to place tile outside board bounds: " + tile.GridPosition);
         }
         if (TileGrid[tile.GridPosition.x, tile.GridPosition.y] != null)
         {
@@ -86,39 +78,56 @@ public class BoardModel : IBoardModel
 
         _tilesById.Add(tile.ID, tile);
         TileGrid[tile.GridPosition.x, tile.GridPosition.y] = tile;
-        OnTileSpawned?.Invoke(tile);
     }
-    public void SpawnDot(Dot dot)
+    public bool TryPlaceTile(Tile tile, Vector2Int position)
     {
-
-        if (TryPlaceDot(dot))
+        if (!IsValidPosition(position))
         {
-            OnDotSpawned?.Invoke(dot);
-        }
-    }
-   
-    public bool TryPlaceDot(Dot dot)
-    {
-        if (!IsValidPosition(dot.GridPosition))
-        {
-            Debug.LogError($"Attempted to place dot outside board bounds: {dot.GridPosition}");
             return false;
         }
-        else if (_dotsById.TryAdd(dot.ID, dot))
+        if (TileGrid[position.x, position.y] != null)
         {
-            DotGrid[dot.GridPosition.x, dot.GridPosition.y] = dot;
+            return false;
+        }
+        PlaceTile(tile, position);
+        return true;
+    }
+
+    public bool TryPlaceDot(Dot dot, Vector2Int position)
+    {
+        if (!IsValidPosition(position))
+        {
+            Debug.LogError($"Attempted to place dot outside board bounds: {position}");
+            return false;
+        }
+        if (_dotsById.TryAdd(dot.ID, dot))
+        {
+            DotGrid[position.x, position.y] = dot;
+
             return true;
         }
         return false;
     }
+    public void PlaceDot(Dot dot, Vector2Int position)
+    {
+        if (!IsValidPosition(dot.GridPosition))
+        {
+            throw new ArgumentException("Attempted to place dot outside board bounds: " + dot.GridPosition);
+        }
+        if (TileGrid[dot.GridPosition.x, dot.GridPosition.y] != null)
+        {
+            throw new ArgumentException("A dot already exists at this position: " + dot.GridPosition);
+        }
+        DotGrid[position.x, position.y] = dot;
+        _dotsById.Add(dot.ID, dot);
 
+    }
     public void ClearDot(string id)
     {
         if (_dotsById.TryGetValue(id, out Dot dotToRemove))
         {
             _dotsById.Remove(id);
             DotGrid[dotToRemove.GridPosition.x, dotToRemove.GridPosition.y] = null;
-            OnDotCleared?.Invoke(dotToRemove);
             
         }
     }
@@ -128,7 +137,6 @@ public class BoardModel : IBoardModel
         {
             _tilesById.Remove(id);
             TileGrid[tileToRemove.GridPosition.x, tileToRemove.GridPosition.y] = null;
-            OnTileRemoved?.Invoke(tileToRemove);
 
         }
     }

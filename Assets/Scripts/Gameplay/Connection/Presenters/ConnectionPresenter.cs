@@ -11,11 +11,11 @@ public class ConnectionPresenter : IConnectionPresenter
 {
     private ConnectorLineView _activeDragLine;
     private IConnectionModel _model;
-    public static event Action<DotColor> OnColorChanged;
     private readonly Stack<ConnectorLineView> _activeConnectionSegments = new();
    
     private IBoardPresenter _board;
-    public Stack<ConnectionResult> ConnectionHistory => _model.ConnectionHistory;
+    private PreviewStateManager _previewStateManager;
+    private PreviewConfig _previewConfig;
     public Connection Connection => _model.Connection;
     public ConnectionPresenter()
     {
@@ -37,10 +37,34 @@ public class ConnectionPresenter : IConnectionPresenter
         _model.Connection.OnSquareActivated += HandleSquareActivated;
         _model.Connection.OnSquareDeactivated += HandleSquareDeactivated;
         _model.Connection.OnDotRemovedFromPath += HandleDotRemovedFromPath;
+        _model.Connection.OnConnectionStarted += HandleConnectionStarted;
+        _model.Connection.OnConnectionCancelled += HandleConnectionCancelled;
+        _model.Connection.OnConnectionCompleted += HandleConnectionCompleted;
+
+        _previewConfig = Resources.Load<PreviewConfig>("Preview/PreviewConfig");
+        _previewStateManager = new PreviewStateManager(_board, _model.Connection, _previewConfig);
+        _previewStateManager.RegisterRule(new NestingPreviewRule(_previewConfig));
+        _previewStateManager.RegisterRule(new BeetlePreviewRule(_previewConfig));
     }
     private void HandlePathChanged()
     {
         _model.UpdateColor();
+        _previewStateManager?.Recompute();
+    }
+
+    private void HandleConnectionStarted()
+    {
+        _previewStateManager?.Recompute();
+    }
+
+    private void HandleConnectionCancelled()
+    {
+        _previewStateManager?.ResetAllPreview();
+    }
+
+    private void HandleConnectionCompleted(ConnectionResult _)
+    {
+        _previewStateManager?.ResetAllPreview();
     }
 
    
@@ -82,32 +106,34 @@ public class ConnectionPresenter : IConnectionPresenter
                 presenter.ChangeColor(color);
             }
         }
-        OnColorChanged?.Invoke(color);
     }
     private void OnInputDotSelected(DotPresenter dot)
     {
-        if ( _model.Connection.IsActive) return;
-        
-        _model.Begin(dot);
-        if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
+
+        if (_model.TryBegin(dot))
         {
-            presenter.Connect(_model.Connection.Color);
+            if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
+            {
+                presenter.Connect(_model.Connection.Color);
+            }
         }
-        
-        
+
+
+
+
     }
 
     
     private void OnInputDotConnected(DotPresenter dot)
     {
-        if (!_model.Connection.IsActive || _model.Path.Count == 0) return;
-        var previousDot = _model.Path[^1];
 
+        if (_model.Path.Count == 0) return;
+        var previousDot = _model.Path[^1];
         if (_model.TryAppend(dot))
         {
-            
-            AddConnectionSegment(previousDot.DotView.transform.position, dot.DotView.transform.position);
-    
+            var previousDotView = _board.GetDot(previousDot).DotView;
+            AddConnectionSegment(previousDotView.transform.position, dot.DotView.transform.position);
+
             if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
             {
                 presenter.Connect(_model.Connection.Color);
@@ -121,13 +147,13 @@ public class ConnectionPresenter : IConnectionPresenter
     }
     private void OnPointerDragged(Vector3 worldPos)
     {
-        if (!_model.Connection.IsActive || _model.Path.Count == 0 || _model.Connection.IsSquare)
+        if ( _model.Path.Count == 0 || _model.Connection.IsSquare)
         {
             HideDragLine();
             return;
         }
-
-        Vector3 from = _model.Path[^1].DotView.transform.position;
+        var lastDot = _board.GetDot(_model.Path[^1]);
+        Vector3 from = lastDot.DotView.transform.position;
         UpdateDragLine(from, worldPos);
 
 

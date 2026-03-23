@@ -14,11 +14,11 @@ public class BombView : DotView
         _visuals = GetComponent<BombVisuals>();
     }
     
-    public Sequence DoLineAnimation(IHittablePresenter hittable, Action callback = null)
+    public Sequence DoLineAnimation(IHittablePresenter hittable)
     {
         var sequence = DOTween.Sequence();
-        float duration = 0.35f;
-        Vector3 startPos = transform.position;
+        float duration = 0.3f;
+        Vector3 startPos =transform.position;
         Vector3 targetPosition = GridUtility.GridToWorld(hittable.Entity.GridPosition);
         float angle = Vector2.SignedAngle(Vector2.right, targetPosition - startPos);
         float distance = Vector2.Distance(startPos, targetPosition);
@@ -27,9 +27,8 @@ public class BombView : DotView
         GameObject line = Instantiate(_visuals.BombLine, startPos, Quaternion.Euler(0, 0, angle));
         var renderer = line.GetComponent<LineRenderer>();
         renderer.material.color = ServiceProvider.Instance.GetService<ColorSchemeService>().CurrentColorScheme.blank;
-        renderer.sortingLayerName = "Bomb";
-        renderer.sortingOrder = 100;
-
+        renderer.sortingOrder = -1;
+        renderer.sortingLayerName = "Dots";
         renderer.startWidth = 0.2f;
         renderer.endWidth = 0.2f;
         renderer.positionCount = 2;
@@ -37,6 +36,7 @@ public class BombView : DotView
         // Set line to start small "behind" the bomb view (opposite direction to target)
         float startLength = 0.3f; // tweak for visual effect
         Vector3 forward = (targetPosition - startPos).normalized;
+        
         Vector3 startOffset = -forward * startLength;
         Vector3 lineStart = startPos + startOffset;
         renderer.SetPosition(0, lineStart);
@@ -49,22 +49,32 @@ public class BombView : DotView
             t =>
             {
                 renderer.SetPosition(0, lineStart);
-                renderer.SetPosition(1, Vector3.Lerp(lineStart, targetPosition, t));
-                if (Vector3.Distance(renderer.GetPosition(0), hittable.View.transform.position - (hittable.View.transform.localScale / 2)) < 0.01f)
-                {
-                    if(hittable.View.Renderer != null)
-                    {
-                        hittable.View.Renderer.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().CurrentColorScheme.blank);
-                    }
-                }
+                // Calculate the direction from the center of the hittable dot to the incoming line
+                Vector3 direction = (lineStart - targetPosition).normalized;
+                // Estimate the edge position of the hittable dot in that direction
+                float radius = hittable.View.transform.localScale.x / 2f;
+                Vector3 edgePosition = targetPosition + direction * radius;
+
+                renderer.SetPosition(1, Vector3.Lerp(lineStart, edgePosition, t));
+                
+                
             },
             1f,
             duration * 0.5f
-        )).AppendCallback(() => {
-            if(hittable.View.Renderer != null)
+        ));
+        sequence.AppendCallback(() =>
+        {
+            // Change to HitMaterial as soon as the line reaches the dot's edge
+            if (hittable.View.Renderer != null)
             {
-                hittable.View.Renderer.SetColor(ServiceProvider.Instance.GetService<ColorSchemeService>().ToDotColor(hittable.Entity));
+                Debug.Log("Setting color to blank");
+                hittable.View.Renderer.HitMaterial.color = ServiceProvider.Instance.GetService<ColorSchemeService>().CurrentColorScheme.blank;
+                hittable.View.Renderer.SetMaterial(hittable.View.Renderer.HitMaterial);
             }
+            
+        });
+        sequence.AppendCallback(() => {
+            
         });
 
         // Phase 2: Tail follows to target, so line 'collapses' into target
@@ -78,10 +88,15 @@ public class BombView : DotView
 
             },
             1f,
-            duration * 1.3f
+            duration * 0.5f
         ));
 
-
+        sequence.AppendInterval(duration * 0.5f).AppendCallback(() => {
+            if(hittable.View.Renderer != null)
+            {
+                hittable.View.Renderer.SetMaterial(hittable.View.Renderer.DefaultMaterial);
+            }
+        });
         sequence.OnComplete(() => Destroy(line.gameObject));
         return sequence;
     }

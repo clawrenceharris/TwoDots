@@ -36,7 +36,7 @@ public class BoardPresenter : IBoardPresenter
     private readonly Dictionary<string, DotPresenter> _dotPresenters = new();
     private readonly Dictionary<string, TilePresenter> _tilePresenters = new();
 
-    private BoardView _boardView;
+    private BoardView _view;
     private DotsObject[] _dotsToSpawn;
 
     public static float Offset { get; private set; } = 2.5f;
@@ -62,60 +62,29 @@ public class BoardPresenter : IBoardPresenter
 
 
     #region  Initialization/Setup
-    public void Init(LevelData level, BoardView boardView, DotSpawner dotSpawner)
+    public void Initialize(BoardView boardView, DotSpawner dotSpawner)
     {
-        _model = new BoardModel(level);
-        _boardView = boardView;
+        _model = new BoardModel();
+        _view = boardView;
         _dotSpawner = dotSpawner;
-        _boardView.Init(_model);
 
-        _dotsToSpawn = LevelLoader.Level?.dotsToSpawn;
         OnBoardInitialized?.Invoke(this);
 
-        SetupBoard(LevelLoader.Level);
-
     }
-
-    /// <summary>
-    /// Gets a board mechanic tile at the specified column and row
-    /// </summary>
-    /// <typeparam name="T">The desired type that the desired board mechanic inherits</typeparam>
-    /// <param name="col">The column of the desired board mechanic tile</param>
-    /// <param name="row">The row of the desired board mechanic tile</param>
-    /// <returns>A board mechanic tile at the specified column and row or null if not found</returns>
-    public T GetBoardMechanicTileAt<T>(int col, int row)
-    {
-        if (col >= 0 && col < Width && row >= 0 && row < Height)
-        {
-            Tile tile = _model.GetTileAt(col, row);
-            if (tile is T t && tile.TileType.IsBoardMechanicTile())
-                return t;
-        }
-        return default;
-    }
-
-
-
-    private IDotPresenter SpawnRandomDotAt(Vector2Int position, DotsObject[] dotsToSpawn)
-    {
-
-        DotsObject dot = _dotSpawner.GetRandomDot(dotsToSpawn.ToList());
-        dot.Col = position.x;
-        dot.Row = position.y;
-        return SpawnDot(dot);
-    }
-
 
     public void SetupBoard(LevelData level)
     {
-        foreach (var dot in level.dotsOnBoard)
-        {
-            var dotPresenter = SpawnDot(dot);
-            dotPresenter.Drop(dot.Row);
-        }
+        ClearBoard();
+        _model.Initialize(level);
+        _view.Initialize(_model);
+
+        var dots = _model.InitDots(level);
+        var tiles = _model.InitTiles(level);
+        _dotsToSpawn = level.dotsToSpawn;
+       
         foreach (var tile in level.tilesOnBoard)
         {
-            SpawnTile(tile);
+            SpawnTile(TileFactory.CreateTile(tile));
         }
         FillBoard(level.initDotsToSpawn.Length > 0 ? level.initDotsToSpawn : level.dotsToSpawn);
         OnBoardSetupComplete?.Invoke(this);
@@ -167,10 +136,10 @@ public class BoardPresenter : IBoardPresenter
         List<IBoardEntity> neighbors = new();
         var offsets = new List<Vector2Int>
         {
-            Vector2Int.up,
-            Vector2Int.down,
             Vector2Int.left,
-            Vector2Int.right
+            Vector2Int.up,
+            Vector2Int.right,
+            Vector2Int.down
         };
         if (includesDiagonals)
         {
@@ -195,22 +164,7 @@ public class BoardPresenter : IBoardPresenter
         return neighbors;
     }
 
-    public bool TryHit(string hittableId, out bool shouldClear)
-    {
-        var hittable = GetEntity(hittableId);
-        shouldClear = false;
-        if (hittable == null)
-        {
-            return false;
-        }
-        if (hittable.Entity.TryGetModel(out Hittable hittableModel) && hittableModel.ShouldHit())
-        {
-            hittableModel.Hit();
-            shouldClear = hittableModel.Clearable.ShouldClear();
-            return true;
-        }
-        return false;
-    }
+    
     public List<T> GetNeighbors<T>(Vector2Int position, bool includesDiagonals = true) where T : class
     {
         List<T> neighbors = new();
@@ -338,14 +292,16 @@ public class BoardPresenter : IBoardPresenter
     {
         return GetDotNeighbors<T>(position.x, position.y, includesDiagonals);
     }
-    public void PlaceDot(Dot dot, int x, int y)
+
+    public bool TryPlaceDot(Dot dot, Vector2Int position)
     {
-        dot.GridPosition = new Vector2Int(x, y);
-        _model.SpawnDot(dot);
+        return _model.TryPlaceDot(dot, position);
     }
+    
     public void PlaceDot(Dot dot, Vector2Int position)
     {
-        PlaceDot(dot, position.x, position.y);
+        _model.PlaceDot(dot, position);
+
     }
 
     public bool IsOnEdgeOfBoard(Vector2Int position)
@@ -395,7 +351,6 @@ public class BoardPresenter : IBoardPresenter
         if (string.IsNullOrEmpty(id)) return null;
         if (!_dotPresenters.TryGetValue(id, out var p))
         {
-            Debug.LogWarning($"[BoardPresenter] Dot {id} does not exist");
             return null;
 
         }
@@ -408,12 +363,10 @@ public class BoardPresenter : IBoardPresenter
         presenter = null;
         if (!_dotPresenters.TryGetValue(id, out var _))
         {
-            Debug.LogError($"[BoardPresenter] Dot {id} does not exist");
             return false;
         }
         if (_model.GetDot(id) == null)
         {
-            Debug.LogError($"[BoardPresenter] Dot {id} does not exist");
             return false;
         }
 
@@ -527,49 +480,14 @@ public class BoardPresenter : IBoardPresenter
 
     #region  Dot Management
 
-
     public void MoveDot(string id, Vector2Int endPosition)
     {
         _model.MoveDot(id, endPosition);
     }
 
 
-    public bool TryHitDot(string dotId, out bool shouldClear)
-    {
-        var dot = GetDot(dotId);
-        shouldClear = false;
-        if (dot == null)
-        {
-            return false;
-        }
-        if (dot.Dot.TryGetModel(out Hittable hittable) && hittable.ShouldHit())
-        {
-            hittable.Hit();
-            shouldClear = hittable.Clearable.ShouldClear();
-            return true;
-        }
-        return false;
-    }
-    public bool TryClearDot(string dotId)
-    {
-        var dot = GetDot(dotId);
-        if (dot == null)
-        {
-            return false;
-        }
-        if (dot.Dot.TryGetModel(out Hittable hittable) && hittable.Clearable.ShouldClear())
-        {
-            ClearDot(dotId);
-            return true;
-        }
-        
-        else if (dot.Dot.TryGetModel(out IClearable clearable) && clearable.ShouldClear())
-        {
-            ClearDot(dotId);
-            return true;
-        }
-        return false;
-    }
+    
+    
     public EntityPresenter GetEntity(string id)
     {
         if (string.IsNullOrEmpty(id)) return null;
@@ -581,101 +499,146 @@ public class BoardPresenter : IBoardPresenter
         {
             return tp;
         }
-        Debug.LogWarning($"[BoardPresenter] Entity {id} does not exist");
         return null;
     }
-    public bool TryClear(string entityId)
+    public void ClearEntity(string entityId)
+    {      
+        TryClearEntity(entityId);
+    }
+
+    public bool TryClearEntity(string entityId)
     {
-        Debug.Log($"[BoardPresenter] TryClear: {entityId}");
         EntityPresenter entity = GetEntity(entityId);
         if (entity == null)
         {
             return false;
         }
-        if (entity.Entity.TryGetModel(out Hittable hittable) && hittable.Clearable.ShouldClear())
+        if (entity.Entity is Dot dot)
         {
-            if (entity.Entity is Dot dot)
-            {
-                _model.ClearDot(dot.ID);
-            }
-            else if (entity.Entity is Tile tile)
-            {
-                _model.ClearTile(tile.ID);
-                Debug.Log($"[BoardPresenter] Cleared tile {tile.ID}");
-            }
-
+            _model.ClearDot(dot.ID);
             return true;
         }
-
-        else if (entity.Entity.TryGetModel(out IClearable clearable) && clearable.ShouldClear())
+        else if (entity.Entity is Tile tile)
         {
-            if (entity.Entity is Dot dot)
-            {
-                _model.ClearDot(dot.ID);
-            }
-            else if (entity.Entity is Tile tile)
-            {
-                _model.ClearTile(tile.ID);
-            }
+            _model.ClearTile(tile.ID);
             return true;
         }
         return false;
     }
 
-
+    
+    
+    
+    public bool TryHit(string hittableId, out bool shouldClear)
+    {
+        var hittable = GetEntity(hittableId);
+        shouldClear = false;
+        if (hittable == null)
+        {
+            return false;
+        }
+        if (hittable.Entity.TryGetModel(out Hittable hittableModel) && hittableModel.ShouldHit())
+        {
+            shouldClear = hittableModel.ShouldClearAfterHit();
+            hittableModel.Hit();
+            return true;
+        }
+        return false;
+    }
 
     /// <summary>
+    /// Creates a dot presenter from a Dot.
+    /// </summary>
+    /// <param name="dObject"></param>
+    /// <returns></returns>
+    public DotPresenter CreateDotPresenter(Dot dot)
+    {
+        if (_view == null)
+        {
+            Debug.LogError("[BoardPresenter] BoardView is null");
+            return null;
+        }
+
+
+        var view = _view.CreateDotView(dot);
+        
+        var presenter = DotFactory.CreateDotPresenter(dot, view, this);
+        presenter.Initialize();
+        return presenter;
+    }
+     /// <summary>
     /// Creates a dot presenter from a DotsObject.
     /// </summary>
     /// <param name="dObject"></param>
     /// <returns></returns>
     public DotPresenter CreateDotPresenter(DotsObject dObject)
     {
-        if (_boardView == null)
+        if (_view == null)
         {
             Debug.LogError("[BoardPresenter] BoardView is null");
             return null;
         }
 
-        Dot dot = DotFactory.CreateDot(dObject);
-
-        var view = _boardView.CreateDotView(dot);
+        var dot = DotFactory.CreateDot(dObject);
+        var view = _view.CreateDotView(dot);
         var presenter = DotFactory.CreateDotPresenter(dot, view, this);
-        presenter.Initialize(this);
+        presenter.Initialize();
+        return presenter;
+    }
+    
+
+    private IDotPresenter SpawnRandomDotAt(Vector2Int position, DotsObject[] dotsToSpawn)
+    {
+
+        DotsObject dot = _dotSpawner.GetRandomDot(dotsToSpawn.ToList());
+        dot.Col = position.x;
+        dot.Row = position.y;
+        var presenter = SpawnDot(DotFactory.CreateDot(dot));
         return presenter;
     }
 
     
-    public IDotPresenter SpawnDot(DotsObject dObject)
+
+    
+    public IDotPresenter SpawnDot(Dot dot)
     {
-        if (_boardView == null)
+        if (_view == null)
         {
             Debug.LogError("[BoardPresenter] BoardView is null");
             return null;
         }
+        if (!_model.TryPlaceDot(dot, dot.GridPosition))
+        {
+            Debug.LogError($"[BoardPresenter] Failed to spawn dot {dot.ID} at {dot.GridPosition}");
+            return null;
+        }
 
-        var presenter = CreateDotPresenter(dObject);
-        _dotPresenters.Add(presenter.Dot.ID, presenter);
-        _model.SpawnDot(presenter.Dot);  
-
+        var presenter = CreateDotPresenter(dot);
+        _dotPresenters.Add(dot.ID, presenter);
+        
         return presenter;
     }
 
 
     
 
-    public void ReplaceDot(DotPresenter oldDot, DotPresenter newDot, Action onComplete = null)
+    public void ReplaceDot(Dot oldDot, Dot newDot, Action onComplete = null)
     {
-        
-        _model.ReplaceDot(oldDot.Dot.ID, newDot.Dot);
-        _boardView.ReleaseDotView(oldDot.Dot.ID);
+        var oldDotPresenter = GetDot(oldDot.ID);
+        var newDotPresenter = GetDot(newDot.ID);
+        _model.ReplaceDot(oldDot.ID, newDot);
+        _view.ReleaseDotView(oldDot.ID);
+        if (newDotPresenter == null)
+        {
+            Debug.Log($"[BoardPresenter] Creating new dot presenter for {newDot.ID}");
+            newDotPresenter = CreateDotPresenter(newDot);
+        }
+        newDotPresenter.DotView.transform.position = oldDotPresenter.DotView.transform.position;
+        newDotPresenter.Dot.GridPosition = oldDotPresenter.Dot.GridPosition;
+        newDotPresenter.DotView.Init(newDotPresenter.Dot);
 
-        newDot.DotView.transform.position = oldDot.DotView.transform.position;
-        newDot.Dot.GridPosition = oldDot.Dot.GridPosition;
-        newDot.DotView.Init(newDot.Dot);
-
-        _dotPresenters.Remove(oldDot.Dot.ID);
-        _dotPresenters.Add(newDot.Dot.ID, newDot);
+        _dotPresenters.Remove(oldDot.ID);
+        _dotPresenters.Add(newDot.ID, newDotPresenter);
         onComplete?.Invoke();
     
        
@@ -683,13 +646,14 @@ public class BoardPresenter : IBoardPresenter
     public void RemoveAndDestroyDot(string id)
     {
         _model.ClearDot(id);
-        _boardView.ReleaseDotView(id);
+        _view.ReleaseDotView(id);
         _dotPresenters.Remove(id);
     }
 
     public void ClearDot(string id)
     {
         _model.ClearDot(id);
+
     }
     
     
@@ -711,22 +675,7 @@ public class BoardPresenter : IBoardPresenter
 
     #region Tile Management
 
-    public bool TryHitTile(string tileId, out bool shouldClear)
-    {
-        var tile = GetTile(tileId);
-        shouldClear = false;
-        if (tile == null)
-        {
-            return false;
-        }
-        if (tile.Tile.TryGetModel(out Hittable hittable) && hittable.ShouldHit())
-        {
-            hittable.Hit();
-            shouldClear = hittable.Clearable.ShouldClear();
-            return true;
-        }
-        return false;
-    }
+    
     public void RemoveTile(string id)
     {
         _model.ClearTile(id);
@@ -751,33 +700,43 @@ public class BoardPresenter : IBoardPresenter
     /// </summary>
     /// <param name="dObject"></param>
     /// <returns>The tile presenter that was created</returns>
-    public TilePresenter CreateTilePresenter(DotsObject dObject)
+    public TilePresenter CreateTilePresenter(Tile tile)
     {
-        if (_boardView == null)
+        if (_view == null)
         {
             Debug.LogError("[BoardPresenter] BoardView is null");
             return null;
         }
 
-        Tile tile = TileFactory.CreateTile(dObject);
 
-        var view = _boardView.CreateTileView(tile);
+        var view = _view.CreateTileView(tile);
         var presenter = TileFactory.CreateTilePresenter(tile, view, this);
-        presenter.Initialize(this);
+        presenter.Initialize();
         return presenter;
     }
-
-    public ITilePresenter SpawnTile(DotsObject dObject)
+    public bool TryPlaceTile(Tile tile, Vector2Int position)
     {
-        if (_boardView == null)
+        return _model.TryPlaceTile(tile, position);
+    }
+    public void PlaceTile(Tile tile, Vector2Int position)
+    {
+        _model.PlaceTile(tile, position);
+    }
+    public ITilePresenter SpawnTile(Tile tile)
+    {
+        if (_view == null)
         {
             Debug.LogError("[BoardPresenter] BoardView is null");
             return null;
         }
-
-        TilePresenter presenter = CreateTilePresenter(dObject);
+        if(!_model.TryPlaceTile(tile, tile.GridPosition))
+        {
+            Debug.LogError($"[BoardPresenter] Failed to spawn tile {tile.ID} at {tile.GridPosition}");
+            return null;
+        }   
+        TilePresenter presenter = CreateTilePresenter(tile);
         _tilePresenters.Add(presenter.Tile.ID, presenter);
-        _model.SpawnTile(presenter.Tile);  
+       
 
         UpdateNeighborTileSprites(presenter.Tile.GridPosition);
         return presenter;
@@ -826,11 +785,7 @@ public class BoardPresenter : IBoardPresenter
 
     #endregion
 
-    public override string ToString()
-    {
-        return _model.ToString();
-    }
-
+   
 
 
 
@@ -864,7 +819,7 @@ public class BoardPresenter : IBoardPresenter
     {
         return IsAtBottomOfBoard(col, row) || IsAtLeftOfBoard(col, row) || IsAtRightOfBoard(col, row) || IsAtTopOfBoard(col, row);
     }
-     public bool FillBoard(DotsObject[] dotsToSpawn = null)
+     public bool FillBoard(DotsObject[] dotsToSpawn = null, Action onComplete = null)
     {
         var drops = CollectRefillDrops(dotsToSpawn);
         foreach (var drop in drops)
@@ -872,13 +827,13 @@ public class BoardPresenter : IBoardPresenter
             if (drop.Presenter == null) continue;
             drop.Presenter.Drop(drop.TargetRow);
         }
+        onComplete?.Invoke();
         return drops.Count > 0;
     }
 
     public bool CanHostDot(int col, int row)
     {
         ITilePresenter tile = GetTileAt(col, row);
-        DotPresenter dot = GetDotAt(col, row);
         
         if (tile != null && !tile.Tile.TileType.IsOpenTile())
         {
@@ -943,7 +898,6 @@ public class BoardPresenter : IBoardPresenter
     }
     public List<DotDrop> CollectGravityDrops()
     {
-        Debug.Log($"[BoardPresenter] CollectGravityDrops");
         var allDrops = new List<DotDrop>();
         bool dotsDropped;
         do
@@ -954,11 +908,22 @@ public class BoardPresenter : IBoardPresenter
 
 
         } while (dotsDropped);
-        Debug.Log($"[BoardPresenter] CollectGravityDrops: {allDrops.Count} drops");
 
         return allDrops;
     }
-
+    public List<T> CollectPresenters<T>(List<string> ids) where T : class, IPresenter
+    {
+        var presenters = new List<T>();
+        foreach (var id in ids)
+        {
+            var presenter = GetEntity(id);
+            if (presenter != null && presenter.TryGetPresenter(out T tPresenter))
+            {
+                presenters.Add(tPresenter);
+            }
+        }
+        return presenters;
+    }
     public List<DotDrop> CollectRefillDrops(DotsObject[] dotsToSpawn = null)
     {
         var drops = new List<DotDrop>();
@@ -967,15 +932,15 @@ public class BoardPresenter : IBoardPresenter
             for (int row = Height - 1; row >= 0; row--)
             {
                 ITilePresenter tile = GetTileAt(col, row);
-                    if (tile != null && tile.Tile.TileType.IsBlockingTile())
-                    {
-                        break;
-                    }
-                    if (!CanHostDot(col, row))
-                    {
-                        continue;
-                    }
-               
+                if (tile != null && tile.Tile.TileType.IsBlockingTile())
+                {
+                    break;
+                }
+                if (!CanHostDot(col, row))
+                {
+                    continue;
+                }
+
                 if (GetDotAt(col, row) == null)
                 {
 
@@ -1114,6 +1079,10 @@ public class BoardPresenter : IBoardPresenter
         return IsAtBottomOfBoard(gridPosition.x, gridPosition.y);
     }
 
+ public override string ToString()
+    {
+        return _model.ToString();
+    }
 
     
 }

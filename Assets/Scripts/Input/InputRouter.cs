@@ -21,8 +21,8 @@ public class InputRouter : MonoBehaviour
     public static event Action<Vector3> OnPointerDragged;
     private Camera _cam;
     private BoardService _board;
-    private static InputGate _gate;
-    public static InputGate Gate => _gate ??= new InputGate();
+    private static readonly InputGate _gate = new();
+    public static InputGate Gate => _gate;
     [SerializeField] private float _maxHitRadius =0.5f;
     public static event Action<DotPresenter> OnDotDeselected;
     private bool _isPointerDown;
@@ -33,7 +33,6 @@ public class InputRouter : MonoBehaviour
     private void Awake()
     {
         _cam = Camera.main;
-        _gate = new InputGate();
     }
     private void Start()
     {

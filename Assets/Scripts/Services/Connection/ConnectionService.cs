@@ -9,21 +9,6 @@ public class ConnectionService : MonoBehaviour
         _connectionPresenter.Initialize(board);
     }
 
-    public Connection ActiveConnection
-    {
-        get
-        {
-            if(_connectionPresenter == null) return null;
-            return _connectionPresenter.Connection;
-        }
-
-    }
-    public ConnectionResult LastConnection {
-        get
-        {
-            if(_connectionPresenter == null) return null;
-            return _connectionPresenter.ConnectionHistory.TryPeek(out var result) ? result : null;
-        }
-    }
+    public Connection ActiveConnection =>_connectionPresenter.Connection;
 
 }

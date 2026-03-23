@@ -25,10 +25,9 @@ public class DotPresenter : EntityPresenter, IDotPresenter
         PrepareForDrop();
     }
 
-    public override void Initialize(IBoardPresenter board)
+    public override void Initialize()
     {
         DotView.Init(Dot);
-        _board = board;
         RefreshSkin();
     }
 
@@ -55,7 +54,7 @@ public class DotPresenter : EntityPresenter, IDotPresenter
     public void PrepareForDrop()
     {
         var startPos = GridUtility.GridToWorld(Dot.GridPosition);
-        _view.transform.position = new Vector3(startPos.x, (Camera.main.orthographicSize * 2) + startPos.y, 0);
+        _view.transform.position = new Vector3(startPos.x, (Camera.main.orthographicSize * 3) + startPos.y, 0);
     }
 
 
@@ -64,7 +63,10 @@ public class DotPresenter : EntityPresenter, IDotPresenter
     {
         if (_view == null || Dot == null) return;
         var skin = _skinResolver.ResolveSkin(Dot);
-        _skinApplier.Apply(DotView, skin);
+        if (skin.HasValue)
+        {
+            _skinApplier.Apply(DotView, skin.Value);
+        }
     }
 
 }

@@ -3,11 +3,11 @@ using UnityEngine;
 
 public class DotSkinResolver : ISkinResolver<Dot>
 {
-    public Skin ResolveSkin(Dot dot)
+    public Skin? ResolveSkin(Dot dot)
     {
         return ResolveDotSkin(dot);
     }
-    public Skin ResolveDotSkin(Dot dot)
+    public Skin? ResolveDotSkin(Dot dot)
     {
         var colorScheme = ServiceProvider.Instance.GetService<ColorSchemeService>().CurrentColorScheme;
         if (dot.TryGetModel(out Colorable colorable))
@@ -18,7 +18,8 @@ public class DotSkinResolver : ISkinResolver<Dot>
         return dot.DotType switch
         {
             DotType.Bomb => new Skin(colorScheme.bomb.baseColor, colorScheme.bomb.accentColor, colorScheme.bomb.detailColor),
-            _ => throw new System.Exception("Invalid dot type."),
+            DotType.Nesting => new Skin(colorScheme.backgroundColor, colorScheme.backgroundColor, colorScheme.backgroundColor),
+            _ => null,
         };
     
     }

@@ -13,35 +13,48 @@ public interface IBoardPresenter
     int Height { get; }
 
     // Initialization
-    void Init(LevelData level, BoardView boardView, DotSpawner dotSpawner);
+    void Initialize(BoardView boardView, DotSpawner dotSpawner);
     void ClearBoard();
-
+    void SetupBoard(LevelData level);
     // Dot management
     void MoveDot(string dotId, Vector2Int endPosition);
     void ClearDot(string dotId);
     void RemoveAndDestroyDot(string dotId);
-    IDotPresenter SpawnDot(DotsObject dObject);
+    IDotPresenter SpawnDot(Dot dot);
     DotPresenter CreateDotPresenter(DotsObject dObject);
 
-    /// <summary>
-    /// Tries to clear a dot.
-    /// </summary>
-    /// <param name="dotId">The dot id to hit</param>
-    bool TryClearDot(string dotId);
 
     /// <summary>
-    /// Tries to hit a dot.
+    /// Places a dot at a specific position on the board, by adding its reference to the grid and to the board model
     /// </summary>
-    /// <param name="dotId">The dot id to hit</param>
-    bool TryHitDot(string dotId, out bool shouldClear);
+    /// <param name="dot">The dot to place</param>
+    /// <param name="gridPosition"></param>
+    bool TryPlaceDot(Dot dot, Vector2Int position);
 
-
+    /// <summary>
+    /// Places a dot at a specific position on the board, by adding its reference to the grid and to the board model
+    /// </summary>
+    /// <param name="dot">The dot to place</param>
+    /// <param name="position">The position</param>
+    void PlaceDot(Dot dot, Vector2Int position);
     // Tile management
-    ITilePresenter SpawnTile(DotsObject dObject);
-    void RemoveTile(string tileId);
-    TilePresenter CreateTilePresenter(DotsObject dObject);
-    bool TryHitTile(string tileId, out bool shouldClear);
 
+
+    /// <summary>
+    /// Tries to place a tile at the given position on the board, updating both the tile grid and the board model.
+    /// </summary>
+    /// <param name="tile">The tile to place of move</param>
+    /// <param name="position">The target grid position</param>
+    /// <returns>True if the tile was moved, false otherwise</returns>
+    bool TryPlaceTile(Tile tile, Vector2Int position);
+
+    /// <summary>
+    /// Places a tile at the given position on the board, updating both the tile grid and the board model.
+    /// Call this when the tile and its presenter already exist, such as when moving a tile from one position to another.
+    /// </summary>
+    /// <param name="tile">The tile to place or move.</param>
+    /// <param name="position">The target grid position for the tile.</param>
+    void PlaceTile(Tile tile, Vector2Int position);
     // Dot queries
     DotPresenter GetDotAt(Vector2Int position);
     DotPresenter GetDotAt(int x, int y);
@@ -65,8 +78,7 @@ public interface IBoardPresenter
     List<DotPresenter> GetDotsOnBoard();
     List<T> GetDotsOnBoard<T>() where T : class, IPresenter;
     bool IsValidPosition(Vector2Int position);
-
-    void ReplaceDot(DotPresenter oldDot, DotPresenter newDot, System.Action onComplete = null);
+    void ReplaceDot(Dot oldDot, Dot newDot, System.Action onComplete = null);
     bool IsOnEdgeOfBoard(Vector2Int gridPosition);
     bool IsOnEdgeOfBoard(int column, int row);
     List<IDotPresenter> GetDotNeighbors(Vector2Int position, bool includesDiagonals = true);
@@ -85,8 +97,10 @@ public interface IBoardPresenter
     List<BoardPresenter.DotDrop> CollectRefillDrops(DotsObject[] dotsToSpawn = null);
     List<T> CollectDotPresenters<T>(List<string> dotIds) where T : class, IPresenter;
     List<T> CollectTilePresenters<T>(List<string> tileIds) where T : class, IPresenter;
-    bool TryClear(string clearableId);
-    bool TryHit(string hittableId, out bool v);
+    bool TryHit(string hittableId, out bool shouldClear);
     IBoardEntity GetEntityAt(Vector2Int targetPosition);
     IBoardEntity GetEntityAt(int x, int y);
+    List<T> CollectPresenters<T>(List<string> ids) where T : class, IPresenter;
+    int GetBottomMostRow(int x);
+    void ClearEntity(string entityId);
 }

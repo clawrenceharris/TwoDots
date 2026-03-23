@@ -32,18 +32,19 @@ public class CascadeContext
     private readonly List<Vector2Int> _recentClearedPositions = new();
 
     /// <summary>Creates context for a cascade run with the given board and optional connection payload.</summary>
-    public CascadeContext(IBoardPresenter board, ConnectionResult payload, int turnIndex = 0)
+    public CascadeContext(IBoardPresenter board, ConnectionResult? payload, int turnIndex = 0)
     {
         Board = board;
-        Connection = payload;
+        if(payload.HasValue)
+        Connection = payload.Value;
         TurnIndex = turnIndex;
     }
 
     /// <summary>Returns the connection payload and marks it consumed; returns false if already consumed or null.</summary>
-    public bool TryConsumeConnectionPayload(out ConnectionResult payload)
+    public bool TryConsumeConnectionPayload(out ConnectionResult? payload)
     {
         payload = Connection;
-        if (payload == null || ConnectionPayloadConsumed) return false;
+        if (ConnectionPayloadConsumed) return false;
         ConnectionPayloadConsumed = true;
         return true;
     }

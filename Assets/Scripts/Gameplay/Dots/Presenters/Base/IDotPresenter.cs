@@ -8,7 +8,6 @@ public interface IDotPresenter
     Dot Dot { get; }
     DotView DotView { get; }
     event Action<string> OnDotDropped;
-    void Initialize(IBoardPresenter board);
     Sequence Spawn();
    
     Sequence Drop(int targetRow);

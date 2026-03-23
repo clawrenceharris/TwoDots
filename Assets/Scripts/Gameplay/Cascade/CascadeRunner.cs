@@ -22,6 +22,7 @@ public class CascadeRunner : MonoBehaviour
 
     [SerializeField] private bool _enableTrace;
     [SerializeField] private int _maxCascadeIterations = 50;
+    [SerializeField] private bool _deferBombUntilOtherPostFillClears = true;
 
     private IBoardPresenter _board;
     private LevelStateManager _stateManager;
@@ -38,30 +39,49 @@ public class CascadeRunner : MonoBehaviour
     private void Awake()
     {
         _stateManager = FindFirstObjectByType<LevelStateManager>();
-        BuildProducers();
     }
-    public void Init(IBoardPresenter board)
+
+
+    public void Init(Connection connection)
     {
-        _board = board;
-        if (ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService) && connectionService.ActiveConnection == null)
-        {   
-            Debug.LogError("[CascadeRunner] Missing ConnectionService ActiveConnection.");
-            return;
-        }
-        connectionService.ActiveConnection.OnConnectionCompleted += HandleConnectionCompleted;
+
+        BoardPresenter.OnBoardSetupComplete += OnBoardSetupComplete;
+        connection.OnConnectionCompleted += OnConnectionCompleted;
+        BuildProducers();
 
     }
-   
+
     private void OnDisable()
     {
         if (!ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService)) return;
-        connectionService.ActiveConnection.OnConnectionCompleted -= HandleConnectionCompleted;
+        connectionService.ActiveConnection.OnConnectionCompleted -= OnConnectionCompleted;
     }
+    private void OnBoardSetupComplete(IBoardPresenter board)
+    {
+        _board = board;
+        if (_isRunning) return;
+        if (_stateManager == null)
+        {
+            Debug.LogError("[CascadeRunner] Missing LevelStateManager.");
+            return;
+        }
 
-    private void HandleConnectionCompleted(ConnectionResult payload)
+        if (_board == null)
+        {
+            Debug.LogError("[CascadeRunner] Missing BoardPresenter.");
+            return;
+        }
+
+        _previousState = _stateManager.CurrentState;
+        _stateManager.ChangeState(new CascadeState(_stateManager));
+        _context = new CascadeContext(_board, new ConnectionResult(new Connection()));
+
+        StartCoroutine(RunCascade());
+    }
+    private void OnConnectionCompleted(ConnectionResult payload)
     {
         if (_isRunning) return;
-        if (payload == null || payload.DotIdsInPath == null || payload.DotIdsInPath.Count < 2) return;
+        if (payload.DotIdsInPath == null || payload.DotIdsInPath.Count < 2) return;
         StartCascade(payload);
     }
 
@@ -73,7 +93,7 @@ public class CascadeRunner : MonoBehaviour
             Debug.LogError("[CascadeRunner] Missing LevelStateManager.");
             return;
         }
-        
+
         if (_board == null)
         {
             Debug.LogError("[CascadeRunner] Missing BoardPresenter.");
@@ -83,7 +103,7 @@ public class CascadeRunner : MonoBehaviour
         _context = new CascadeContext(_board, payload);
         _previousState = _stateManager.CurrentState;
         _stateManager.ChangeState(new CascadeState(_stateManager));
-        
+
 
         StartCoroutine(RunCascade());
     }
@@ -145,7 +165,11 @@ public class CascadeRunner : MonoBehaviour
         }
         _previousState = null;
         _isRunning = false;
-        
+
+        foreach (var id in _context.ClearedDotIds)
+        {
+            _board.RemoveAndDestroyDot(id);
+        }
     }
 
     private void BuildProducers()
@@ -154,8 +178,6 @@ public class CascadeRunner : MonoBehaviour
         _postFillProducers.Clear();
 
         _preGravityProducers.Add(new ConnectionClearProducer());
-        _preGravityProducers.Add(new SeedAdjacencyProducer());
-        _preGravityProducers.Add(new HedgehogProducer());
         _postFillProducers.Add(new BombProducer());
         _postFillProducers.Add(new AnchorSinkProducer());
         _postFillProducers.Add(new LotusProducer());
@@ -171,6 +193,15 @@ public class CascadeRunner : MonoBehaviour
             producer?.CollectSteps(_context, steps);
         }
 
+        if (_deferBombUntilOtherPostFillClears && ReferenceEquals(producers, _postFillProducers))
+        {
+            bool hasNonBombPostFillWork = steps.Any(s => s != null && s.Type != FillStepType.BombExplode);
+            if (hasNonBombPostFillWork)
+            {
+                steps.RemoveAll(s => s != null && s.Type == FillStepType.BombExplode);
+            }
+        }
+
         foreach (var step in steps)
         {
             queue.Enqueue(step, ref _stepSequence);
@@ -184,10 +215,16 @@ public class CascadeRunner : MonoBehaviour
     {
         while (queue.TryDequeue(out var step))
         {
-            markWork?.Invoke();
             TraceStep(step);
-
+            
+            var explodeAnimations = ExecuteExplodePhase(step);
+            
+            if (explodeAnimations.Count > 0)
+            {
+                yield return WaitForAnimations(explodeAnimations);
+            }
             var hitAnimations = ExecuteHitPhase(step);
+            bool stepDidWork = hitAnimations.Count > 0;
             if (hitAnimations.Count > 0)
             {
                 yield return WaitForAnimations(hitAnimations);
@@ -197,20 +234,28 @@ public class CascadeRunner : MonoBehaviour
             if (result.HasClears)
             {
                 _context.SetRecentClears(result.ClearedDotIds, result.ClearedPositions);
+                stepDidWork = true;
             }
             if (clearAnimations.Count > 0)
             {
+                stepDidWork = true;
                 yield return WaitForAnimations(clearAnimations);
+            }
+            if (stepDidWork)
+            {
+                markWork?.Invoke();
             }
             if (result.HasClears)
             {
-                EnqueueProducerSteps(producers, queue);
+                // Pre-gravity can continue chaining in-phase, but post-fill clears must
+                // yield to gravity/refill before collecting fresh post-fill work (e.g. bombs).
+                if (!ReferenceEquals(producers, _postFillProducers))
+                {
+                    EnqueueProducerSteps(producers, queue);
+                }
             }
         }
-        foreach (var id in _context.ClearedDotIds)
-        {
-            _board.RemoveAndDestroyDot(id);
-        }
+
         _context.ClearRecentClears();
 
     }
@@ -218,46 +263,24 @@ public class CascadeRunner : MonoBehaviour
     private List<Sequence> ExecuteHitPhase(FillStep step)
     {
         var animations = new List<Sequence>();
-        if (step == null) return animations;
-        if (step.ToHit.Count > 0)
+        if (step == null || step.ToHit.Count == 0) return animations;
+        var hittables = _board.CollectPresenters<IHittablePresenter>(new List<string>(step.ToHit));
+        if (hittables.Count > 0)
         {
-            foreach (var hittableId in step.ToHit)
+            foreach (var hittablePresenter in hittables)
             {
-                var entity = _board.GetEntity(hittableId);
-                if (entity == null) continue;
-                if (entity.TryGetPresenter(out IHittablePresenter hittablePresenter))
+                if (hittablePresenter.Entity.TryGetModel(out Hittable hittableModel))
                 {
-                    if (_board.TryHit(hittableId, out bool _))
-                    {
+                    hittableModel.Hit();
 
-                        var sequence = hittablePresenter.Hit();
-                        if (sequence != null)
-                            animations.Add(sequence);
-                    }  
                 }
-            }
-           
-            if (step.ToExplode.Count > 0)
-            {
-                foreach (var explodableId in step.ToExplode)
+                if (hittablePresenter != null)
                 {
-                    var entity = _board.GetEntity(explodableId);
-                    if(entity == null) continue;
-                    if (entity.TryGetPresenter(out IExplodablePresenter explodablePresenter))
-                    {
-                        explodablePresenter.PrepareForExplode(new List<string>(step.ToHit), new List<string>(step.ToExplode));
-                    }
+                    var sequence = hittablePresenter.Hit();
+                    if (sequence != null)
+                        animations.Add(sequence);
                 }
-                foreach (var explodableId in step.ToExplode)
-                {
-                    var entity = _board.GetEntity(explodableId);
-                    if(entity == null) continue;
-                    if(entity.TryGetPresenter(out IExplodablePresenter explodablePresenter)){
-                        var sequence = explodablePresenter.Explode();
-                        if (sequence != null)
-                            animations.Add(sequence);
-                    }
-                }
+
 
 
             }
@@ -265,36 +288,78 @@ public class CascadeRunner : MonoBehaviour
 
         return animations;
     }
+    private List<Sequence> ExecuteExplodePhase(FillStep step)
+    {
+        var animations = new List<Sequence>();
+        if (step == null || step.ToExplode.Count == 0) return animations;
+
+        var explodables = _board.CollectPresenters<IExplodablePresenter>(new List<string>(step.ToExplode));
+
+        if (explodables.Count > 0)
+        {
+            foreach (var presenter in explodables)
+            {
+                if (presenter == null) continue;
+
+                presenter.PrepareForExplode(new List<string>(step.ToHit), new List<string>(step.ToExplode));
+            }
+            foreach (var explodable in explodables)
+            {
+                if (explodable == null) continue;
+                var sequence = explodable.Explode();
+                if (sequence != null)
+                    animations.Add(sequence);
+            }
+
+        }
+        return animations;
+    }
 
     private FillStepResult ExecuteClearPhase(FillStep step, out List<Sequence> animations)
     {
         animations = new List<Sequence>();
-        if (step == null) return FillStepResult.Empty;
-        var clearCandidates = new HashSet<string>(step.ToClear);
-        clearCandidates.UnionWith(step.ToHit);
-        if (clearCandidates.Count == 0) return FillStepResult.Empty;
+        var clearCandidates = new HashSet<string>(step.ToHit);
+        clearCandidates.UnionWith(step.ToClear);
+        clearCandidates.UnionWith(step.ToExplode);
+        if (step == null || clearCandidates.Count == 0) return FillStepResult.Empty;
+
+        var clearablePresenters = _board.CollectPresenters<IClearablePresenter>(new List<string>(clearCandidates));
+        if (clearablePresenters.Count == 0) return FillStepResult.Empty;
 
         var clearedIds = new List<string>();
         var clearedPositions = new List<Vector2Int>();
 
-       
-        foreach (var clearableId in clearCandidates)
+
+        foreach (var presenter in clearablePresenters)
         {
-            var entity = _board.GetEntity(clearableId);
-            if (entity == null) continue;
-            if (_board.TryClear(entity.Entity.ID))
+            if (presenter == null) continue;
+            if(presenter.Entity.TryGetModel(out Replaceable replaceable) && replaceable.ShouldReplace())
             {
-                if (entity.TryGetPresenter(out IClearablePresenter clearablePresenter))
-                {
-                    var sequence = clearablePresenter.Clear();
-                    if (sequence != null)
-                        animations.Add(sequence);
-                }
+                replaceable.Replace();
+                continue;
+            }
+            if (presenter.Entity.TryGetModel(out Clearable clearable) && clearable.ShouldClear())
+            {
+               
+                _board.ClearEntity(presenter.Entity.ID);
+
+                clearedIds.Add(presenter.Entity.ID);
+                clearedPositions.Add(presenter.Entity.GridPosition);
+
+                var sequence = presenter.Clear();
+                if (sequence != null)
+                    animations.Add(sequence);
+
+            }
+            if (presenter.Entity.TryGetModel(out Hittable hittable) && hittable.ShouldClear())
+            {
+                _board.ClearEntity(presenter.Entity.ID);
+
             }
         }
-       
+
         foreach (var id in clearedIds)
-                _context.ClearedDotIds.Add(id);
+            _context.ClearedDotIds.Add(id);
 
         return new FillStepResult(clearedIds, clearedPositions);
     }

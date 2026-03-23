@@ -29,9 +29,9 @@ public class OneSidedBlockPresenter : TilePresenter
     public OneSidedBlockPresenter(Tile tile, TileView view) : base(tile, view)
     {
     }
-    public override void Initialize(IBoardPresenter board)
+    public override void Initialize()
     {
-        base.Initialize(board);
+        base.Initialize();
         _directional = _entity.GetModel<Directional>();
         TileView.transform.rotation = Quaternion.Euler(_directional.ToRotation(_directional.FacingDirection.x, _directional.FacingDirection.y));
         if (ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService))
@@ -52,13 +52,11 @@ public class OneSidedBlockPresenter : TilePresenter
     {
 
         if (!_neighbors.Contains(dotId)) return;
-        Debug.Log($"dotId: {dotId} is a neighbor");
         _connectedNeighbors--;
         var neighbor = _board.GetDot(dotId);
         
         if (_directional.FacingDirection + _entity.GridPosition == neighbor.Dot.GridPosition)
         {
-            Debug.Log($"dotId: {dotId} is a target");
             _facingConnectionCount--;
         }
     }
@@ -66,12 +64,10 @@ public class OneSidedBlockPresenter : TilePresenter
     private void OnDotAddedToPath(string dotId)
     {
         if (!_neighbors.Contains(dotId)) return;
-        Debug.Log($"dotId: {dotId} is a neighbor");
         var neighbor = _board.GetDot(dotId);
         _connectedNeighbors++;
         if (_directional.FacingDirection + _entity.GridPosition == neighbor.Dot.GridPosition)
         {
-            Debug.Log($"dotId: {dotId} is a target");
             _facingConnectionCount++;
         }
     }
@@ -80,7 +76,6 @@ public class OneSidedBlockPresenter : TilePresenter
     {
         if(result.DotIdsInPath.Count <= 1) return;
         if (_connectedNeighbors == 0) return;
-        Debug.Log($"connectedNeighbors: {_connectedNeighbors}, facingConnectionCount: {_facingConnectionCount}");
 
 
         /// If there are candidates (connected neighbors) and no targets, shake the block.
