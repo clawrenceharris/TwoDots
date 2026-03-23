@@ -11,7 +11,6 @@ public class ConnectionPresenter : IConnectionPresenter
 {
     private ConnectorLineView _activeDragLine;
     private IConnectionModel _model;
-    public static event Action<DotColor> OnColorChanged;
     private readonly Stack<ConnectorLineView> _activeConnectionSegments = new();
    
     private IBoardPresenter _board;
@@ -82,13 +81,11 @@ public class ConnectionPresenter : IConnectionPresenter
                 presenter.ChangeColor(color);
             }
         }
-        OnColorChanged?.Invoke(color);
     }
     private void OnInputDotSelected(DotPresenter dot)
-    {
-        if ( _model.Connection.IsActive) return;
-        
+    {        
         _model.Begin(dot);
+        
         if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
         {
             presenter.Connect(_model.Connection.Color);
@@ -100,14 +97,18 @@ public class ConnectionPresenter : IConnectionPresenter
     
     private void OnInputDotConnected(DotPresenter dot)
     {
-        if (!_model.Connection.IsActive || _model.Path.Count == 0) return;
-        var previousDot = _model.Path[^1];
+        Debug.Log("OnInputDotConnected");
 
+        if (_model.Path.Count == 0) return;
+        var previousDot = _model.Path[^1];
+        Debug.Log("Previous Dot: " + previousDot);
+        Debug.Log("Dot: " + dot.Dot.ID);
         if (_model.TryAppend(dot))
         {
-            
-            AddConnectionSegment(previousDot.DotView.transform.position, dot.DotView.transform.position);
-    
+            var previousDotView = _board.GetDot(previousDot).DotView;
+            AddConnectionSegment(previousDotView.transform.position, dot.DotView.transform.position);
+            Debug.Log("Connecting dot: " + dot.Dot.ID);
+
             if (dot.TryGetPresenter(out IConnectableDotPresenter presenter))
             {
                 presenter.Connect(_model.Connection.Color);
@@ -121,13 +122,14 @@ public class ConnectionPresenter : IConnectionPresenter
     }
     private void OnPointerDragged(Vector3 worldPos)
     {
-        if (!_model.Connection.IsActive || _model.Path.Count == 0 || _model.Connection.IsSquare)
+        Debug.Log("OnPointerDragged");
+        if ( _model.Path.Count == 0 || _model.Connection.IsSquare)
         {
             HideDragLine();
             return;
         }
-
-        Vector3 from = _model.Path[^1].DotView.transform.position;
+        var lastDot = _board.GetDot(_model.Path[^1]);
+        Vector3 from = lastDot.DotView.transform.position;
         UpdateDragLine(from, worldPos);
 
 

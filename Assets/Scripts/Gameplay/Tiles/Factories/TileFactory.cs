@@ -15,14 +15,17 @@ public class TileFactory
                 {
                     var tile = new Tile(type, new Vector2Int(data.Col, data.Row));
                     
-                    tile.AddModel(new HittableTile(tile, new Clearable(tile)));
+                    var hittable = tile.AddModel(new Hittable(tile, new AdjacentToConnectionRule()));
+                    tile.AddModel(new Clearable(tile , hittable));
                     return tile;
             }
             case TileType.OneSidedBlock:
                 {
                     var tile = new Tile(type, new Vector2Int(data.Col, data.Row));
                     var direction = data.GetProperty<int[]>(DotsObject.Property.Directions);
-                    tile.AddModel(new HittableOneSidedBlock(tile, new Vector2Int(direction[0], direction[1])));
+                    var hittable = tile.AddModel(new Hittable(tile, new FacingAdjacentConnectionRule()));
+                    tile.AddModel(new Clearable(tile, hittable));
+                    tile.AddModel(new Directional(tile, new Vector2Int(direction[0], direction[1])));
                     return tile;
                 }
             default:

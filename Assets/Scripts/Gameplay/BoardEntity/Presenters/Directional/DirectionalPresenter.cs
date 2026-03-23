@@ -6,9 +6,9 @@ public class DirectionalPresenter : EntityPresenter, IDirectionalPresenter
     public DirectionalPresenter(BoardEntity entity, EntityView view) : base(entity, view)
     {
     }
-    public override void Initialize(IBoardPresenter board)
+    public override void Initialize()
     {
-        base.Initialize(board);
+        base.Initialize();
 
         View.transform.rotation = Quaternion.Euler(Directional.ToRotation(Directional.FacingDirection.x, Directional.FacingDirection.y));
     }

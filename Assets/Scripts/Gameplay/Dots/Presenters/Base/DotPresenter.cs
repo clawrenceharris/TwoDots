@@ -25,10 +25,9 @@ public class DotPresenter : EntityPresenter, IDotPresenter
         PrepareForDrop();
     }
 
-    public override void Initialize(IBoardPresenter board)
+    public override void Initialize()
     {
         DotView.Init(Dot);
-        _board = board;
         RefreshSkin();
     }
 
@@ -64,7 +63,10 @@ public class DotPresenter : EntityPresenter, IDotPresenter
     {
         if (_view == null || Dot == null) return;
         var skin = _skinResolver.ResolveSkin(Dot);
-        _skinApplier.Apply(DotView, skin);
+        if (skin.HasValue)
+        {
+            _skinApplier.Apply(DotView, skin.Value);
+        }
     }
 
 }

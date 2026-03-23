@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 /// <summary>
 /// A tile entity on the board
@@ -16,6 +17,11 @@ public class Tile : BoardEntity
     public Tile(TileType type, Vector2Int position) : base(position)
     {
         _tileType = type;
-       
+
     }
+    public override T GetEntityType<T>()
+    {
+        return (T)(object)TileType;
+    }
+   
 }

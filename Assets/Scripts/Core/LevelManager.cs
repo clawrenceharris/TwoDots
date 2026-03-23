@@ -77,15 +77,18 @@ public class LevelManager : MonoBehaviour
 
         // Set up the services
         colorScheme.Initialize(Level.levelNum - 1);
-        board.Initialize(Level);
+
+
+        board.Initialize();
         connection.Initialize(board.BoardPresenter);
+        _cascadeRunner.Init(connection.ActiveConnection);
+        board.SetupBoard(Level);
 
         pool.RegisterPools();
         pool.FillPool<LinePool>();
         pool.FillPool<BombPool>();
 
 
-        _cascadeRunner.Init(board.BoardPresenter);
         _camera.SetUpCameraForLevel(Level);
         if (IsTutorial)
         {

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 public class BoardService : MonoBehaviour
 {
@@ -21,10 +22,19 @@ public class BoardService : MonoBehaviour
        
     }
     
-    public void Initialize(LevelData level)
+    public void Initialize()
     {
-        _boardPresenter?.ClearBoard();
         _boardPresenter = new BoardPresenter();
-        _boardPresenter.Init(level, _boardView, _dotSpawner);
+        _boardPresenter.Initialize(_boardView, _dotSpawner);
+    }
+
+    public void SetupBoard(LevelData level)
+    {
+        if (_boardPresenter == null)
+        {
+            Debug.LogError("[BoardService] BoardPresenter is null");
+            return;
+        }
+        _boardPresenter.SetupBoard(level);
     }
 }

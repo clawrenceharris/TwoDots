@@ -165,9 +165,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DotSpawner
   dotProbabilities:
   - type: 1
-    value: 0.2
+    value: 0
   - type: 9
     value: 0.8
+  - type: 7
+    value: 0.2
 --- !u!1 &5849007
 GameObject:
   m_ObjectHideFlags: 0
@@ -443,7 +445,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PrefabLibrary
   NormalDot: {fileID: 1842759899835583463, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
   BlankDot: {fileID: 3680304200168233775, guid: f50e2b3939a3145468b2eb54e9452743, type: 3}
-  AnchorDot: {fileID: 0}
+  AnchorDot: {fileID: 3627845718609047058, guid: 1bd84699e5d6c41a6ac5b3372c0d3e32, type: 3}
   ClockDot: {fileID: 0}
   Bomb: {fileID: 8928303601095544995, guid: adcfeb753f60d4034b22fe1dd4f10892, type: 3}
   NestingDot: {fileID: 0}
@@ -1113,7 +1115,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _isTutorial: 0
-  startingLevel: {fileID: 4900000, guid: 8556cb4da27724fcb9800c5d18812c46, type: 3}
+  startingLevel: {fileID: 4900000, guid: 0b32b897f57ff470cbeb833d8c6a2f61, type: 3}
 --- !u!4 &1079918959
 Transform:
   m_ObjectHideFlags: 0
@@ -1175,6 +1177,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CascadeRunner
   _enableTrace: 1
   _maxCascadeIterations: 50
+  _deferBombUntilOtherPostFillClears: 1
 --- !u!1 &1153407602
 GameObject:
   m_ObjectHideFlags: 0

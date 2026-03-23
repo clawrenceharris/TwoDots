@@ -25,10 +25,9 @@ public class TilePresenter : EntityPresenter, ITilePresenter
       
     }
 
-    public override void Initialize(IBoardPresenter board)
+    public override void Initialize()
     {
         TileView.Init(Tile);
-        _board = board;
         RefreshSkin();
         TileView.transform.localScale = Vector3.one * BoardView.TileSize;
 
@@ -36,13 +35,16 @@ public class TilePresenter : EntityPresenter, ITilePresenter
 
     public Sequence Spawn()
     {
+        OnTileSpawned?.Invoke(this);
         return null;
     }
 
 
     public Sequence Remove()
     {
+        OnTileRemoved?.Invoke(this);
         return null;
+
     }
    
 
@@ -51,7 +53,10 @@ public class TilePresenter : EntityPresenter, ITilePresenter
     {
         if (_view == null || Tile == null) return;
         var skin = _skinResolver.ResolveSkin(Tile);
-        _skinApplier.Apply(TileView, skin);
+        if (skin.HasValue)
+        {
+            _skinApplier.Apply(TileView, skin.Value);
+        }
     }
 
 }

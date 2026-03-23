@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public interface IConnectionModel
 {
     /// <summary>Current ordered path of dots in this session (empty if no active session).</summary>
-    IReadOnlyList<IDotPresenter> Path { get; }
+    IReadOnlyList<string> Path { get; }
     /// <summary> Set of unique dot IDs in the path. </summary>
     IReadOnlyList<string> DotIdsInPath { get; }
 

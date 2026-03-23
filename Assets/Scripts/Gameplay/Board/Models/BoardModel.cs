@@ -30,15 +30,14 @@ public class BoardModel : IBoardModel
     public event Action<Dot> OnDotSpawned;
     public event Action<Tile> OnTileRemoved;
     public event Action<Tile> OnTileSpawned;
-    public BoardModel(LevelData level)
+    
+    public void Initialize(LevelData level)
     {
         Width = level.width;
         Height = level.height;
         DotGrid = new Dot[Width, Height];
         TileGrid = new Tile[Width, Height];
-       
     }
-
     public List<Dot> InitDots(LevelData level)
     {
         var dots = new List<Dot>();

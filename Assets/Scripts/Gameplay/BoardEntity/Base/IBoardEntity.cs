@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -11,4 +12,6 @@ public interface IBoardEntity
     bool TryGetModel<T>(out T model) where T : class, IModel;
     void RemoveModel<T>() where T : class, IModel;
     T AddModel<T>(T component) where T : class, IModel;
+    T GetEntityType<T>() where T : Enum, IConvertible;
+
 }

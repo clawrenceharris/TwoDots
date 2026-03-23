@@ -1,0 +1,17 @@
+{
+  "levelNum": 1,
+  "w": 6,
+  "h": 6,
+  "moves": 10,
+  "colors": ["b"],
+  "initDotsToSpawn": [],
+  "dotsToSpawn": [
+    {
+      "t": "n"
+    },
+    { "t": "nt" }
+  ],
+  "dotsOnBoard": [],
+
+  "tilesOnBoard": []
+}

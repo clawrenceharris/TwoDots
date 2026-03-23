@@ -29,9 +29,9 @@ public class OneSidedBlockPresenter : TilePresenter
     public OneSidedBlockPresenter(Tile tile, TileView view) : base(tile, view)
     {
     }
-    public override void Initialize(IBoardPresenter board)
+    public override void Initialize()
     {
-        base.Initialize(board);
+        base.Initialize();
         _directional = _entity.GetModel<Directional>();
         TileView.transform.rotation = Quaternion.Euler(_directional.ToRotation(_directional.FacingDirection.x, _directional.FacingDirection.y));
         if (ServiceProvider.Instance.TryGetService<ConnectionService>(out var connectionService))
