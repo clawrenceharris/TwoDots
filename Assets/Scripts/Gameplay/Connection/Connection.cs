@@ -24,24 +24,10 @@ public sealed class Connection
     public Square Square { get; private set; }
     /// <summary>True when a session is active (between Begin and End/Cancel).</summary>
     public bool IsActive { get; private set; }
-     /// <summary>Raised when the color changes.</summary>
-    public event Action<DotColor> OnColorChanged;
-
-    /// <summary>Raised when a dot is added to the path.</summary>
-    public event Action<string> OnDotAddedToPath;
-
-    /// <summary>Raised when a dot is removed from the path.</summary>
-    public event Action<string> OnDotRemovedFromPath;
     
-    /// <summary>Raised when a square is activated.</summary>
-    public event Action<IReadOnlyList<string>> OnSquareActivated;
-    /// <summary>Raised when a square is deactivated.</summary>
-    public event Action<IReadOnlyList<string>> OnSquareDeactivated;
+  
 
-    /// <summary>Raised when the connection is completed.</summary>
-    public event Action<ConnectionResult> OnConnectionCompleted;
-
-    private List<string> _path;
+    private readonly List<string> _path;
     public string CurrentDot => _path.Last();
 
     /// <summary>Ordered, unique dot IDs in the path.</summary>
@@ -56,6 +42,26 @@ public sealed class Connection
     /// <summary>Raised when the path changes.</summary>
     public event Action OnPathChanged;
 
+      /// <summary>Raised when a dot is removed from the path.</summary>
+    public event Action<string> OnDotRemovedFromPath;
+    
+    /// <summary>Raised when a square is activated.</summary>
+    public event Action<IReadOnlyList<string>> OnSquareActivated;
+    /// <summary>Raised when a square is deactivated.</summary>
+    public event Action<IReadOnlyList<string>> OnSquareDeactivated;
+
+    /// <summary>Raised when the connection is completed.</summary>
+    public event Action<ConnectionResult> OnConnectionCompleted;
+     /// <summary>Raised when the color changes.</summary>
+    public event Action<DotColor> OnColorChanged;
+
+    /// <summary>Raised when a dot is added to the path.</summary>
+    public event Action<string> OnDotAddedToPath;
+
+    /// <summary>Raised when the connection is cancelled.</summary>
+    public event Action OnConnectionCancelled;
+
+
     public Connection()
     {
         _path = new List<string>();
@@ -63,18 +69,28 @@ public sealed class Connection
         Square = null;
         IsActive = false;
     }
-    public void BeginSession(IDotPresenter dot)
-    {
-        _path = new List<string>();
-        Color = DotColor.Blank;
-        Square = null;
-        IsActive = true;
-        OnConnectionStarted?.Invoke();
-        Append(dot);
 
-       
+
+    /// <summary>
+    /// Start a new session with the given dot as the first node.   
+    /// </summary>
+    /// <param name="dot">The starting dot</param>
+    public void StartSession(IDotPresenter dot)
+    {
+        CancelSession();
+        IsActive = true;
+
+        Append(dot);
+        OnConnectionStarted?.Invoke();
+
+
 
     }
+   
+    /// <summary>
+    /// Append a dot to the path.
+    /// </summary>
+    /// <param name="dot">The dot to append</param>
     public void Append(IDotPresenter dot)
     {
         _path.Add(dot.Dot.ID);
@@ -84,6 +100,9 @@ public sealed class Connection
 
     }
 
+    /// <summary>
+    /// Backtrack the connection by removing the last dot from the path.
+    /// </summary>
     public void Backtrack()
     {
         if (_path.Count == 0) return;
@@ -95,7 +114,9 @@ public sealed class Connection
     }
 
     
-    
+    /// <summary>
+    /// Deactivate the square.
+    /// </summary>
     public void DeactivateSquare()
     {
         // All the dots that would have been hit from the square excluding the dots that are still in the path
@@ -106,12 +127,17 @@ public sealed class Connection
         Square = null;
        
     }
+    /// <summary>
+    /// Activate the square.
+    /// </summary>
+    /// <param name="square">The square activate</param>
     public void ActivateSquare(Square square)
     {
         Square = square;
         Square.Activate();
         OnSquareActivated?.Invoke(Square.AllDotsToHit);
     }
+
     /// <summary>
     /// Gathers all entities that should be "hit" by the current connection, including reached dots
     /// and any additional targets that propagate via ITargetable neighbors (chain reactions).
@@ -123,12 +149,35 @@ public sealed class Connection
     /// </returns>
     public void EndSession()
     {
-        IsActive = false;
         Square?.Commit();
-       
+
         OnConnectionCompleted?.Invoke(new ConnectionResult(this));
+
     }
+
+
+    /// <summary>
+    /// Cancel the session. Resets path, color, 
+    /// and square and becomes inactive
+    /// </summary>
+
+    public void CancelSession()
+    {
+        IsActive = false;
+        _path.Clear();
+        Color = DotColor.Blank;
+        Square = null;
+        OnConnectionCancelled?.Invoke();
+    }
+
+
     
+    /// <summary>
+    /// Get the color of the connection.
+    /// </summary>
+    /// <returns>
+    /// The color of the connection.
+    /// </returns>
     private DotColor GetConnectionColor()
     {
         if (!ServiceProvider.Instance.TryGetService<BoardService>(out var boardService)) return DotColor.Blank;
@@ -153,6 +202,9 @@ public sealed class Connection
         return DotColor.Blank;
     }
     
+    /// <summary>
+    /// Update the color of the connection.
+    /// </summary>
     public void UpdateColor()
     {
         var newColor = GetConnectionColor();

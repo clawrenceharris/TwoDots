@@ -18,6 +18,7 @@ public class DotSkinResolver : ISkinResolver<Dot>
         return dot.DotType switch
         {
             DotType.Bomb => new Skin(colorScheme.bomb.baseColor, colorScheme.bomb.accentColor, colorScheme.bomb.detailColor),
+            DotType.Nesting => new Skin(colorScheme.backgroundColor, colorScheme.backgroundColor, colorScheme.backgroundColor),
             _ => null,
         };
     

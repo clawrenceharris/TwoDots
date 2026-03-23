@@ -12,6 +12,7 @@ Documentation for the current project state. All paths are relative to the repos
 | [Board, Dots, and Levels](Board-Dots-Levels.md)   | Board model/presenter/view, dot entity and components, tiles, level data, worlds, and loading.             |
 | [Empty Tile Mechanic](Empty-Tile-Mechanic.md)     | Behavior and classification of empty tiles as board mechanic tiles that reserve unfillable board positions. |
 | [Blocking Gravity Mechanic](Blocking-Gravity-Mechanic.md) | Segment-based gravity and refill behavior with blocking tiles, host tiles, and pass-through-only tiles.    |
+| [Preview State System](Preview-State-System.md) | Event-driven preview pipeline for reversible connection-time animations/sounds and mechanic rule integration. |
 
 ## Quick reference
 

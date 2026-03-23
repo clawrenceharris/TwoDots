@@ -87,9 +87,10 @@ public static class GameTypeExtensions
         return type == DotType.Beetle || type == DotType.Monster;
     }
     
-    public static bool IsBomb(this DotType type)
+    public static bool IsBomb(this Dot dot)
     {
-        return type == DotType.Bomb;
+        return dot.DotType == DotType.Bomb;
+        
     }
     public static bool IsBasicDot(this DotType type)
     {

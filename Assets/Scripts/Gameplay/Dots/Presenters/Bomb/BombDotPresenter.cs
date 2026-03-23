@@ -37,7 +37,7 @@ public class BombDotPresenter : EntityPresenter, IExplodablePresenter
         foreach (string hittableId in targetHittables)
         {
             var hittable = _board.GetDot(hittableId);
-            if (hittable == null || hittable.Dot.DotType.IsBomb())
+            if (hittable == null || hittable.Dot.IsBomb())
                 continue;
             validHittables.Add(hittableId);
         }

@@ -12,10 +12,10 @@ public class BombProducer : IFillStepProducer
         var dots = context.Board.GetDotsOnBoard();
 
         var bombIds = new HashSet<string>();
-        var dotsToHit = new HashSet<string>();
+        var dotsToHit = new List<string>();
         foreach (var dot in dots)
         {
-            if(dot.Dot.DotType.IsBomb())
+            if(dot.Dot.IsBomb())
             {
                 if (context.ClearedDotIds.Contains(dot.Entity.ID)) continue;
                 bombIds.Add(dot.Entity.ID);
@@ -25,9 +25,10 @@ public class BombProducer : IFillStepProducer
                 foreach (var neighbor in neighbors)
                 {
                     if (neighbor == null) continue;
-                    if (neighbor.GetEntityType<DotType>() == DotType.Bomb) continue;
-                    if (context.ClearedDotIds.Contains(neighbor.ID)) continue;
-                    dotsToHit.Add(neighbor.ID);
+                    if (neighbor.TryGetModel(out Hittable _))
+                    {
+                        dotsToHit.Add(neighbor.ID);
+                    }
                 }
             }
         }

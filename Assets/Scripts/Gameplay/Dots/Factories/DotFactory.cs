@@ -51,6 +51,15 @@ public class DotFactory
                     dot.AddModel(new Clearable(dot));
                     return dot;
                 }
+            case DotType.Nesting:
+                {
+                    var dot = new Dot(DotType.Nesting, new Vector2Int(data.Col, data.Row));
+                    var replaceable = dot.AddModel(new Replaceable(dot, CreateDot(new DotsObject { Type = LevelLoader.ToJsonDotType(DotType.Bomb) })));
+
+                    var hittable = dot.AddModel(new Hittable(dot, new AdjacentToConnectionRule(), hitMax: 3, hitCount: 0));
+                    dot.AddModel(new Clearable(dot, hittable));
+                    return dot;
+                }
             case DotType.Anchor:
                 {
                     var dot = new Dot(DotType.Anchor, new Vector2Int(data.Col, data.Row));
@@ -80,7 +89,7 @@ public class DotFactory
                 {
                     var presenter = new DotPresenter(dot, view);
                     presenter.AddPresenter(new ConnectableDotPresenter(dot, view));
-                    presenter.AddPresenter(new HittablePresenter(dot, view, new ClearablePresenter(dot, view)));
+                    presenter.AddPresenter(new BeetlePreviewPresenter(dot, view));
                     return presenter;
                 }
             case DotType.Blank:
@@ -98,6 +107,14 @@ public class DotFactory
                     presenter.AddPresenter(new ClearablePresenter(dot, view));
                     return presenter;
                 }
+                case DotType.Nesting:
+                {
+                    var presenter = new DotPresenter(dot, view);
+                    presenter.AddPresenter(new HittableNestingPresenter(dot, view));
+                    presenter.AddPresenter(new ClearableNestingPresenter(dot, view));
+                    presenter.AddPresenter(new NestingPreviewPresenter(dot, view));
+                    return presenter;
+                }
             case DotType.Bomb:
                 {
                     if (view is not BombView bombView)
@@ -108,7 +125,6 @@ public class DotFactory
                     var presenter = new DotPresenter(dot, bombView);
                     presenter.AddPresenter(new ClearablePresenter(dot, view));
                     presenter.AddPresenter(new BombDotPresenter(dot, bombView));
-                    presenter.AddPresenter(new HittablePresenter(dot, view));
                     return presenter;
 
                 }

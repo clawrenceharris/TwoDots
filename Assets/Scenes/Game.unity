@@ -168,8 +168,10 @@ MonoBehaviour:
     value: 0
   - type: 9
     value: 0.8
-  - type: 7
+  - type: 4
     value: 0.2
+  - type: 7
+    value: 0
 --- !u!1 &5849007
 GameObject:
   m_ObjectHideFlags: 0
@@ -448,7 +450,7 @@ MonoBehaviour:
   AnchorDot: {fileID: 3627845718609047058, guid: 1bd84699e5d6c41a6ac5b3372c0d3e32, type: 3}
   ClockDot: {fileID: 0}
   Bomb: {fileID: 8928303601095544995, guid: adcfeb753f60d4034b22fe1dd4f10892, type: 3}
-  NestingDot: {fileID: 0}
+  NestingDot: {fileID: 6871592221886282894, guid: 390027d122ca746928a098b53c90c9cd, type: 3}
   BeetleDot: {fileID: 0}
   LotusDot: {fileID: 0}
   TileView: {fileID: 6988021338377598629, guid: 80178b5823b6e4cdeb9fe7d8ff1d889e, type: 3}
@@ -754,7 +756,7 @@ SpriteMask:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 16
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 15d0c3709176029428a0da2f8cecf0b5, type: 2}
@@ -782,10 +784,10 @@ SpriteMask:
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: a3964ccd7cbe3423ca0c0915ce097fe6, type: 3}
   m_MaskAlphaCutoff: 0.2
-  m_FrontSortingLayerID: 0
-  m_BackSortingLayerID: 0
-  m_FrontSortingLayer: 0
-  m_BackSortingLayer: 0
+  m_FrontSortingLayerID: -2009438893
+  m_BackSortingLayerID: -2009438893
+  m_FrontSortingLayer: 2
+  m_BackSortingLayer: 2
   m_FrontSortingOrder: 0
   m_BackSortingOrder: 0
   m_IsCustomRangeActive: 0
@@ -944,7 +946,7 @@ AudioSource:
   m_PlayOnAwake: 1
   m_Volume: 0.1
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
@@ -1223,7 +1225,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InputRouter
   _maxHitRadius: 1.3
-  _selectionThrottleTime: 0.4
+  _selectionThrottleTime: 0.25
 --- !u!1 &1402596582
 GameObject:
   m_ObjectHideFlags: 0

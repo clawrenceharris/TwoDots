@@ -233,7 +233,8 @@ public class Square
             if (dot == null) continue;
             var bomb = PreviewBombs[dotId].Presenter;
             AllDotsToHit.RemoveAll(id => id == dotId);
-            _board.ReplaceDot(dot, bomb);
+            _board.ReplaceDot(dot.Dot, bomb.Dot);
+            _board.RemoveAndDestroyDot(dotId);
         }
     }
 }

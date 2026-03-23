@@ -1,4 +1,4 @@
-using System;
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,8 +10,6 @@ public interface IBoardModel
     Tile[,] TileGrid { get; }
     List<Dot> GetAllDots();
     List<Tile> GetAllTiles();
-    void SpawnTile(Tile tile);
-    void SpawnDot(Dot dot);
     void ClearTile(string tileId);
     void ClearDot(string dotId);
     void MoveDot(string id, Vector2Int toPosition);
@@ -21,14 +19,15 @@ public interface IBoardModel
     Tile GetTileAt(int x, int y);
     Dot GetDot(string dotId);
     Tile GetTile(string id);
-    event Action<Dot> OnDotCleared;
-    event Action<Dot> OnDotSpawned;
-    event Action<Tile> OnTileRemoved;
-    event Action<Tile> OnTileSpawned;
     List<Dot> InitDots(LevelData level);
     List<Tile> InitTiles(LevelData level);
     bool IsValidPosition(Vector2Int position);
     void ClearBoard();
     void ReplaceDot(string dotId, Dot dot);
     void Initialize(LevelData level);
+    bool TryPlaceDot(Dot dot, Vector2Int position);
+    void PlaceDot(Dot dot, Vector2Int position);
+    bool TryPlaceTile(Tile tile, Vector2Int position);
+    void PlaceTile(Tile tile, Vector2Int position);
+
 }

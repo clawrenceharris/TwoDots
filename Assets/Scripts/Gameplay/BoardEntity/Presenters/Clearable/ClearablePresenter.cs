@@ -9,7 +9,7 @@ public class ClearablePresenter : EntityPresenter, IClearablePresenter
     {
     }
 
-    public Sequence Clear()
+    public virtual Sequence Clear()
     {
        return DOTween.Sequence().Append(View.transform.DOScale(Vector3.zero, 0.3f));
     }

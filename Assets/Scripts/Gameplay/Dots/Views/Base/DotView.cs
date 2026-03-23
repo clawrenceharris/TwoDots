@@ -7,7 +7,6 @@ using UnityEngine;
 /// </summary>
 public class DotView : EntityView
 {
-    
     private Dot _dot;
 
     /// <summary>

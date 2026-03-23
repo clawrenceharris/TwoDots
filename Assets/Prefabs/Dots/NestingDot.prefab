@@ -55,7 +55,7 @@ SpriteRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 32
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
@@ -77,9 +77,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1239392859
-  m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingLayerID: -2009438893
+  m_SortingLayer: 2
+  m_SortingOrder: 99
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: a163ed744313241f994179ffe04dfe51, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -168,8 +168,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1239392859
-  m_SortingLayer: 0
+  m_SortingLayerID: -2009438893
+  m_SortingLayer: 2
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: f80fac22bd9dd4b23983f218e400e392, type: 3}
@@ -259,9 +259,9 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1239392859
-  m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingLayerID: -2009438893
+  m_SortingLayer: 2
+  m_SortingOrder: 99
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 49d0e9edd3c8741caa8d2b35249f6e6b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -283,11 +283,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2818817833734586123, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.8
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2818817833734586123, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.8
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2818817833734586123, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -330,13 +330,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3936153308775757099, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
+      propertyPath: _targets.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3936153308775757099, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
       propertyPath: _fallbackBaseRenderer
       value: 
+      objectReference: {fileID: 7042503334726736847}
+    - target: {fileID: 3936153308775757099, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
+      propertyPath: _targets.Array.data[0].Renderers.Array.size
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3936153308775757099, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
       propertyPath: '_targets.Array.data[0].Renderers.Array.data[0]'
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 7042503334726736847}
     - target: {fileID: 5224356030327197459, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -362,7 +370,11 @@ PrefabInstance:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
-    m_RemovedGameObjects: []
+    - {fileID: 1842759899835583463, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
+    - {fileID: 4478629231230152698, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
+    m_RemovedGameObjects:
+    - {fileID: 1924676625956258037, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
+    - {fileID: 6915616125363496934, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 2818817833734586123, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
       insertIndex: -1
@@ -373,10 +385,52 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2818817833734586123, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4999338485989605920}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6629530070703699901, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5546297401577699078}
+    - targetCorrespondingSourceObject: {fileID: 6629530070703699901, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6871592221886282894}
   m_SourcePrefab: {fileID: 100100000, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
 --- !u!4 &1019265678563060695 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2818817833734586123, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
   m_PrefabInstance: {fileID: 2971068818806707420}
   m_PrefabAsset: {fileID: 0}
+--- !u!212 &7042503334726736847 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 5224356030327197459, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
+  m_PrefabInstance: {fileID: 2971068818806707420}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8447496296866440033 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6629530070703699901, guid: 526d8194fb84e4654a0f6b3dda7cd1c7, type: 3}
+  m_PrefabInstance: {fileID: 2971068818806707420}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5546297401577699078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8447496296866440033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6cfdbb0a612d4664928924e38e937bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NestingDotVisuals
+  TopCap: {fileID: 1090832818109188376}
+  BottomCap: {fileID: 4463504198251220756}
+--- !u!114 &6871592221886282894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8447496296866440033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec56f718aca0f4097a8654580e73f1f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NestingDotView

@@ -17,5 +17,7 @@ public interface IClearable : IModel
     /// Clears the clearable model by executing any needed clear logic.
     /// </summary>
     void Clear();
+
+    Action<IClearable> OnClear { get; set; }
     
 }
